@@ -17,9 +17,7 @@ Best of all, think of the simplicity of something like the `nedb` embedded datab
 
 ## Installation
 
-While not yet on NPM ( it will be soon! ) you can easily install it from the GitHub repo:
-
-`npm i citycide/trilogy`
+`npm i trilogy`
 
 ## Usage
 
