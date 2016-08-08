@@ -1,0 +1,22 @@
+sudo: false
+
+language: node_js
+node_js:
+  - "4.0"
+  - "5.0"
+  - "6.0"
+
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+    - node_modules
+
+install:
+  - npm prune
+  - npm install
+
+notifications:
+  email: false
