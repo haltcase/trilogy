@@ -8,7 +8,10 @@ export default {
   plugins: [
     babel({
       babelrc: false,
-      presets: ['es2015-rollup', 'stage-0'],
+      presets: [
+        ['es2015', { modules: false }],
+        'stage-0'
+      ],
       plugins: [
         'syntax-flow',
         'transform-flow-strip-types',
