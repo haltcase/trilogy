@@ -1,6 +1,6 @@
 {
   "name": "trilogy",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "100% pure JS SQLite, built on Knex & SQL.js",
   "main": "dist/trilogy.js",
   "jsnext:main": "dist/trilogy.mjs",
