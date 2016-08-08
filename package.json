@@ -7,10 +7,13 @@
   "scripts": {
     "prebuild": "eslint lib test",
     "build": "rollup -c",
+    "build": "rollup -c && npm run docs",
     "watch": "rollup -c -w",
     "pretest": "npm run build",
     "test": "mocha",
-    "prepublish": "npm test"
+    "docs": "jsdoc -c .jsdoc.json",
+    "pages": "git subtree split --prefix docs -b gh-pages && git push -f origin gh-pages:gh-pages && git branch -D gh-pages",
+    "prepublish": "npm test",
   },
   "repository": {
     "type": "git",
@@ -53,11 +56,15 @@
     "babelrc-rollup": "^1.1.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
+    "docdash": "^0.4.0",
     "eslint": "^3.0.1",
     "eslint-config-standard": "^5.3.1",
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-promise": "^1.3.2",
     "eslint-plugin-standard": "^1.3.2",
+    "jsdoc": "^3.4.0",
+    "jsdoc-babel": "^0.2.1",
+    "jsdoc-strip-async-await": "^0.1.0",
     "mocha": "^2.5.3",
     "rollup": "^0.34.0",
     "rollup-plugin-babel": "^2.5.1"
