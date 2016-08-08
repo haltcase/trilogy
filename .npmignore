@@ -1,4 +1,5 @@
 .idea
-dist
+lib
+test
 node_modules
 trilogy-*.tgz
