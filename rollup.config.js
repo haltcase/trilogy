@@ -10,6 +10,8 @@ export default {
       babelrc: false,
       presets: ['es2015-rollup', 'stage-0'],
       plugins: [
+        'syntax-flow',
+        'transform-flow-strip-types',
         'transform-runtime'
       ],
       externalHelpers: false,

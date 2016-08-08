@@ -1,0 +1,15 @@
+[ignore]
+.*/node_modules/.*
+.*/fixtures/.*
+.*/docs/.*
+.*/test/.*
+.*/dist/.*
+
+[include]
+.*/lib/.*
+
+[libs]
+flow
+node_modules/iflow-lodash/index.js.flow
+
+[options]

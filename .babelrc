@@ -1,5 +1,9 @@
 {
-  "presets": [ "es2015-rollup", "stage-0"],
-  "plugins": ["transform-runtime"]
   "presets": ["es2015", "stage-0"],
+  "plugins": [
+    "syntax-flow",
+    "transform-flow-strip-types",
+    "transform-runtime"
+  ]
 }
+
