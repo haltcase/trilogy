@@ -1,5 +1,6 @@
 .idea
 lib
 test
+media
 node_modules
 trilogy-*.tgz
