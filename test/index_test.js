@@ -30,9 +30,7 @@ describe('trilogy', () => {
   })
 
   it('throws if no file path is provided', () => {
-    (() => new Trilogy()).should.throw(
-      'Trilogy constructor must be provided a file path.'
-    )
+    (() => new Trilogy()).should.throw(Error)
   })
 
   it('successfully creates a new file', () => {
