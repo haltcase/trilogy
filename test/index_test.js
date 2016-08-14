@@ -30,9 +30,7 @@ describe('trilogy', () => {
   })
 
   it('throws if no file path is provided', () => {
-    (() => new Trilogy()).should.throw(
-      'Trilogy constructor must be provided a file path.'
-    )
+    (() => new Trilogy()).should.throw(Error)
   })
 
   it('successfully creates a new file', () => {
@@ -41,7 +39,7 @@ describe('trilogy', () => {
   })
 
   it('successfully reads in an existing file', () => {
-    return store.getValue('data', 'price', {
+    return store.getValue('data.price', {
       item: 'freedom'
     }).should.eventually.equal('not free')
   })
@@ -105,7 +103,7 @@ describe('trilogy', () => {
       }))
 
       return Promise.all(inserts.map(insert => {
-        return db.select(insert.name, '*', ...insert.value)
+        return db.select(insert.name, insert.value)
                  .should.eventually.deep.equal([insert.value])
       }))
     })
@@ -140,15 +138,15 @@ describe('trilogy', () => {
 
   describe('#getValue()', () => {
     it('retrieves a single column\'s value', () => {
-      return db.getValue('one', 'second', { first: 'fee' })
+      return db.getValue('one.second', { first: 'fee' })
                .should.eventually.become('blah')
     })
 
     it('returns undefined if key does not exist', () => {
       return Promise.all([
-        db.getValue('one', 'second', { first: 'worst' })
+        db.getValue('one.second', { first: 'worst' })
           .should.eventually.become(undefined),
-        db.getValue('one', 'third', { first: 'fee' })
+        db.getValue('one.third', { first: 'fee' })
           .should.eventually.become(undefined)
       ])
     })
@@ -161,7 +159,7 @@ describe('trilogy', () => {
 
     it('changes the value of an existing key', async () => {
       await store.update('data', { price: 'free' }, { item: 'freedom' })
-      return store.getValue('data', 'price', { item: 'freedom' })
+      return store.getValue('data.price', { item: 'freedom' })
                .should.eventually.equal('free')
     })
   })
@@ -179,23 +177,19 @@ describe('trilogy', () => {
 
     it('increments a specific number value by 1', () => {
       return Promise.all(people.map(async ({ name, age }, i) => {
-        // maybe implement this syntax:
-        // await db.increment({ in: 'people.age', where: { name } })
-        // await db.increment({ in: 'people.age', by: 7, where: { name } })
-
         people[i].age += 1
-        await db.increment('people', 'age', { name })
+        await db.increment('people.age', { name })
 
-        return db.getValue('people', 'age', { name })
+        return db.getValue('people.age', { name })
                  .should.eventually.equal(age + 1)
       }))
     })
 
     it('increments a specific number value by specified amount', () => {
       return Promise.all(people.map(async ({ name, age }) => {
-        await db.increment('people', 'age', 7, { name })
+        await db.increment('people.age', 7, { name })
 
-        return db.getValue('people', 'age', { name })
+        return db.getValue('people.age', { name })
                  .should.eventually.equal(age + 7)
       }))
     })
@@ -217,7 +211,7 @@ describe('trilogy', () => {
         people[i].age -= 1
         await db.decrement('people.age', { name })
 
-        return db.getValue('people', 'age', { name })
+        return db.getValue('people.age', { name })
                  .should.eventually.equal(age - 1)
       }))
     })
@@ -225,35 +219,29 @@ describe('trilogy', () => {
     it('decrements a specific number value by a specified amount', async () => {
       return Promise.all(people.map(async ({ name, age }, i) => {
         people[i].age -= 4
-        await db.decrement({ at: 'people.age', by: 4, where: { name } })
+        await db.decrement('people.age', 4, { name })
 
-        return db.getValue('people', 'age', { name })
+        return db.getValue('people.age', { name })
                  .should.eventually.equal(age - 4)
       }))
     })
 
     it(`doesn't allow negative values when allowNegative is false`, async () => {
-      await db.decrement({
-        at: 'people.age',
-        by: 200,
-        where: {
-          name: 'Benjamin Button'
-        }
+      await db.decrement('people.age', 200, {
+        name: 'Benjamin Button'
       })
 
-      return db.getValue('people', 'age', {
+      return db.getValue('people.age', {
         name: 'Benjamin Button'
       }).should.eventually.equal(0)
     })
 
     it('allows negative values when allowNegative is true', async () => {
-      await db.decrement({
-        at: 'people.age',
-        where: { name: 'Benjamin Button' },
-        allowNegative: true
-      })
+      await db.decrement('people.age', {
+        name: 'Benjamin Button'
+      }, true)
 
-      return db.getValue('people', 'age', {
+      return db.getValue('people.age', {
         name: 'Benjamin Button'
       }).should.eventually.equal(-1)
     })
@@ -266,7 +254,7 @@ describe('trilogy', () => {
     it('removes a row from the specified table', async () => {
       somePeople.forEach(async person => {
         await db.del('people', { name: person })
-        const res = await db.first('people', '*', { name: person })
+        const res = await db.first('people', { name: person })
         res.should.not.exist()
       })
     })
@@ -275,7 +263,7 @@ describe('trilogy', () => {
       await db.del('people')
 
       morePeople.forEach(async person => {
-        const res = await db.first('people', '*', { name: person })
+        const res = await db.first('people', { name: person })
         res.should.not.exist()
       })
     })
@@ -297,7 +285,7 @@ describe('trilogy', () => {
     })
 
     it('returns the number of matching rows', () => {
-      return db.count('people', '*', ['age', '<', '20'])
+      return db.count('people', ['age', '<', '20'])
                .should.eventually.equal(2)
     })
   })

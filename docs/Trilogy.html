@@ -65,7 +65,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line49">line 49</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line50">line 50</a>
     </li></ul></dd>
     
 
@@ -373,7 +373,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="count"><span class="type-signature"></span>count<span class="signature">(tableName, column<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;number>}</span></h4>
+    <h4 class="name" id="count"><span class="type-signature"></span>count<span class="signature">(table, column<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;number>}</span></h4>
 
     
 
@@ -385,7 +385,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line603">line 603</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line759">line 759</a>
     </li></ul></dd>
     
 
@@ -425,7 +425,7 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Select the first row returned by the query</p>
+    <p>Return the number of rows, matching a criteria if specified.</p>
 </div>
 
 
@@ -434,6 +434,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>// given we have this data in our 'people' table:// |  name   |   age   |// |  Bob    |   18    |// |  Dale   |   25    |// |  Harry  |   32    |db.count('people')// -> 3// given we have tables `people`, `places`, `things`, &amp; `ideas`// thanks to function overloading we can do this// to count number of tables in the database:db.count()// -> 4</code></pre>
 
 
 
@@ -467,7 +472,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -534,7 +539,7 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to selecting all columns.</p></td>
         </tr>
 
     
@@ -574,10 +579,12 @@ it if it does.</p>
             
                 <td class="default">
                 
+                    <code>['1','=','1']</code>
+                
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -616,7 +623,76 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>distinct</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Counts only unique values if <code>true</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -677,7 +753,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line163">line 163</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line207">line 207</a>
     </li></ul></dd>
     
 
@@ -717,7 +793,16 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Add a table to the database</p>
+    <p>Add a table to the database. The <code>columns</code> argument must be an array of
+either strings or Objects, which can be mixed and matched. String values
+default to a column of the SQLite 'text' type. If another type is needed
+or any other attributes, use an Object.</p>
+<p>All the properties of the supplied column Object are passed to knex. Some
+attributes require no values, such as <code>primary</code> or <code>nullable</code>. In these
+cases, their presence in the object is enough to add that flag.</p>
+<p>If the column property is not present in knex's methods it will be ignored.
+See <a href="http://knexjs.org/#Schema-Building">knex's documentation</a>
+on Schema Building for the available attributes when creating column tables.</p>
 </div>
 
 
@@ -726,6 +811,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>// `columns` should be an Array// each item in the Array should be either a string or an Object// a string in the Array defaults to a text column in the tabledb.createTable('people', ['email'])// use an object to specify other attributesdb.createTable('people', [  { name: 'age', type: 'integer' }])// you can mix and matchdb.createTable('people', [  'name',  { name: 'age', type: 'integer' },  'email',  // note that the value of `primary` doesn't make a difference  // this would still be a primary key column  { name: '', primary: false }])</code></pre>
 
 
 
@@ -746,6 +836,8 @@ it if it does.</p>
         <th>Attributes</th>
         
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -780,6 +872,10 @@ it if it does.</p>
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
             <td class="description last"></td>
         </tr>
@@ -810,6 +906,10 @@ it if it does.</p>
                 </td>
             
 
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"></td>
@@ -844,8 +944,76 @@ it if it does.</p>
             
 
             
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
 
-            <td class="description last"></td>
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>compositeKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>An array of column names as strings. A composite primary key will be
+ created on all of these columns.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -890,7 +1058,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="decrement"><span class="type-signature"></span>decrement<span class="signature">(params, &hellip;args)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="decrement"><span class="type-signature"></span>decrement<span class="signature">(table, column<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -902,7 +1070,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line496">line 496</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line652">line 652</a>
     </li></ul></dd>
     
 
@@ -942,188 +1110,12 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Decrement a value at <code>column</code> by a specified <code>amount</code></p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Example</h5>
-    
-    <pre class="prettyprint"><code>db.decrement({  at: 'people',  in: 'age',  by: 2,  allowNegative: false,  where: { name: 'Me' }})db.decrement({ at: 'people.age', by: 4, where: { name: 'Me' })</code></pre>
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>params</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>args</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                    &lt;repeatable><br>
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="del"><span class="type-signature"></span>del<span class="signature">(tableName, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;number>}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line575">line 575</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Delete rows from a table</p>
+    <p>Decrement a value at <code>column</code> by a specified <code>amount</code>.
+Allows function overloading, ie. <code>table</code> is the only
+required argument. In that case, column must be provided
+as part of <code>table</code> using dot- or bracket-notation. This
+allows for a short-and-sweet syntax in the case you only
+want to decrement by 1.</p>
 </div>
 
 
@@ -1153,6 +1145,8 @@ it if it does.</p>
         
 
         
+        <th>Default</th>
+        
 
         <th class="last">Description</th>
     </tr>
@@ -1163,7 +1157,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -1185,6 +1179,273 @@ it if it does.</p>
                 </td>
             
 
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>column</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>If this argument is not explicitly provided, it must be
+ included as part of <code>tableName</code> using either dot- or
+ bracket-notation.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>where</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Array</span>
+|
+
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>['1', '=', '1']</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>db.decrement('people', 'age', 1, { name: 'Bob' })</p>
+<p>// we can make that much sweeter :)
+db.decrement('people.age', { name: 'Bob' })</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="del"><span class="type-signature"></span>del<span class="signature">(table, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;number>}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line712">line 712</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Delete rows from a table. Allows deletion of all records in
+a table by passing only a table name.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>// delete all records from 'people'db.del('people')// delete only where age is under 21db.del('people', ['age', '&lt;', '21'])</code></pre>
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>table</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"></td>
@@ -1225,8 +1486,14 @@ it if it does.</p>
             
 
             
+                <td class="default">
+                
+                    <code>['1','=','1']</code>
+                
+                </td>
+            
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -1275,7 +1542,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(query)</span><span class="type-signature"> &rarr; {Promise.&lt;(Array|Error)>}</span></h4>
+    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(query)</span><span class="type-signature"> &rarr; {Promise.&lt;Array>}</span></h4>
 
     
 
@@ -1287,7 +1554,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line138">line 138</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line144">line 144</a>
     </li></ul></dd>
     
 
@@ -1321,7 +1588,7 @@ it if it does.</p>
     <dt class="tag-see">See:</dt>
     <dd class="tag-see">
         <ul>
-            <li>run if you don't care about a return value</li>
+            <li><a href="Trilogy.html#run">Trilogy#run</a> if you don't care about a return value</li>
         </ul>
     </dd>
     
@@ -1334,7 +1601,7 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Execute a query on the database and return its results</p>
+    <p>Execute a query on the database and return its results.</p>
 </div>
 
 
@@ -1391,7 +1658,8 @@ it if it does.</p>
 
             
 
-            <td class="description last"><p>any SQLite query string</p></td>
+            <td class="description last"><p>Any SQLite query string. If an Object is provided, a <code>toString</code>
+ conversion will be attempted in the case it's a knex query object.</p></td>
         </tr>
 
     
@@ -1415,7 +1683,7 @@ it if it does.</p>
 
         
 <div class="param-desc">
-    <p>an <code>Array</code> containing query results, or an <code>Error</code> if one occurred</p>
+    <p>an <code>Array</code> containing query result objects</p>
 </div>
 
 
@@ -1426,7 +1694,7 @@ it if it does.</p>
     </dt>
     <dd>
         
-<span class="param-type">Promise.&lt;(Array|Error)></span>
+<span class="param-type">Promise.&lt;Array></span>
 
 
     </dd>
@@ -1440,7 +1708,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="first"><span class="type-signature"></span>first<span class="signature">(tableName, columns<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Object>}</span></h4>
+    <h4 class="name" id="first"><span class="type-signature"></span>first<span class="signature">(table, columns<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Object>}</span></h4>
 
     
 
@@ -1452,7 +1720,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line327">line 327</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line391">line 391</a>
     </li></ul></dd>
     
 
@@ -1492,7 +1760,9 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Select the first row returned by the query</p>
+    <p>Return the first row selected by the query. Allows overloading
+of arguments, ie. <code>table</code> is the only required argument. In this
+case, <code>columns</code> defaults to selecting all columns.</p>
 </div>
 
 
@@ -1501,6 +1771,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>// select the first record in 'people'db.first('people')// select a random record from 'people'// the second argument is a where clause but is always true for all recordsdb.first('people', ['1', '=', '1'], { random: true })// NOTE:// even with overloading, in this case `where` needs to be provided if we// have an `options` object. this is because `where` could also be an object// so the function has no way to know which one you meant to provide.</code></pre>
 
 
 
@@ -1534,7 +1809,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -1604,7 +1879,7 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to selecting all columns.</p></td>
         </tr>
 
     
@@ -1644,10 +1919,12 @@ it if it does.</p>
             
                 <td class="default">
                 
+                    <code>['1', '=', '1']</code>
+                
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -1686,7 +1963,76 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>random</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Pass <code>true</code> to return a random record.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -1743,7 +2089,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line680">line 680</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line877">line 877</a>
     </li></ul></dd>
     
 
@@ -1777,7 +2123,7 @@ it if it does.</p>
     <dt class="tag-see">See:</dt>
     <dd class="tag-see">
         <ul>
-            <li>raw to run queries built with this</li>
+            <li><a href="Trilogy.html#raw">Trilogy#raw</a> to run queries built with this</li>
         </ul>
     </dd>
     
@@ -1852,7 +2198,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line665">line 665</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line862">line 862</a>
     </li></ul></dd>
     
 
@@ -1886,7 +2232,7 @@ it if it does.</p>
     <dt class="tag-see">See:</dt>
     <dd class="tag-see">
         <ul>
-            <li>raw to run queries built with this</li>
+            <li><a href="Trilogy.html#raw">Trilogy#raw</a> to run queries built with this</li>
         </ul>
     </dd>
     
@@ -1949,7 +2295,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="getValue"><span class="type-signature"></span>getValue<span class="signature">(tableName, column, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;*>}</span></h4>
+    <h4 class="name" id="getValue"><span class="type-signature"></span>getValue<span class="signature">(table, column<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;*>}</span></h4>
 
     
 
@@ -1961,7 +2307,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line372">line 372</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line466">line 466</a>
     </li></ul></dd>
     
 
@@ -2001,7 +2347,10 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Retrieve the value at a specific row in a specific column</p>
+    <p>Retrieve the value at a specific row in a specific column.
+Allows function overloading, ie. <code>table</code> is the only required
+argument. In this case, <code>column</code> must be provided as dot- or
+bracket-notation syntax of <code>table.column</code> or <code>table[column]</code>.</p>
 </div>
 
 
@@ -2010,6 +2359,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>db.getValue('people', 'age', { name: 'Bob' })// dot- or bracket-notation of table and columndb.getValue('people.age', { name: 'Bob' })db.getValue('people[age]', { name: 'Bob' })</code></pre>
 
 
 
@@ -2031,6 +2385,8 @@ it if it does.</p>
         
 
         
+        <th>Default</th>
+        
 
         <th class="last">Description</th>
     </tr>
@@ -2041,7 +2397,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -2063,6 +2419,10 @@ it if it does.</p>
                 </td>
             
 
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"></td>
@@ -2087,6 +2447,8 @@ it if it does.</p>
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -2095,8 +2457,14 @@ it if it does.</p>
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
-            <td class="description last"></td>
+            <td class="description last"><p>If this argument is not explicitly provided, it must be
+ included as part of <code>tableName</code> using either dot- or
+ bracket-notation.</p></td>
         </tr>
 
     
@@ -2134,8 +2502,14 @@ it if it does.</p>
             
 
             
+                <td class="default">
+                
+                    <code>['1', '=', '1']</code>
+                
+                </td>
+            
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -2192,7 +2566,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line231">line 231</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line260">line 260</a>
     </li></ul></dd>
     
 
@@ -2331,7 +2705,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="increment"><span class="type-signature"></span>increment<span class="signature">(tableName, column, amount<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id="increment"><span class="type-signature"></span>increment<span class="signature">(table, column<span class="signature-attributes">opt</span>, amount<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -2343,7 +2717,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line450">line 450</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line591">line 591</a>
     </li></ul></dd>
     
 
@@ -2383,7 +2757,12 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Increment a value at <code>column</code> by a specified <code>amount</code></p>
+    <p>Increment a value at <code>column</code> by a specified <code>amount</code>.
+Allows function overloading, ie. <code>table</code> is the only
+required argument. In that case, column must be provided
+as part of <code>table</code> using dot- or bracket-notation. This
+allows for a short-and-sweet syntax in the case you only
+want to increment by 1.</p>
 </div>
 
 
@@ -2392,6 +2771,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>db.increment('people', 'age', 1, { name: 'Bob' })// we can make that much sweeter :)db.increment('people.age', { name: 'Bob' })</code></pre>
 
 
 
@@ -2425,7 +2809,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -2475,6 +2859,8 @@ it if it does.</p>
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -2488,7 +2874,9 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>If this argument is not explicitly provided, it must be
+ included as part of <code>tableName</code> using either dot- or
+ bracket-notation.</p></td>
         </tr>
 
     
@@ -2567,10 +2955,12 @@ it if it does.</p>
             
                 <td class="default">
                 
+                    <code>['1', '=', '1']</code>
+                
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -2627,7 +3017,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line250">line 250</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line296">line 296</a>
     </li></ul></dd>
     
 
@@ -2667,7 +3057,7 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Insert values into a table in the database</p>
+    <p>Insert values into a table in the database.</p>
 </div>
 
 
@@ -2676,6 +3066,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>db.insert('people', {  name: 'Bob',  age: 17})// insert or replacedb.insert('people', {  name: 'Bob',  age: 17}, { conflict: 'replace' })</code></pre>
 
 
 
@@ -2811,7 +3206,69 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>conflict</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>An SQLite conflict type, one of: <code>fail</code>, <code>abort</code>, <code>ignore</code>,
+ <code>replace</code>, <code>rollback</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -2872,7 +3329,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line650">line 650</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line847">line 847</a>
     </li></ul></dd>
     
 
@@ -2912,7 +3369,12 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Execute arbitrary SQLite queries</p>
+    <p>Execute arbitrary SQLite queries. You can either write your
+own queries as you would with typical SQLite, or you can build
+them with knex and use the knex <code>toString</code> method before passing
+it here.</p>
+<p>Pass <code>true</code> as the second argument to return the results, otherwise
+the query will be assumed to be execution only.</p>
 </div>
 
 
@@ -2966,7 +3428,7 @@ it if it does.</p>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Any arbitrary SQLite query string</p></td>
         </tr>
 
     
@@ -2989,7 +3451,7 @@ it if it does.</p>
 
             
 
-            <td class="description last"><p>whether to return the result</p></td>
+            <td class="description last"><p>Pass <code>true</code> to return the results of the query</p></td>
         </tr>
 
     
@@ -3034,7 +3496,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="run"><span class="type-signature"></span>run<span class="signature">(query)</span><span class="type-signature"> &rarr; {Promise.&lt;(boolean|Error)>}</span></h4>
+    <h4 class="name" id="run"><span class="type-signature"></span>run<span class="signature">(query)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -3046,7 +3508,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line111">line 111</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line115">line 115</a>
     </li></ul></dd>
     
 
@@ -3080,7 +3542,7 @@ it if it does.</p>
     <dt class="tag-see">See:</dt>
     <dd class="tag-see">
         <ul>
-            <li>exec if you need a return value</li>
+            <li><a href="Trilogy.html#exec">Trilogy#exec</a> if you need a return value</li>
         </ul>
     </dd>
     
@@ -3093,7 +3555,7 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Execute a query on the database, ignoring its results</p>
+    <p>Execute a query on the database, ignoring its results.</p>
 </div>
 
 
@@ -3150,7 +3612,8 @@ it if it does.</p>
 
             
 
-            <td class="description last"><p>any SQLite query string</p></td>
+            <td class="description last"><p>Any SQLite query string. If an Object is provided, a <code>toString</code>
+ conversion will be attempted in the case it's a knex query object.</p></td>
         </tr>
 
     
@@ -3173,10 +3636,6 @@ it if it does.</p>
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    <p><code>true</code> if the query ran successfully, else an error</p>
-</div>
-
 
 
 <dl class="param-type">
@@ -3185,7 +3644,7 @@ it if it does.</p>
     </dt>
     <dd>
         
-<span class="param-type">Promise.&lt;(boolean|Error)></span>
+<span class="param-type">Promise</span>
 
 
     </dd>
@@ -3199,7 +3658,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="select"><span class="type-signature"></span>select<span class="signature">(tableName, columns<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Array>}</span></h4>
+    <h4 class="name" id="select"><span class="type-signature"></span>select<span class="signature">(table, columns<span class="signature-attributes">opt</span>, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Array>}</span></h4>
 
     
 
@@ -3211,7 +3670,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line279">line 279</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line317">line 317</a>
     </li></ul></dd>
     
 
@@ -3251,7 +3710,9 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Execute a select query on the database</p>
+    <p>Execute a select query on the database. Allows overloading of arguments,
+ie. <code>table</code> is the only required argument. In this case, <code>columns</code>
+defaults to selecting all columns.</p>
 </div>
 
 
@@ -3260,6 +3721,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>// select all records in the 'people' tabledb.select('people')// select just the 'age' and 'favColor' columns where name is 'Bob'db.select('people', ['age', 'favColor'], { name: 'Bob' })// select just 'name' where age is at least 18db.select('people', 'age', ['age', '>=', '18'])</code></pre>
 
 
 
@@ -3293,7 +3759,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -3363,7 +3829,7 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to selecting all columns.</p></td>
         </tr>
 
     
@@ -3403,10 +3869,12 @@ it if it does.</p>
             
                 <td class="default">
                 
+                    <code>['1', '=', '1']</code>
+                
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -3445,7 +3913,76 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>random</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Pass <code>true</code> to return records in random order.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -3490,7 +4027,7 @@ it if it does.</p>
 
     
 
-    <h4 class="name" id="update"><span class="type-signature"></span>update<span class="signature">(tableName, values, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Number>}</span></h4>
+    <h4 class="name" id="update"><span class="type-signature"></span>update<span class="signature">(table, values, where<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;number>}</span></h4>
 
     
 
@@ -3502,7 +4039,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line411">line 411</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line531">line 531</a>
     </li></ul></dd>
     
 
@@ -3542,7 +4079,7 @@ it if it does.</p>
 
 
 <div class="description">
-    <p>Update rows in the database</p>
+    <p>Update rows in the database.</p>
 </div>
 
 
@@ -3551,6 +4088,11 @@ it if it does.</p>
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>db.update('people', { age: 18 }, { name: 'Bob' })</code></pre>
 
 
 
@@ -3584,7 +4126,7 @@ it if it does.</p>
 
         <tr>
             
-                <td class="name"><code>tableName</code></td>
+                <td class="name"><code>table</code></td>
             
 
             <td class="type">
@@ -3650,7 +4192,7 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Must either be an object or a key / value array (length === 2)</p></td>
         </tr>
 
     
@@ -3690,10 +4232,12 @@ it if it does.</p>
             
                 <td class="default">
                 
+                    <code>['1', '=', '1']</code>
+                
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Defaults to no restriction on selection.</p></td>
         </tr>
 
     
@@ -3732,7 +4276,69 @@ it if it does.</p>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>conflict</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>An SQLite conflict type, one of: <code>fail</code>, <code>abort</code>, <code>ignore</code>,
+ <code>replace</code>, <code>rollback</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -3767,7 +4373,7 @@ it if it does.</p>
     </dt>
     <dd>
         
-<span class="param-type">Promise.&lt;Number></span>
+<span class="param-type">Promise.&lt;number></span>
 
 
     </dd>
@@ -3794,7 +4400,7 @@ it if it does.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sun Aug 07 2016 23:51:08 GMT-0500 (Central Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sun Aug 14 2016 17:25:24 GMT-0500 (Central Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
