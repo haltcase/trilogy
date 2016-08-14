@@ -18,8 +18,6 @@ declare module 'sql.js' {
   declare class Database {}
 }
 
-declare type WhereClause = Object | Array<string> | Function;
-
 declare type ClassOptions = {
   verbose?: Function;
   errorListener?: Function | null;
