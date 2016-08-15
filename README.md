@@ -5,8 +5,8 @@
 > ***trilogy*** is SQLite - but 100% pure JavaScript. Its core is built on two modules: [SQL.js][sqljs] for accessing and writing to database files and [knex][knex] for building its queries.
 
 [![npm version](https://img.shields.io/npm/v/trilogy.svg?maxAge=2592000?style=flat-square)](https://www.npmjs.com/package/trilogy)
+[![license](https://img.shields.io/npm/l/trilogy.svg?style=flat-square)](LICENSE)
 [![travis status](https://img.shields.io/travis/citycide/trilogy.svg?style=flat-square)](https://travis-ci.org/citycide/trilogy)
-[![npm license](https://img.shields.io/npm/l/trilogy.svg?maxAge=2592000?style=flat-square)](LICENSE)
 [![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](http://standardjs.com/)
 
 [sqljs]: https://github.com/kripken/sql.js
