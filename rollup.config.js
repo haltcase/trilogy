@@ -22,7 +22,6 @@ export default {
         'transform-flow-strip-types',
         'transform-runtime'
       ],
-      externalHelpers: false,
       runtimeHelpers: true,
       exclude: 'node_modules/**'
     })
