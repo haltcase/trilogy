@@ -9,6 +9,6 @@
 
 [libs]
 flow
-node_modules/iflow-lodash/index.js.flow
+node_modules/arify/dist/arify.js.flow
 
 [options]

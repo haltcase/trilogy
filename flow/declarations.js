@@ -1,3 +1,7 @@
+declare module 'native-or-lie' {
+  declare var exports: typeof Promise;
+}
+
 declare module 'fs-jetpack' {
   declare function exists (path: string): boolean;
   declare function file (path: string, criteria: {
