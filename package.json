@@ -5,9 +5,9 @@
   "main": "dist/trilogy.js",
   "jsnext:main": "dist/trilogy.mjs",
   "scripts": {
-    "prebuild": "eslint lib test",
     "build": "rollup -c && npm run docs",
     "watch": "rollup -c -w",
+    "prebuild": "eslint src test",
     "pretest": "npm run build",
     "test": "mocha",
     "flow": "flow check",
@@ -36,7 +36,7 @@
     "url": "https://github.com/citycide/trilogy/issues"
   },
   "files": [
-    "lib",
+    "src",
     "dist",
     "flow"
   ],

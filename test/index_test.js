@@ -8,8 +8,8 @@ import asPromised from 'chai-as-promised'
 chai.should()
 chai.use(asPromised)
 
-const filePath = resolve(__dirname, '..', 'fixtures', 'test.db')
-const existing = resolve(__dirname, '..', 'fixtures', 'file.db')
+const filePath = resolve(__dirname, 'test.db')
+const existing = resolve(__dirname, 'file.db')
 
 describe('trilogy', () => {
   let db = null

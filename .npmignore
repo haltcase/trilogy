@@ -1,5 +1,5 @@
 .idea
-lib
+src
 test
 media
 node_modules

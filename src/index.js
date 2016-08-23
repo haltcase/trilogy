@@ -1,13 +1,15 @@
 /* @flow */
 
+import Promise from 'native-or-lie'
 import jetpack from 'fs-jetpack'
 import arify from 'arify'
-import Promise from 'bluebird'
 import knex from 'knex'
 import SQL from 'sql.js'
-import _ from 'lodash'
+import map from 'lodash.map'
+import isPlainObject from 'is-plain-obj'
 
 import constants from './constants'
+import { isFunction, isString } from './util'
 
 export default class Trilogy {
   fileName: string;
@@ -67,10 +69,10 @@ export default class Trilogy {
     Object.assign(this, {
       fileName,
       db: null,
-      verbose: _.isFunction(opts.verbose)
+      verbose: isFunction(opts.verbose)
         ? opts.verbose
         : () => {},
-      errorListener: _.isFunction(opts.errorListener)
+      errorListener: isFunction(opts.errorListener)
         ? opts.errorListener
         : null
     })
@@ -91,9 +93,10 @@ export default class Trilogy {
       this._write()
     }
 
-    this.knex = knex({ client: 'sqlite', useNullAsDefault: true })
+    const kn = knex({ client: 'sqlite', useNullAsDefault: true })
 
-    this.sb = this.knex.schema
+    this.knex = kn
+    this.sb = kn.schema
   }
 
   /**
@@ -127,15 +130,15 @@ export default class Trilogy {
    *
    * @see {@link Trilogy#exec} if you need a return value
    */
-  async run (query: Object | string): Promise<void> {
+  async run (query: Object | string): Promise<void|Error> {
     if (!this.db) {
       return this._errorHandler(constants.ERR_NO_DATABASE)
     }
 
-    if (!_.isString(query)) query = query.toString()
+    if (!isString(query)) query = query.toString()
     this.verbose(query)
 
-    return new Promise((resolve: Function, reject: Function): Promise => {
+    return new Promise((resolve, reject) => {
       try {
         this.db.run(query)
         this._write()
@@ -156,15 +159,15 @@ export default class Trilogy {
    *
    * @see {@link Trilogy#run} if you don't care about a return value
    */
-  async exec (query: Object | string): Promise<Array<Object>> {
+  async exec (query: Object | string): Promise<Array<Object>|Error> {
     if (!this.db) {
       return this._errorHandler(constants.ERR_NO_DATABASE)
     }
 
-    if (!_.isString(query)) query = query.toString()
+    if (!isString(query)) query = query.toString()
     this.verbose(query)
 
-    return new Promise((resolve: Function, reject: Function): Promise => {
+    return new Promise((resolve, reject) => {
       try {
         const val = this.db.exec(query)
         return resolve(val)
@@ -223,19 +226,19 @@ export default class Trilogy {
     tableName: string,
     columns: Array<Object>,
     options: Object = {}
-  ): Promise<void> {
+  ): Promise<void|Error> {
     if (!Array.isArray(columns) || !columns.length) {
       return this._errorHandler('#createTable', `'columns' must be an array`)
     }
 
     const query = this.sb.createTableIfNotExists(tableName, table => {
-      _.map(columns, column => {
-        if (_.isPlainObject(column)) {
+      map(columns, column => {
+        if (isPlainObject(column)) {
           if (!column.name) return
           if (!column.type || !(column.type in table)) column.type = 'text'
           let partial = table[column.type](column.name)
 
-          _.map(column, (attr, prop) => {
+          map(column, (attr, prop: string) => {
             // name & type are handled above
             if (prop === 'name' || prop === 'type') return
             if (!(prop in partial)) return
@@ -253,7 +256,7 @@ export default class Trilogy {
                 partial = partial[prop](attr)
             }
           })
-        } else if (_.isString(column)) {
+        } else if (isString(column)) {
           table.text(column)
         }
       })
@@ -278,7 +281,7 @@ export default class Trilogy {
    */
   async hasTable (
     tableName: string
-  ): Promise<boolean> {
+  ): Promise<boolean|Error> {
     try {
       const res = await this.count('sqlite_master', 'name', {
         name: tableName
@@ -318,8 +321,8 @@ export default class Trilogy {
     tableName: string,
     values: Object,
     options?: { conflict?: string } = {}
-  ): Promise<number> {
-    if (!tableName || !_.isString(tableName)) {
+  ): Promise<number|Error> {
+    if (!tableName || !isString(tableName)) {
       return this._errorHandler('#insert', `'tableName' must be a string`)
     }
 
@@ -373,12 +376,12 @@ export default class Trilogy {
   /**
    * @private
    */
-  async select (...params: Array<mixed>): Promise<Array<Object>> {
+  async select (...params: Array<mixed>): Promise<Array<Object>|Error> {
     return (arify(v => {
       v.str('table')
        .obj('options', { random: false })
        .add('columns', {
-         test: (value: mixed): boolean => _.isString(value) || Array.isArray(value),
+         test: (value: mixed): boolean => isString(value) || Array.isArray(value),
          description: 'a string or an array of strings',
          defaultValue: ['*']
        })
@@ -453,12 +456,12 @@ export default class Trilogy {
   /**
    * @private
    */
-  async first (...params: Array<mixed>): Promise<Object> {
+  async first (...params: Array<mixed>): Promise<Object|Error> {
     return (arify(v => {
       v.str('table')
        .obj('options', { random: false })
        .add('columns', {
-         test: (value: mixed): boolean => Array.isArray(value) || _.isString(value),
+         test: (value: mixed): boolean => Array.isArray(value) || isString(value),
          description: 'a string or an array of strings',
          defaultValue: ['*']
        })
@@ -525,7 +528,7 @@ export default class Trilogy {
   /**
    * @private
    */
-  async getValue (...params: Array<mixed>): Promise<mixed> {
+  async getValue (...params: Array<mixed>): Promise<mixed|Error> {
     return (arify(v => {
       v.str('table')
        .str('column')
@@ -587,16 +590,17 @@ export default class Trilogy {
   /**
    * @private
    */
-  async update (...params: Array<mixed>): Promise<number> {
+  async update (...params: Array<mixed>): Promise<number|Error> {
     return (arify(v => {
       v.str('table')
        .obj('options', {})
        .add('values', {
          test: (value: mixed): boolean => {
            return (
-             _.isPlainObject(value) || (Array.isArray(value) && value.length === 2)
+             isPlainObject(value) || (Array.isArray(value) && value.length === 2)
            )
-         }
+         },
+         description: 'either an Object or an Array with a length of 2'
        })
        .add('where', {
          test: (value: mixed): boolean => Trilogy._isValidWhere(value),
@@ -607,7 +611,7 @@ export default class Trilogy {
       v.form('table', 'values', '?where', '?options')
     }, async (args: Object): * => {
       const partial = this.knex.table(args.table)
-      const update = _.isPlainObject(args.values)
+      const update = isPlainObject(args.values)
         ? partial.update(args.values)
         : partial.update(...args.values)
 
@@ -661,7 +665,7 @@ export default class Trilogy {
   /**
    * @private
    */
-  async increment (...params: Array<mixed>): Promise<void> {
+  async increment (...params: Array<mixed>): Promise<void|Error> {
     return (arify(v => {
       v.str('table')
        .str('column')
@@ -725,7 +729,7 @@ export default class Trilogy {
   /**
    * @private
    */
-  async decrement (...params: Array<mixed>): Promise<void> {
+  async decrement (...params: Array<mixed>): Promise<void|Error> {
     return (arify(v => {
       v.str('table')
        .str('column')
@@ -786,7 +790,7 @@ export default class Trilogy {
   /**
    * @private
    */
-  async del (...params: Array<mixed>): Promise<number> {
+  async del (...params: Array<mixed>): Promise<number|Error> {
     return (arify(v => {
       v.str('table')
        .add('where', {
@@ -848,7 +852,7 @@ export default class Trilogy {
   /**
    * @private
    */
-  count (...params: Array<mixed>): Promise<number> {
+  count (...params: Array<mixed>): Promise<number|Error> {
     return (arify(v => {
       v.str('table', 'sqlite_master')
        .str('column', '*')
@@ -874,7 +878,7 @@ export default class Trilogy {
         const statement = this.db.prepare(query)
         const res = statement.getAsObject({})
 
-        if (_.isPlainObject(res) && 'count' in res) {
+        if (isPlainObject(res) && 'count' in res) {
           return Promise.resolve(res.count)
         } else {
           return Promise.resolve(0)
@@ -903,7 +907,7 @@ export default class Trilogy {
   async raw (
     query: string,
     ret?: boolean = false
-  ): Promise<Object | void> {
+  ): Promise<Object|void|Error> {
     try {
       const done = ret ? await this.exec(query) : await this.run(query)
       return Promise.resolve(ret ? done : undefined)
@@ -989,14 +993,14 @@ export default class Trilogy {
    * @private
    */
   static _isValidWhere (where: any): boolean {
-    if (_.isPlainObject(where)) return true
+    if (isPlainObject(where)) return true
 
     if (Array.isArray(where)) {
       const len = where.length
       return len === 2 || len === 3
     }
 
-    return _.isFunction(where)
+    return isFunction(where)
   }
 
   /**
@@ -1012,7 +1016,7 @@ export default class Trilogy {
     columns: string | Array<string>
   ): Array<string> {
     if (Array.isArray(columns)) return columns
-    if (_.isString(columns)) return [columns]
+    if (isString(columns)) return [columns]
     return ['*']
   }
 
@@ -1027,10 +1031,10 @@ export default class Trilogy {
    * @static
    * @private
    */
-  static _sanitizeWhere (where: Object | Array<string> | Function, partial: Object): Object {
+  static _sanitizeWhere (where: Function|Array<string>, partial: Object): Object {
     if (Array.isArray(where)) {
       return partial.where(...where)
-    } else if (_.isFunction(where)) {
+    } else if (isFunction(where)) {
       return partial.where(where.bind(partial))
     } else {
       // it's an object
@@ -1053,7 +1057,7 @@ export default class Trilogy {
   ): Object {
     if (Array.isArray(order) && order.length === 2) {
       return partial.orderBy(...order)
-    } else if (_.isString(order)) {
+    } else if (isString(order)) {
       return partial.orderBy(order)
     } else {
       return partial
@@ -1112,14 +1116,15 @@ export default class Trilogy {
   _errorHandler (
     err: string | Error,
     msg?: string = constants.ERR_UNKNOWN
-  ): Promise<?Error> {
-    let e
+  ): Promise<Error> {
+    let e = new Error()
+
     if (err instanceof Error) {
       e = err
-    } else if (_.isString(err)) {
-      e = (arguments.length === 1)
-        ? new Error(`Trilogy :: ${err}`)
-        : new Error(`Trilogy${err} :: ${msg}`)
+    } else if (isString(err)) {
+      e.message = (arguments.length === 1)
+        ? `Trilogy :: ${err}`
+        : `Trilogy${err} :: ${msg}`
     }
 
     e.name = 'TrilogyError'

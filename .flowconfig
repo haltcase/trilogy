@@ -1,12 +1,11 @@
 [ignore]
 .*/node_modules/.*
-.*/fixtures/.*
 .*/docs/.*
 .*/test/.*
 .*/dist/.*
 
 [include]
-.*/lib/.*
+.*/src/.*
 
 [libs]
 flow

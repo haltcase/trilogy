@@ -4,7 +4,7 @@
   },
   "source": {
     "include": [
-      "lib",
+      "src",
       "README.md"
     ],
     "includePattern": ".js$"

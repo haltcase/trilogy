@@ -4,7 +4,8 @@ const pkg = require('./package.json')
 const external = Object.keys(pkg.dependencies)
 
 export default {
-  entry: 'lib/index.js',
+  entry: 'src/index.js',
+  external,
   plugins: [
     babel({
       babelrc: false,
@@ -21,7 +22,6 @@ export default {
       runtimeHelpers: true
     })
   ],
-  external,
   targets: [{
     dest: pkg['main'],
     format: 'umd',
