@@ -30,9 +30,12 @@ module.exports = {
     'babel/func-params-comma-dangle': 1,
 
     'flowtype/define-flow-type': 1,
-    'flowtype/require-parameter-type': 'off',
+    'flowtype/require-parameter-type': ['warn', {
+      excludeArrowFunctions: true
+    }],
     'flowtype/require-return-type': ['warn', 'always', {
-      annotateUndefined: 'never'
+      annotateUndefined: 'never',
+      excludeArrowFunctions: true
     }],
     'flowtype/space-after-type-colon': ['error', 'always'],
     'flowtype/space-before-type-colon': ['error', 'never'],
