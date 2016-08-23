@@ -5,13 +5,13 @@
   "main": "dist/trilogy.js",
   "jsnext:main": "dist/trilogy.mjs",
   "scripts": {
-    "build": "rollup -c && npm run docs",
-    "watch": "rollup -c -w",
     "prebuild": "eslint src test",
+    "build": "rimraf dist/** && rollup -c && npm run docs",
+    "watch": "rimraf dist/** && rollup -c -w",
     "pretest": "npm run build",
     "test": "mocha",
     "flow": "flow check",
-    "docs": "jsdoc -c .jsdoc.json",
+    "docs": "rimraf docs/** && jsdoc -c .jsdoc.json",
     "pages": "git subtree split --prefix docs -b gh-pages && git push -f origin gh-pages:gh-pages && git branch -D gh-pages",
     "prepublish": "npm test",
     "commit": "git-cz"
@@ -77,7 +77,10 @@
     "jsdoc-strip-async-await": "^0.1.0",
     "mocha": "^2.5.3",
     "rollup": "^0.34.0",
+    "rimraf": "^2.5.4",
     "rollup-plugin-babel": "^2.6.1",
+    "rollup-plugin-commonjs": "^3.3.1",
+    "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-watch": "^2.5.0"
   },
   "config": {

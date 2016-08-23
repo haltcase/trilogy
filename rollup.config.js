@@ -1,4 +1,6 @@
 import babel from 'rollup-plugin-babel'
+import cjs from 'rollup-plugin-commonjs'
+import resolve from 'rollup-plugin-node-resolve'
 
 const pkg = require('./package.json')
 const external = Object.keys(pkg.dependencies)
@@ -7,6 +9,8 @@ export default {
   entry: 'src/index.js',
   external,
   plugins: [
+    resolve({ jsnext: true, main: true }),
+    cjs({ exclude: 'src/**' }),
     babel({
       babelrc: false,
       presets: [
@@ -19,17 +23,15 @@ export default {
         'transform-runtime'
       ],
       externalHelpers: false,
-      runtimeHelpers: true
+      runtimeHelpers: true,
+      exclude: 'node_modules/**'
     })
   ],
   targets: [{
     dest: pkg['main'],
-    format: 'umd',
-    moduleName: 'trilogy',
-    sourceMap: true
+    format: 'cjs'
   }, {
     dest: pkg['jsnext:main'],
-    format: 'es',
-    sourceMap: true
+    format: 'es'
   }]
 }
