@@ -333,6 +333,12 @@ export default class Trilogy {
       return this._errorHandler('#insert', `'tableName' must be a string`)
     }
 
+    for (const v of Object.values(values)) {
+      if (typeof values[v] === 'boolean') {
+        values[v] = `${values[v]}`
+      }
+    }
+
     let query = this.knex.table(tableName).insert(values)
 
     // Knex doesn't have support for conflict clauses yet :(
@@ -618,9 +624,19 @@ export default class Trilogy {
       v.form('table', 'values', '?where', '?options')
     }, async (args: Object): * => {
       const partial = this.knex.table(args.table)
-      const update = isPlainObject(args.values)
-        ? partial.update(args.values)
-        : partial.update(...args.values)
+
+      let update
+      if (isPlainObject(args.values)) {
+        for (const v of Object.values(args.values)) {
+          if (typeof args.values[v] === 'boolean') {
+            args.values[v] = `${args.values[v]}`
+          }
+        }
+        update = partial.update(args.values)
+      } else {
+        const arr = args.values.map(v => typeof v === 'boolean' ? `${v}` : v)
+        update = partial.update(...arr)
+      }
 
       let query = Trilogy._sanitizeWhere(args.where, update)
 
