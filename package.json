@@ -5,11 +5,11 @@
   "main": "dist/trilogy.js",
   "jsnext:main": "dist/trilogy.mjs",
   "scripts": {
-    "prebuild": "eslint src test",
+    "prebuild": "eslint src tests",
     "build": "rimraf dist/** && rollup -c && npm run docs",
     "watch": "rimraf dist/** && rollup -c -w",
     "pretest": "npm run build",
-    "test": "mocha",
+    "test": "ava",
     "flow": "flow check",
     "docs": "rimraf docs/** && jsdoc -c .jsdoc.json",
     "pages": "git subtree split --prefix docs -b gh-pages && git push -f origin gh-pages:gh-pages && git branch -D gh-pages",
@@ -52,6 +52,7 @@
     "sql.js": "^0.3.2"
   },
   "devDependencies": {
+    "ava": "^0.16.0",
     "babel-core": "^6.13.2",
     "babel-eslint": "^6.1.0",
     "babel-plugin-syntax-flow": "^6.13.0",
@@ -60,8 +61,6 @@
     "babel-preset-es2015": "^6.13.2",
     "babel-preset-stage-0": "^6.5.0",
     "babel-register": "^6.9.0",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^5.3.0",
     "commitizen": "^2.8.5",
     "cz-conventional-changelog": "^1.1.6",
     "docdash": "^0.4.0",
@@ -75,7 +74,6 @@
     "jsdoc": "^3.4.0",
     "jsdoc-babel": "^0.2.1",
     "jsdoc-strip-async-await": "^0.1.0",
-    "mocha": "^2.5.3",
     "rimraf": "^2.5.4",
     "rollup": "^0.34.10",
     "rollup-plugin-babel": "^2.6.1",
@@ -85,5 +83,11 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "ava": {
+    "files": [
+      "tests/*.js"
+    ],
+    "verbose": true
   }
 }
