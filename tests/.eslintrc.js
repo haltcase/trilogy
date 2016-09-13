@@ -11,8 +11,7 @@ module.exports = {
   },
   extends: 'standard',
   plugins: [
-    'babel',
-    'flowtype'
+    'babel'
   ],
   rules: {
     quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],

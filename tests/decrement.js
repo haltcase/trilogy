@@ -18,7 +18,7 @@ test.before(async () => {
     'name',
     { name: 'age', type: 'integer' }
   ])
-  
+
   people.forEach(async person => await db.insert('people', person))
 })
 
