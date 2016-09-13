@@ -301,6 +301,21 @@ export default class Trilogy {
   }
 
   /**
+   * Remove a table from the database
+   * @param {string} tableName
+   * @returns {Promise<boolean>}
+   */
+  async dropTable (
+    tableName: string
+  ): Promise<?Error> {
+    try {
+      await this.run(this.sb.dropTable(tableName))
+    } catch (e) {
+      return this._errorHandler(e)
+    }
+  }
+
+  /**
    * Insert values into a table in the database.
    *
    * @param {string} tableName
