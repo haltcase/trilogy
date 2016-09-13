@@ -236,8 +236,14 @@ export default class Trilogy {
         if (isPlainObject(column)) {
           if (!column.name) return
           if (!column.type || !(column.type in table)) column.type = 'text'
-          let partial = table[column.type](column.name)
+          if ('unique' in column && column.unique === 'inline') {
+            // bypass knex's usual unique method
+            column['__TYPE__'] = `${column.type} unique`
+            column.type = 'specificType'
+            delete column.unique
+          }
 
+          let partial = table[column.type](column.name, column['__TYPE__'])
           map(column, (attr, prop: string) => {
             // name & type are handled above
             if (prop === 'name' || prop === 'type') return
@@ -245,6 +251,7 @@ export default class Trilogy {
 
             // handle methods that take no arguments
             switch (prop) {
+              case 'unique':
               case 'primary':
               case 'notNull':
               case 'notNullable':
