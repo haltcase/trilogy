@@ -5,7 +5,7 @@ import jetpack from 'fs-jetpack'
 import arify from 'arify'
 import knex from 'knex'
 import SQL from 'sql.js'
-import map from 'lodash.map'
+import each from 'lodash.foreach'
 import isPlainObject from 'is-plain-obj'
 
 import constants from './constants'
@@ -232,7 +232,7 @@ export default class Trilogy {
     }
 
     const query = this.sb.createTableIfNotExists(tableName, table => {
-      map(columns, column => {
+      each(columns, column => {
         if (isPlainObject(column)) {
           if (!column.name) return
           if (!column.type || !(column.type in table)) column.type = 'text'
@@ -244,7 +244,7 @@ export default class Trilogy {
           }
 
           let partial = table[column.type](column.name, column['__TYPE__'])
-          map(column, (attr, prop: string) => {
+          each(column, (attr, prop: string) => {
             // name & type are handled above
             if (prop === 'name' || prop === 'type') return
             if (!(prop in partial)) return
@@ -348,11 +348,9 @@ export default class Trilogy {
       return this._errorHandler('#insert', `'tableName' must be a string`)
     }
 
-    for (const v of Object.values(values)) {
-      if (typeof values[v] === 'boolean') {
-        values[v] = `${values[v]}`
-      }
-    }
+    each(values, (v, k) => {
+      if (typeof v === 'boolean') values[k] = `${v}`
+    })
 
     let query = this.knex.table(tableName).insert(values)
 
@@ -642,11 +640,9 @@ export default class Trilogy {
 
       let update
       if (isPlainObject(args.values)) {
-        for (const v of Object.values(args.values)) {
-          if (typeof args.values[v] === 'boolean') {
-            args.values[v] = `${args.values[v]}`
-          }
-        }
+        each(args.values, (v, k) => {
+          if (typeof v === 'boolean') args.values[k] = `${v}`
+        })
         update = partial.update(args.values)
       } else {
         const arr = args.values.map(v => typeof v === 'boolean' ? `${v}` : v)
@@ -1012,7 +1008,7 @@ export default class Trilogy {
       for (let i = 0; i < values.length; i++) {
         let line = {}
         for (let j = 0; j < columns.length; j++) {
-          line[columns[j]] = values[i][j]
+          line[columns[j]] = Trilogy._stringToBoolean(values[i][j])
         }
         results.push(line)
       }
@@ -1071,13 +1067,26 @@ export default class Trilogy {
    */
   static _sanitizeWhere (where: Function|Array<string>, partial: Object): Object {
     if (Array.isArray(where)) {
-      return partial.where(...where)
+      const arr = where.map(Trilogy._booleanToString)
+      return partial.where(...arr)
     } else if (isFunction(where)) {
       return partial.where(where.bind(partial))
     } else {
       // it's an object
+      each(where, (v, k) => {
+        where[k] = Trilogy._booleanToString(v)
+      })
       return partial.where(where)
     }
+  }
+
+  static _booleanToString (value: boolean): string|any {
+    return typeof value === 'boolean' ? `${value}` : value
+  }
+
+  static _stringToBoolean (value: 'true'|'false'): boolean|any {
+    if (value !== 'true' && value !== 'false') return value
+    return value === 'true'
   }
 
   /**
