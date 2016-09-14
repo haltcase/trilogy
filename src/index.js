@@ -138,15 +138,12 @@ export default class Trilogy {
     if (!isString(query)) query = query.toString()
     this.verbose(query)
 
-    return new Promise((resolve, reject) => {
-      try {
-        this.db.run(query)
-        this._write()
-        return resolve()
-      } catch (e) {
-        return reject(e)
-      }
-    })
+    try {
+      this.db.run(query)
+      this._write()
+    } catch (e) {
+      throw e
+    }
   }
 
   /**
@@ -167,14 +164,11 @@ export default class Trilogy {
     if (!isString(query)) query = query.toString()
     this.verbose(query)
 
-    return new Promise((resolve, reject) => {
-      try {
-        const val = this.db.exec(query)
-        return resolve(val)
-      } catch (e) {
-        return reject(e)
-      }
-    })
+    try {
+      return this.db.exec(query)
+    } catch (e) {
+      throw e
+    }
   }
 
   /**
@@ -275,7 +269,6 @@ export default class Trilogy {
 
     try {
       await this.run(query)
-      return Promise.resolve()
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -294,7 +287,7 @@ export default class Trilogy {
         name: tableName
       })
 
-      return Promise.resolve(res > 0)
+      return res > 0
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -362,7 +355,7 @@ export default class Trilogy {
 
     try {
       await this.run(query)
-      return Promise.resolve(this.db.getRowsModified())
+      return this.db.getRowsModified()
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -432,13 +425,12 @@ export default class Trilogy {
 
       try {
         const result = await this.exec(query)
-        const res = Trilogy._parseResponse(result)
-        return Promise.resolve(res)
+        return Trilogy._parseResponse(result)
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
-          return Promise.resolve(undefined)
+          return
         }
         return this._errorHandler(e)
       }
@@ -510,13 +502,12 @@ export default class Trilogy {
 
       try {
         const result = await this.exec(query)
-        const res = Trilogy._parseResponse(result)
-        return Promise.resolve(res[0])
+        return Trilogy._parseResponse(result)[0]
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
-          return Promise.resolve(undefined)
+          return
         }
         return this._errorHandler(e)
       }
@@ -577,13 +568,12 @@ export default class Trilogy {
 
       try {
         const result = await this.exec(query)
-        const res = Trilogy._parseResponse(result)
-        return Promise.resolve(res[0][col])
+        return Trilogy._parseResponse(result)[0][col]
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
-          return Promise.resolve(undefined)
+          return
         }
         return this._errorHandler(e)
       }
@@ -659,7 +649,7 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve(this.db.getRowsModified())
+        return this.db.getRowsModified()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -723,7 +713,6 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -792,7 +781,6 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -840,7 +828,7 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve(this.db.getRowsModified())
+        return this.db.getRowsModified()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -913,9 +901,9 @@ export default class Trilogy {
         const res = statement.getAsObject({})
 
         if (isPlainObject(res) && 'count' in res) {
-          return Promise.resolve(res.count)
+          return res.count
         } else {
-          return Promise.resolve(0)
+          return 0
         }
       } catch (e) {
         return this._errorHandler(e)
@@ -943,8 +931,8 @@ export default class Trilogy {
     ret?: boolean = false
   ): Promise<Object|void|Error> {
     try {
-      const done = ret ? await this.exec(query) : await this.run(query)
-      return Promise.resolve(ret ? done : undefined)
+      const done = ret ? this.exec(query) : this.run(query)
+      return ret ? done : undefined
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -1170,8 +1158,8 @@ export default class Trilogy {
       e = err
     } else if (isString(err)) {
       e.message = (arguments.length === 1)
-        ? `Trilogy :: ${err}`
-        : `Trilogy${err} :: ${msg}`
+        ? `${err}`
+        : `${err} :: ${msg}`
     }
 
     e.name = 'TrilogyError'
