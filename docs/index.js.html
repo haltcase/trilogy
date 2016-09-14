@@ -22,7 +22,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Trilogy.html">Trilogy</a><ul class='methods'><li data-type='method'><a href="Trilogy.html#count">count</a></li><li data-type='method'><a href="Trilogy.html#createTable">createTable</a></li><li data-type='method'><a href="Trilogy.html#decrement">decrement</a></li><li data-type='method'><a href="Trilogy.html#del">del</a></li><li data-type='method'><a href="Trilogy.html#exec">exec</a></li><li data-type='method'><a href="Trilogy.html#first">first</a></li><li data-type='method'><a href="Trilogy.html#getQueryBuilder">getQueryBuilder</a></li><li data-type='method'><a href="Trilogy.html#getSchemaBuilder">getSchemaBuilder</a></li><li data-type='method'><a href="Trilogy.html#getValue">getValue</a></li><li data-type='method'><a href="Trilogy.html#hasTable">hasTable</a></li><li data-type='method'><a href="Trilogy.html#increment">increment</a></li><li data-type='method'><a href="Trilogy.html#insert">insert</a></li><li data-type='method'><a href="Trilogy.html#raw">raw</a></li><li data-type='method'><a href="Trilogy.html#run">run</a></li><li data-type='method'><a href="Trilogy.html#select">select</a></li><li data-type='method'><a href="Trilogy.html#update">update</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Trilogy.html">Trilogy</a><ul class='methods'><li data-type='method'><a href="Trilogy.html#count">count</a></li><li data-type='method'><a href="Trilogy.html#createTable">createTable</a></li><li data-type='method'><a href="Trilogy.html#decrement">decrement</a></li><li data-type='method'><a href="Trilogy.html#del">del</a></li><li data-type='method'><a href="Trilogy.html#dropTable">dropTable</a></li><li data-type='method'><a href="Trilogy.html#exec">exec</a></li><li data-type='method'><a href="Trilogy.html#first">first</a></li><li data-type='method'><a href="Trilogy.html#getQueryBuilder">getQueryBuilder</a></li><li data-type='method'><a href="Trilogy.html#getSchemaBuilder">getSchemaBuilder</a></li><li data-type='method'><a href="Trilogy.html#getValue">getValue</a></li><li data-type='method'><a href="Trilogy.html#hasTable">hasTable</a></li><li data-type='method'><a href="Trilogy.html#increment">increment</a></li><li data-type='method'><a href="Trilogy.html#insert">insert</a></li><li data-type='method'><a href="Trilogy.html#raw">raw</a></li><li data-type='method'><a href="Trilogy.html#run">run</a></li><li data-type='method'><a href="Trilogy.html#select">select</a></li><li data-type='method'><a href="Trilogy.html#update">update</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -44,7 +44,7 @@ import jetpack from 'fs-jetpack'
 import arify from 'arify'
 import knex from 'knex'
 import SQL from 'sql.js'
-import map from 'lodash.map'
+import each from 'lodash.foreach'
 import isPlainObject from 'is-plain-obj'
 
 import constants from './constants'
@@ -177,15 +177,12 @@ export default class Trilogy {
     if (!isString(query)) query = query.toString()
     this.verbose(query)
 
-    return new Promise((resolve, reject) => {
-      try {
-        this.db.run(query)
-        this._write()
-        return resolve()
-      } catch (e) {
-        return reject(e)
-      }
-    })
+    try {
+      this.db.run(query)
+      this._write()
+    } catch (e) {
+      throw e
+    }
   }
 
   /**
@@ -206,14 +203,11 @@ export default class Trilogy {
     if (!isString(query)) query = query.toString()
     this.verbose(query)
 
-    return new Promise((resolve, reject) => {
-      try {
-        const val = this.db.exec(query)
-        return resolve(val)
-      } catch (e) {
-        return reject(e)
-      }
-    })
+    try {
+      return this.db.exec(query)
+    } catch (e) {
+      throw e
+    }
   }
 
   /**
@@ -271,19 +265,26 @@ export default class Trilogy {
     }
 
     const query = this.sb.createTableIfNotExists(tableName, table => {
-      map(columns, column => {
+      each(columns, column => {
         if (isPlainObject(column)) {
           if (!column.name) return
           if (!column.type || !(column.type in table)) column.type = 'text'
-          let partial = table[column.type](column.name)
+          if ('unique' in column &amp;&amp; column.unique === 'inline') {
+            // bypass knex's usual unique method
+            column['__TYPE__'] = `${column.type} unique`
+            column.type = 'specificType'
+            delete column.unique
+          }
 
-          map(column, (attr, prop: string) => {
+          let partial = table[column.type](column.name, column['__TYPE__'])
+          each(column, (attr, prop: string) => {
             // name &amp; type are handled above
             if (prop === 'name' || prop === 'type') return
             if (!(prop in partial)) return
 
             // handle methods that take no arguments
             switch (prop) {
+              case 'unique':
               case 'primary':
               case 'notNull':
               case 'notNullable':
@@ -307,7 +308,6 @@ export default class Trilogy {
 
     try {
       await this.run(query)
-      return Promise.resolve()
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -326,7 +326,22 @@ export default class Trilogy {
         name: tableName
       })
 
-      return Promise.resolve(res > 0)
+      return res > 0
+    } catch (e) {
+      return this._errorHandler(e)
+    }
+  }
+
+  /**
+   * Remove a table from the database
+   * @param {string} tableName
+   * @returns {Promise&lt;boolean>}
+   */
+  async dropTable (
+    tableName: string
+  ): Promise&lt;?Error> {
+    try {
+      await this.run(this.sb.dropTable(tableName))
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -365,6 +380,10 @@ export default class Trilogy {
       return this._errorHandler('#insert', `'tableName' must be a string`)
     }
 
+    each(values, (v, k) => {
+      if (typeof v === 'boolean') values[k] = `${v}`
+    })
+
     let query = this.knex.table(tableName).insert(values)
 
     // Knex doesn't have support for conflict clauses yet :(
@@ -375,7 +394,7 @@ export default class Trilogy {
 
     try {
       await this.run(query)
-      return Promise.resolve(this.db.getRowsModified())
+      return this.db.getRowsModified()
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -445,13 +464,12 @@ export default class Trilogy {
 
       try {
         const result = await this.exec(query)
-        const res = Trilogy._parseResponse(result)
-        return Promise.resolve(res)
+        return Trilogy._parseResponse(result)
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
-          return Promise.resolve(undefined)
+          return
         }
         return this._errorHandler(e)
       }
@@ -523,13 +541,12 @@ export default class Trilogy {
 
       try {
         const result = await this.exec(query)
-        const res = Trilogy._parseResponse(result)
-        return Promise.resolve(res[0])
+        return Trilogy._parseResponse(result)[0]
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
-          return Promise.resolve(undefined)
+          return
         }
         return this._errorHandler(e)
       }
@@ -590,13 +607,12 @@ export default class Trilogy {
 
       try {
         const result = await this.exec(query)
-        const res = Trilogy._parseResponse(result)
-        return Promise.resolve(res[0][col])
+        return Trilogy._parseResponse(result)[0][col]
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
-          return Promise.resolve(undefined)
+          return
         }
         return this._errorHandler(e)
       }
@@ -650,9 +666,17 @@ export default class Trilogy {
       v.form('table', 'values', '?where', '?options')
     }, async (args: Object): * => {
       const partial = this.knex.table(args.table)
-      const update = isPlainObject(args.values)
-        ? partial.update(args.values)
-        : partial.update(...args.values)
+
+      let update
+      if (isPlainObject(args.values)) {
+        each(args.values, (v, k) => {
+          if (typeof v === 'boolean') args.values[k] = `${v}`
+        })
+        update = partial.update(args.values)
+      } else {
+        const arr = args.values.map(v => typeof v === 'boolean' ? `${v}` : v)
+        update = partial.update(...arr)
+      }
 
       let query = Trilogy._sanitizeWhere(args.where, update)
 
@@ -664,7 +688,7 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve(this.db.getRowsModified())
+        return this.db.getRowsModified()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -728,7 +752,6 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -797,7 +820,6 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -845,7 +867,7 @@ export default class Trilogy {
 
       try {
         await this.run(query)
-        return Promise.resolve(this.db.getRowsModified())
+        return this.db.getRowsModified()
       } catch (e) {
         return this._errorHandler(e)
       }
@@ -918,9 +940,9 @@ export default class Trilogy {
         const res = statement.getAsObject({})
 
         if (isPlainObject(res) &amp;&amp; 'count' in res) {
-          return Promise.resolve(res.count)
+          return res.count
         } else {
-          return Promise.resolve(0)
+          return 0
         }
       } catch (e) {
         return this._errorHandler(e)
@@ -948,8 +970,8 @@ export default class Trilogy {
     ret?: boolean = false
   ): Promise&lt;Object|void|Error> {
     try {
-      const done = ret ? await this.exec(query) : await this.run(query)
-      return Promise.resolve(ret ? done : undefined)
+      const done = ret ? this.exec(query) : this.run(query)
+      return ret ? done : undefined
     } catch (e) {
       return this._errorHandler(e)
     }
@@ -1013,7 +1035,7 @@ export default class Trilogy {
       for (let i = 0; i &lt; values.length; i++) {
         let line = {}
         for (let j = 0; j &lt; columns.length; j++) {
-          line[columns[j]] = values[i][j]
+          line[columns[j]] = Trilogy._stringToBoolean(values[i][j])
         }
         results.push(line)
       }
@@ -1072,13 +1094,26 @@ export default class Trilogy {
    */
   static _sanitizeWhere (where: Function|Array&lt;string>, partial: Object): Object {
     if (Array.isArray(where)) {
-      return partial.where(...where)
+      const arr = where.map(Trilogy._booleanToString)
+      return partial.where(...arr)
     } else if (isFunction(where)) {
       return partial.where(where.bind(partial))
     } else {
       // it's an object
+      each(where, (v, k) => {
+        where[k] = Trilogy._booleanToString(v)
+      })
       return partial.where(where)
     }
+  }
+
+  static _booleanToString (value: boolean): string|any {
+    return typeof value === 'boolean' ? `${value}` : value
+  }
+
+  static _stringToBoolean (value: 'true'|'false'): boolean|any {
+    if (value !== 'true' &amp;&amp; value !== 'false') return value
+    return value === 'true'
   }
 
   /**
@@ -1162,8 +1197,8 @@ export default class Trilogy {
       e = err
     } else if (isString(err)) {
       e.message = (arguments.length === 1)
-        ? `Trilogy :: ${err}`
-        : `Trilogy${err} :: ${msg}`
+        ? `${err}`
+        : `${err} :: ${msg}`
     }
 
     e.name = 'TrilogyError'
@@ -1187,7 +1222,7 @@ export default class Trilogy {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Aug 23 2016 00:19:07 GMT-0500 (Central Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Sep 13 2016 23:28:08 GMT-0500 (Central Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

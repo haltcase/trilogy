@@ -22,7 +22,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Trilogy.html">Trilogy</a><ul class='methods'><li data-type='method'><a href="Trilogy.html#count">count</a></li><li data-type='method'><a href="Trilogy.html#createTable">createTable</a></li><li data-type='method'><a href="Trilogy.html#decrement">decrement</a></li><li data-type='method'><a href="Trilogy.html#del">del</a></li><li data-type='method'><a href="Trilogy.html#exec">exec</a></li><li data-type='method'><a href="Trilogy.html#first">first</a></li><li data-type='method'><a href="Trilogy.html#getQueryBuilder">getQueryBuilder</a></li><li data-type='method'><a href="Trilogy.html#getSchemaBuilder">getSchemaBuilder</a></li><li data-type='method'><a href="Trilogy.html#getValue">getValue</a></li><li data-type='method'><a href="Trilogy.html#hasTable">hasTable</a></li><li data-type='method'><a href="Trilogy.html#increment">increment</a></li><li data-type='method'><a href="Trilogy.html#insert">insert</a></li><li data-type='method'><a href="Trilogy.html#raw">raw</a></li><li data-type='method'><a href="Trilogy.html#run">run</a></li><li data-type='method'><a href="Trilogy.html#select">select</a></li><li data-type='method'><a href="Trilogy.html#update">update</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Trilogy.html">Trilogy</a><ul class='methods'><li data-type='method'><a href="Trilogy.html#count">count</a></li><li data-type='method'><a href="Trilogy.html#createTable">createTable</a></li><li data-type='method'><a href="Trilogy.html#decrement">decrement</a></li><li data-type='method'><a href="Trilogy.html#del">del</a></li><li data-type='method'><a href="Trilogy.html#dropTable">dropTable</a></li><li data-type='method'><a href="Trilogy.html#exec">exec</a></li><li data-type='method'><a href="Trilogy.html#first">first</a></li><li data-type='method'><a href="Trilogy.html#getQueryBuilder">getQueryBuilder</a></li><li data-type='method'><a href="Trilogy.html#getSchemaBuilder">getSchemaBuilder</a></li><li data-type='method'><a href="Trilogy.html#getValue">getValue</a></li><li data-type='method'><a href="Trilogy.html#hasTable">hasTable</a></li><li data-type='method'><a href="Trilogy.html#increment">increment</a></li><li data-type='method'><a href="Trilogy.html#insert">insert</a></li><li data-type='method'><a href="Trilogy.html#raw">raw</a></li><li data-type='method'><a href="Trilogy.html#run">run</a></li><li data-type='method'><a href="Trilogy.html#select">select</a></li><li data-type='method'><a href="Trilogy.html#update">update</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -385,7 +385,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line766">line 766</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line788">line 788</a>
     </li></ul></dd>
     
 
@@ -753,7 +753,7 @@ it if it does.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line210">line 210</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line204">line 204</a>
     </li></ul></dd>
     
 
@@ -1070,7 +1070,7 @@ on Schema Building for the available attributes when creating column tables.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line656">line 656</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line679">line 679</a>
     </li></ul></dd>
     
 
@@ -1368,7 +1368,7 @@ db.decrement('people.age', { name: 'Bob' })</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line719">line 719</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line741">line 741</a>
     </li></ul></dd>
     
 
@@ -1578,6 +1578,157 @@ a table by passing only a table name.</p>
 
     
 
+    <h4 class="name" id="dropTable"><span class="type-signature"></span>dropTable<span class="signature">(tableName)</span><span class="type-signature"> &rarr; {Promise.&lt;boolean>}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line280">line 280</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Remove a table from the database</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>tableName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;boolean></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
     <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(query)</span><span class="type-signature"> &rarr; {Promise.&lt;Array>}</span></h4>
 
     
@@ -1590,7 +1741,7 @@ a table by passing only a table name.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line147">line 147</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line144">line 144</a>
     </li></ul></dd>
     
 
@@ -1756,7 +1907,7 @@ a table by passing only a table name.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line394">line 394</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line410">line 410</a>
     </li></ul></dd>
     
 
@@ -2125,7 +2276,7 @@ case, <code>columns</code> defaults to selecting all columns.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line884">line 884</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line906">line 906</a>
     </li></ul></dd>
     
 
@@ -2234,7 +2385,7 @@ case, <code>columns</code> defaults to selecting all columns.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line869">line 869</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line891">line 891</a>
     </li></ul></dd>
     
 
@@ -2343,7 +2494,7 @@ case, <code>columns</code> defaults to selecting all columns.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line469">line 469</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line484">line 484</a>
     </li></ul></dd>
     
 
@@ -2753,7 +2904,7 @@ bracket-notation syntax of <code>table.column</code> or <code>table[column]</cod
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line595">line 595</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line619">line 619</a>
     </li></ul></dd>
     
 
@@ -3053,7 +3204,7 @@ want to increment by 1.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line299">line 299</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line312">line 312</a>
     </li></ul></dd>
     
 
@@ -3365,7 +3516,7 @@ want to increment by 1.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line854">line 854</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line876">line 876</a>
     </li></ul></dd>
     
 
@@ -3706,7 +3857,7 @@ the query will be assumed to be execution only.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line320">line 320</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line337">line 337</a>
     </li></ul></dd>
     
 
@@ -4075,7 +4226,7 @@ defaults to selecting all columns.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line534">line 534</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line548">line 548</a>
     </li></ul></dd>
     
 
@@ -4436,7 +4587,7 @@ defaults to selecting all columns.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Aug 23 2016 00:19:07 GMT-0500 (Central Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Sep 13 2016 23:28:08 GMT-0500 (Central Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
