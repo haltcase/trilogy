@@ -16,7 +16,7 @@ var jetpack = _interopDefault(require('fs-jetpack'));
 var arify = _interopDefault(require('arify'));
 var knex = _interopDefault(require('knex'));
 var SQL = _interopDefault(require('sql.js'));
-var map = _interopDefault(require('lodash.map'));
+var each = _interopDefault(require('lodash.foreach'));
 var isPlainObject = _interopDefault(require('is-plain-obj'));
 
 var constants = {
@@ -166,8 +166,6 @@ var Trilogy = function () {
     key: 'run',
     value: function () {
       var _ref = _asyncToGenerator(_regeneratorRuntime.mark(function _callee(query) {
-        var _this = this;
-
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -184,22 +182,24 @@ var Trilogy = function () {
                 if (!isString(query)) query = query.toString();
                 this.verbose(query);
 
-                return _context.abrupt('return', new Promise(function (resolve, reject) {
-                  try {
-                    _this.db.run(query);
-                    _this._write();
-                    return resolve();
-                  } catch (e) {
-                    return reject(e);
-                  }
-                }));
+                _context.prev = 4;
 
-              case 5:
+                this.db.run(query);
+                this._write();
+                _context.next = 12;
+                break;
+
+              case 9:
+                _context.prev = 9;
+                _context.t0 = _context['catch'](4);
+                throw _context.t0;
+
+              case 12:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, this);
+        }, _callee, this, [[4, 9]]);
       }));
 
       function run(_x2) {
@@ -224,8 +224,6 @@ var Trilogy = function () {
     key: 'exec',
     value: function () {
       var _ref2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee2(query) {
-        var _this2 = this;
-
         return _regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
@@ -242,21 +240,20 @@ var Trilogy = function () {
                 if (!isString(query)) query = query.toString();
                 this.verbose(query);
 
-                return _context2.abrupt('return', new Promise(function (resolve, reject) {
-                  try {
-                    var val = _this2.db.exec(query);
-                    return resolve(val);
-                  } catch (e) {
-                    return reject(e);
-                  }
-                }));
+                _context2.prev = 4;
+                return _context2.abrupt('return', this.db.exec(query));
 
-              case 5:
+              case 8:
+                _context2.prev = 8;
+                _context2.t0 = _context2['catch'](4);
+                throw _context2.t0;
+
+              case 11:
               case 'end':
                 return _context2.stop();
             }
           }
-        }, _callee2, this);
+        }, _callee2, this, [[4, 8]]);
       }));
 
       function exec(_x3) {
@@ -331,22 +328,29 @@ var Trilogy = function () {
 
               case 2:
                 query = this.sb.createTableIfNotExists(tableName, function (table) {
-                  map(columns, function (column) {
+                  each(columns, function (column) {
                     if (isPlainObject(column)) {
                       var _ret = function () {
                         if (!column.name) return {
                             v: void 0
                           };
                         if (!column.type || !(column.type in table)) column.type = 'text';
-                        var partial = table[column.type](column.name);
+                        if ('unique' in column && column.unique === 'inline') {
+                          // bypass knex's usual unique method
+                          column['__TYPE__'] = column.type + ' unique';
+                          column.type = 'specificType';
+                          delete column.unique;
+                        }
 
-                        map(column, function (attr, prop) {
+                        var partial = table[column.type](column.name, column['__TYPE__']);
+                        each(column, function (attr, prop) {
                           // name & type are handled above
                           if (prop === 'name' || prop === 'type') return;
                           if (!(prop in partial)) return;
 
                           // handle methods that take no arguments
                           switch (prop) {
+                            case 'unique':
                             case 'primary':
                             case 'notNull':
                             case 'notNullable':
@@ -375,19 +379,20 @@ var Trilogy = function () {
                 return this.run(query);
 
               case 6:
-                return _context3.abrupt('return', Promise.resolve());
+                _context3.next = 11;
+                break;
 
-              case 9:
-                _context3.prev = 9;
+              case 8:
+                _context3.prev = 8;
                 _context3.t0 = _context3['catch'](3);
                 return _context3.abrupt('return', this._errorHandler(_context3.t0));
 
-              case 12:
+              case 11:
               case 'end':
                 return _context3.stop();
             }
           }
-        }, _callee3, this, [[3, 9]]);
+        }, _callee3, this, [[3, 8]]);
       }));
 
       function createTable(_x4, _x5, _x6) {
@@ -420,7 +425,7 @@ var Trilogy = function () {
 
               case 3:
                 res = _context4.sent;
-                return _context4.abrupt('return', Promise.resolve(res > 0));
+                return _context4.abrupt('return', res > 0);
 
               case 7:
                 _context4.prev = 7;
@@ -440,6 +445,48 @@ var Trilogy = function () {
       }
 
       return hasTable;
+    }()
+
+    /**
+     * Remove a table from the database
+     * @param {string} tableName
+     * @returns {Promise<boolean>}
+     */
+
+  }, {
+    key: 'dropTable',
+    value: function () {
+      var _ref5 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee5(tableName) {
+        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                _context5.prev = 0;
+                _context5.next = 3;
+                return this.run(this.sb.dropTable(tableName));
+
+              case 3:
+                _context5.next = 8;
+                break;
+
+              case 5:
+                _context5.prev = 5;
+                _context5.t0 = _context5['catch'](0);
+                return _context5.abrupt('return', this._errorHandler(_context5.t0));
+
+              case 8:
+              case 'end':
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this, [[0, 5]]);
+      }));
+
+      function dropTable(_x9) {
+        return _ref5.apply(this, arguments);
+      }
+
+      return dropTable;
     }()
 
     /**
@@ -470,21 +517,26 @@ var Trilogy = function () {
   }, {
     key: 'insert',
     value: function () {
-      var _ref5 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee5(tableName, values) {
+      var _ref6 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee6(tableName, values) {
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
         var query, str;
-        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
+        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
                 if (!(!tableName || !isString(tableName))) {
-                  _context5.next = 2;
+                  _context6.next = 2;
                   break;
                 }
 
-                return _context5.abrupt('return', this._errorHandler('#insert', '\'tableName\' must be a string'));
+                return _context6.abrupt('return', this._errorHandler('#insert', '\'tableName\' must be a string'));
 
               case 2:
+
+                each(values, function (v, k) {
+                  if (typeof v === 'boolean') values[k] = '' + v;
+                });
+
                 query = this.knex.table(tableName).insert(values);
 
                 // Knex doesn't have support for conflict clauses yet :(
@@ -495,28 +547,28 @@ var Trilogy = function () {
                   query = query.toString().replace('insert into', 'insert' + str + 'into');
                 }
 
-                _context5.prev = 4;
-                _context5.next = 7;
+                _context6.prev = 5;
+                _context6.next = 8;
                 return this.run(query);
 
-              case 7:
-                return _context5.abrupt('return', Promise.resolve(this.db.getRowsModified()));
+              case 8:
+                return _context6.abrupt('return', this.db.getRowsModified());
 
-              case 10:
-                _context5.prev = 10;
-                _context5.t0 = _context5['catch'](4);
-                return _context5.abrupt('return', this._errorHandler(_context5.t0));
+              case 11:
+                _context6.prev = 11;
+                _context6.t0 = _context6['catch'](5);
+                return _context6.abrupt('return', this._errorHandler(_context6.t0));
 
-              case 13:
+              case 14:
               case 'end':
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, _callee5, this, [[4, 10]]);
+        }, _callee6, this, [[5, 11]]);
       }));
 
-      function insert(_x9, _x10, _x11) {
-        return _ref5.apply(this, arguments);
+      function insert(_x10, _x11, _x12) {
+        return _ref6.apply(this, arguments);
       }
 
       return insert;
@@ -560,15 +612,15 @@ var Trilogy = function () {
   }, {
     key: 'select',
     value: function () {
-      var _ref6 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee7() {
-        var _this3 = this;
+      var _ref7 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee8() {
+        var _this = this;
 
-        var _args7 = arguments;
-        return _regeneratorRuntime.wrap(function _callee7$(_context7) {
+        var _args8 = arguments;
+        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                return _context7.abrupt('return', arify(function (v) {
+                return _context8.abrupt('return', arify(function (v) {
                   v.str('table').obj('options', { random: false }).add('columns', {
                     test: function test(value) {
                       return isString(value) || Array.isArray(value);
@@ -585,14 +637,14 @@ var Trilogy = function () {
 
                   v.form('table', '?columns', '?where', '?options');
                 }, function () {
-                  var _ref7 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee6(args) {
-                    var columns, partial, query, result, res;
-                    return _regeneratorRuntime.wrap(function _callee6$(_context6) {
+                  var _ref8 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee7(args) {
+                    var columns, partial, query, result;
+                    return _regeneratorRuntime.wrap(function _callee7$(_context7) {
                       while (1) {
-                        switch (_context6.prev = _context6.next) {
+                        switch (_context7.prev = _context7.next) {
                           case 0:
                             columns = Trilogy._sanitizeColumns(args.columns);
-                            partial = _this3.knex.column(columns).table(args.table);
+                            partial = _this.knex.column(columns).table(args.table);
                             query = Trilogy._sanitizeWhere(args.where, partial);
 
 
@@ -602,52 +654,51 @@ var Trilogy = function () {
                               query = Trilogy._sanitizeOrder(args.options.order, partial);
                             }
 
-                            _context6.prev = 4;
-                            _context6.next = 7;
-                            return _this3.exec(query);
+                            _context7.prev = 4;
+                            _context7.next = 7;
+                            return _this.exec(query);
 
                           case 7:
-                            result = _context6.sent;
-                            res = Trilogy._parseResponse(result);
-                            return _context6.abrupt('return', Promise.resolve(res));
+                            result = _context7.sent;
+                            return _context7.abrupt('return', Trilogy._parseResponse(result));
 
-                          case 12:
-                            _context6.prev = 12;
-                            _context6.t0 = _context6['catch'](4);
+                          case 11:
+                            _context7.prev = 11;
+                            _context7.t0 = _context7['catch'](4);
 
-                            if (!_context6.t0.message.endsWith('of undefined')) {
-                              _context6.next = 16;
+                            if (!_context7.t0.message.endsWith('of undefined')) {
+                              _context7.next = 15;
                               break;
                             }
 
-                            return _context6.abrupt('return', Promise.resolve(undefined));
+                            return _context7.abrupt('return');
+
+                          case 15:
+                            return _context7.abrupt('return', _this._errorHandler(_context7.t0));
 
                           case 16:
-                            return _context6.abrupt('return', _this3._errorHandler(_context6.t0));
-
-                          case 17:
                           case 'end':
-                            return _context6.stop();
+                            return _context7.stop();
                         }
                       }
-                    }, _callee6, _this3, [[4, 12]]);
+                    }, _callee7, _this, [[4, 11]]);
                   }));
 
-                  return function (_x14) {
-                    return _ref7.apply(this, arguments);
+                  return function (_x15) {
+                    return _ref8.apply(this, arguments);
                   };
-                }()).apply(undefined, _args7));
+                }()).apply(undefined, _args8));
 
               case 1:
               case 'end':
-                return _context7.stop();
+                return _context8.stop();
             }
           }
-        }, _callee7, this);
+        }, _callee8, this);
       }));
 
-      function select(_x13) {
-        return _ref6.apply(this, arguments);
+      function select(_x14) {
+        return _ref7.apply(this, arguments);
       }
 
       return select;
@@ -694,15 +745,15 @@ var Trilogy = function () {
   }, {
     key: 'first',
     value: function () {
-      var _ref8 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee9() {
-        var _this4 = this;
+      var _ref9 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee10() {
+        var _this2 = this;
 
-        var _args9 = arguments;
-        return _regeneratorRuntime.wrap(function _callee9$(_context9) {
+        var _args10 = arguments;
+        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
-                return _context9.abrupt('return', arify(function (v) {
+                return _context10.abrupt('return', arify(function (v) {
                   v.str('table').obj('options', { random: false }).add('columns', {
                     test: function test(value) {
                       return Array.isArray(value) || isString(value);
@@ -719,14 +770,14 @@ var Trilogy = function () {
 
                   v.form('table', '?columns', '?where', '?options');
                 }, function () {
-                  var _ref9 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee8(args) {
-                    var columns, partial, query, result, res;
-                    return _regeneratorRuntime.wrap(function _callee8$(_context8) {
+                  var _ref10 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee9(args) {
+                    var columns, partial, query, result;
+                    return _regeneratorRuntime.wrap(function _callee9$(_context9) {
                       while (1) {
-                        switch (_context8.prev = _context8.next) {
+                        switch (_context9.prev = _context9.next) {
                           case 0:
                             columns = Trilogy._sanitizeColumns(args.columns);
-                            partial = _this4.knex.table(args.table).first(columns);
+                            partial = _this2.knex.table(args.table).first(columns);
                             query = Trilogy._sanitizeWhere(args.where, partial);
 
 
@@ -734,52 +785,51 @@ var Trilogy = function () {
                               query = query.orderByRaw('RANDOM()');
                             }
 
-                            _context8.prev = 4;
-                            _context8.next = 7;
-                            return _this4.exec(query);
+                            _context9.prev = 4;
+                            _context9.next = 7;
+                            return _this2.exec(query);
 
                           case 7:
-                            result = _context8.sent;
-                            res = Trilogy._parseResponse(result);
-                            return _context8.abrupt('return', Promise.resolve(res[0]));
+                            result = _context9.sent;
+                            return _context9.abrupt('return', Trilogy._parseResponse(result)[0]);
 
-                          case 12:
-                            _context8.prev = 12;
-                            _context8.t0 = _context8['catch'](4);
+                          case 11:
+                            _context9.prev = 11;
+                            _context9.t0 = _context9['catch'](4);
 
-                            if (!_context8.t0.message.endsWith('of undefined')) {
-                              _context8.next = 16;
+                            if (!_context9.t0.message.endsWith('of undefined')) {
+                              _context9.next = 15;
                               break;
                             }
 
-                            return _context8.abrupt('return', Promise.resolve(undefined));
+                            return _context9.abrupt('return');
+
+                          case 15:
+                            return _context9.abrupt('return', _this2._errorHandler(_context9.t0));
 
                           case 16:
-                            return _context8.abrupt('return', _this4._errorHandler(_context8.t0));
-
-                          case 17:
                           case 'end':
-                            return _context8.stop();
+                            return _context9.stop();
                         }
                       }
-                    }, _callee8, _this4, [[4, 12]]);
+                    }, _callee9, _this2, [[4, 11]]);
                   }));
 
-                  return function (_x16) {
-                    return _ref9.apply(this, arguments);
+                  return function (_x17) {
+                    return _ref10.apply(this, arguments);
                   };
-                }()).apply(undefined, _args9));
+                }()).apply(undefined, _args10));
 
               case 1:
               case 'end':
-                return _context9.stop();
+                return _context10.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee10, this);
       }));
 
-      function first(_x15) {
-        return _ref8.apply(this, arguments);
+      function first(_x16) {
+        return _ref9.apply(this, arguments);
       }
 
       return first;
@@ -820,15 +870,15 @@ var Trilogy = function () {
   }, {
     key: 'getValue',
     value: function () {
-      var _ref10 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee11() {
-        var _this5 = this;
+      var _ref11 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee12() {
+        var _this3 = this;
 
-        var _args11 = arguments;
-        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+        var _args12 = arguments;
+        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                return _context11.abrupt('return', arify(function (v) {
+                return _context12.abrupt('return', arify(function (v) {
                   v.str('table').str('column').add('where', {
                     test: function test(value) {
                       return Trilogy._isValidWhere(value);
@@ -839,12 +889,12 @@ var Trilogy = function () {
 
                   v.form('table', '?column', 'where');
                 }, function () {
-                  var _ref11 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee10(args) {
-                    var _Trilogy$_parseTableP, _Trilogy$_parseTableP2, tbl, col, partial, query, result, res;
+                  var _ref12 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee11(args) {
+                    var _Trilogy$_parseTableP, _Trilogy$_parseTableP2, tbl, col, partial, query, result;
 
-                    return _regeneratorRuntime.wrap(function _callee10$(_context10) {
+                    return _regeneratorRuntime.wrap(function _callee11$(_context11) {
                       while (1) {
-                        switch (_context10.prev = _context10.next) {
+                        switch (_context11.prev = _context11.next) {
                           case 0:
                             _Trilogy$_parseTableP = Trilogy._parseTablePath(args.table, args.column);
                             _Trilogy$_parseTableP2 = _slicedToArray(_Trilogy$_parseTableP, 2);
@@ -852,61 +902,60 @@ var Trilogy = function () {
                             col = _Trilogy$_parseTableP2[1];
 
                             if (col) {
-                              _context10.next = 6;
+                              _context11.next = 6;
                               break;
                             }
 
-                            return _context10.abrupt('return', _this5._errorHandler(constants.ERR_COL_MISSING));
+                            return _context11.abrupt('return', _this3._errorHandler(constants.ERR_COL_MISSING));
 
                           case 6:
-                            partial = _this5.knex.table(tbl).first(col);
+                            partial = _this3.knex.table(tbl).first(col);
                             query = Trilogy._sanitizeWhere(args.where, partial);
-                            _context10.prev = 8;
-                            _context10.next = 11;
-                            return _this5.exec(query);
+                            _context11.prev = 8;
+                            _context11.next = 11;
+                            return _this3.exec(query);
 
                           case 11:
-                            result = _context10.sent;
-                            res = Trilogy._parseResponse(result);
-                            return _context10.abrupt('return', Promise.resolve(res[0][col]));
+                            result = _context11.sent;
+                            return _context11.abrupt('return', Trilogy._parseResponse(result)[0][col]);
 
-                          case 16:
-                            _context10.prev = 16;
-                            _context10.t0 = _context10['catch'](8);
+                          case 15:
+                            _context11.prev = 15;
+                            _context11.t0 = _context11['catch'](8);
 
-                            if (!_context10.t0.message.endsWith('of undefined')) {
-                              _context10.next = 20;
+                            if (!_context11.t0.message.endsWith('of undefined')) {
+                              _context11.next = 19;
                               break;
                             }
 
-                            return _context10.abrupt('return', Promise.resolve(undefined));
+                            return _context11.abrupt('return');
+
+                          case 19:
+                            return _context11.abrupt('return', _this3._errorHandler(_context11.t0));
 
                           case 20:
-                            return _context10.abrupt('return', _this5._errorHandler(_context10.t0));
-
-                          case 21:
                           case 'end':
-                            return _context10.stop();
+                            return _context11.stop();
                         }
                       }
-                    }, _callee10, _this5, [[8, 16]]);
+                    }, _callee11, _this3, [[8, 15]]);
                   }));
 
-                  return function (_x18) {
-                    return _ref11.apply(this, arguments);
+                  return function (_x19) {
+                    return _ref12.apply(this, arguments);
                   };
-                }()).apply(undefined, _args11));
+                }()).apply(undefined, _args12));
 
               case 1:
               case 'end':
-                return _context11.stop();
+                return _context12.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
 
-      function getValue(_x17) {
-        return _ref10.apply(this, arguments);
+      function getValue(_x18) {
+        return _ref11.apply(this, arguments);
       }
 
       return getValue;
@@ -942,15 +991,15 @@ var Trilogy = function () {
   }, {
     key: 'update',
     value: function () {
-      var _ref12 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee13() {
-        var _this6 = this;
+      var _ref13 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee14() {
+        var _this4 = this;
 
-        var _args13 = arguments;
-        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+        var _args14 = arguments;
+        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                return _context13.abrupt('return', arify(function (v) {
+                return _context14.abrupt('return', arify(function (v) {
                   v.str('table').obj('options', {}).add('values', {
                     test: function test(value) {
                       return isPlainObject(value) || Array.isArray(value) && value.length === 2;
@@ -966,14 +1015,28 @@ var Trilogy = function () {
 
                   v.form('table', 'values', '?where', '?options');
                 }, function () {
-                  var _ref13 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee12(args) {
-                    var partial, update, query, str;
-                    return _regeneratorRuntime.wrap(function _callee12$(_context12) {
+                  var _ref14 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee13(args) {
+                    var partial, update, arr, query, str;
+                    return _regeneratorRuntime.wrap(function _callee13$(_context13) {
                       while (1) {
-                        switch (_context12.prev = _context12.next) {
+                        switch (_context13.prev = _context13.next) {
                           case 0:
-                            partial = _this6.knex.table(args.table);
-                            update = isPlainObject(args.values) ? partial.update(args.values) : partial.update.apply(partial, _toConsumableArray(args.values));
+                            partial = _this4.knex.table(args.table);
+                            update = void 0;
+
+                            if (isPlainObject(args.values)) {
+                              each(args.values, function (v, k) {
+                                if (typeof v === 'boolean') args.values[k] = '' + v;
+                              });
+                              update = partial.update(args.values);
+                            } else {
+                              arr = args.values.map(function (v) {
+                                return typeof v === 'boolean' ? '' + v : v;
+                              });
+
+                              update = partial.update.apply(partial, _toConsumableArray(arr));
+                            }
+
                             query = Trilogy._sanitizeWhere(args.where, update);
 
                             // Knex doesn't have support for conflict clauses yet :(
@@ -984,41 +1047,41 @@ var Trilogy = function () {
                               query = query.toString().replace('update', 'update' + str);
                             }
 
-                            _context12.prev = 4;
-                            _context12.next = 7;
-                            return _this6.run(query);
+                            _context13.prev = 5;
+                            _context13.next = 8;
+                            return _this4.run(query);
 
-                          case 7:
-                            return _context12.abrupt('return', Promise.resolve(_this6.db.getRowsModified()));
+                          case 8:
+                            return _context13.abrupt('return', _this4.db.getRowsModified());
 
-                          case 10:
-                            _context12.prev = 10;
-                            _context12.t0 = _context12['catch'](4);
-                            return _context12.abrupt('return', _this6._errorHandler(_context12.t0));
+                          case 11:
+                            _context13.prev = 11;
+                            _context13.t0 = _context13['catch'](5);
+                            return _context13.abrupt('return', _this4._errorHandler(_context13.t0));
 
-                          case 13:
+                          case 14:
                           case 'end':
-                            return _context12.stop();
+                            return _context13.stop();
                         }
                       }
-                    }, _callee12, _this6, [[4, 10]]);
+                    }, _callee13, _this4, [[5, 11]]);
                   }));
 
-                  return function (_x20) {
-                    return _ref13.apply(this, arguments);
+                  return function (_x21) {
+                    return _ref14.apply(this, arguments);
                   };
-                }()).apply(undefined, _args13));
+                }()).apply(undefined, _args14));
 
               case 1:
               case 'end':
-                return _context13.stop();
+                return _context14.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee14, this);
       }));
 
-      function update(_x19) {
-        return _ref12.apply(this, arguments);
+      function update(_x20) {
+        return _ref13.apply(this, arguments);
       }
 
       return update;
@@ -1061,15 +1124,15 @@ var Trilogy = function () {
   }, {
     key: 'increment',
     value: function () {
-      var _ref14 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee15() {
-        var _this7 = this;
+      var _ref15 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee16() {
+        var _this5 = this;
 
-        var _args15 = arguments;
-        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
+        var _args16 = arguments;
+        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                return _context15.abrupt('return', arify(function (v) {
+                return _context16.abrupt('return', arify(function (v) {
                   v.str('table').str('column').num('amount', 1).add('where', {
                     test: function test(value) {
                       return Trilogy._isValidWhere(value);
@@ -1080,12 +1143,12 @@ var Trilogy = function () {
 
                   v.form('table', '?column', '?amount', '?where');
                 }, function () {
-                  var _ref15 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee14(args) {
+                  var _ref16 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee15(args) {
                     var _Trilogy$_parseTableP3, _Trilogy$_parseTableP4, tbl, col, partial, query;
 
-                    return _regeneratorRuntime.wrap(function _callee14$(_context14) {
+                    return _regeneratorRuntime.wrap(function _callee15$(_context15) {
                       while (1) {
-                        switch (_context14.prev = _context14.next) {
+                        switch (_context15.prev = _context15.next) {
                           case 0:
                             _Trilogy$_parseTableP3 = Trilogy._parseTablePath(args.table, args.column);
                             _Trilogy$_parseTableP4 = _slicedToArray(_Trilogy$_parseTableP3, 2);
@@ -1093,50 +1156,51 @@ var Trilogy = function () {
                             col = _Trilogy$_parseTableP4[1];
 
                             if (col) {
-                              _context14.next = 6;
+                              _context15.next = 6;
                               break;
                             }
 
-                            return _context14.abrupt('return', _this7._errorHandler(constants.ERR_COL_MISSING));
+                            return _context15.abrupt('return', _this5._errorHandler(constants.ERR_COL_MISSING));
 
                           case 6:
-                            partial = _this7.knex.table(tbl).increment(col, args.amount);
+                            partial = _this5.knex.table(tbl).increment(col, args.amount);
                             query = Trilogy._sanitizeWhere(args.where, partial);
-                            _context14.prev = 8;
-                            _context14.next = 11;
-                            return _this7.run(query);
+                            _context15.prev = 8;
+                            _context15.next = 11;
+                            return _this5.run(query);
 
                           case 11:
-                            return _context14.abrupt('return', Promise.resolve());
+                            _context15.next = 16;
+                            break;
 
-                          case 14:
-                            _context14.prev = 14;
-                            _context14.t0 = _context14['catch'](8);
-                            return _context14.abrupt('return', _this7._errorHandler(_context14.t0));
+                          case 13:
+                            _context15.prev = 13;
+                            _context15.t0 = _context15['catch'](8);
+                            return _context15.abrupt('return', _this5._errorHandler(_context15.t0));
 
-                          case 17:
+                          case 16:
                           case 'end':
-                            return _context14.stop();
+                            return _context15.stop();
                         }
                       }
-                    }, _callee14, _this7, [[8, 14]]);
+                    }, _callee15, _this5, [[8, 13]]);
                   }));
 
-                  return function (_x22) {
-                    return _ref15.apply(this, arguments);
+                  return function (_x23) {
+                    return _ref16.apply(this, arguments);
                   };
-                }()).apply(undefined, _args15));
+                }()).apply(undefined, _args16));
 
               case 1:
               case 'end':
-                return _context15.stop();
+                return _context16.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee16, this);
       }));
 
-      function increment(_x21) {
-        return _ref14.apply(this, arguments);
+      function increment(_x22) {
+        return _ref15.apply(this, arguments);
       }
 
       return increment;
@@ -1179,15 +1243,15 @@ var Trilogy = function () {
   }, {
     key: 'decrement',
     value: function () {
-      var _ref16 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee17() {
-        var _this8 = this;
+      var _ref17 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee18() {
+        var _this6 = this;
 
-        var _args17 = arguments;
-        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
+        var _args18 = arguments;
+        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
-                return _context17.abrupt('return', arify(function (v) {
+                return _context18.abrupt('return', arify(function (v) {
                   v.str('table').str('column').num('amount', 1).bln('allowNegative', false).add('where', {
                     test: function test(value) {
                       return Trilogy._isValidWhere(value);
@@ -1198,12 +1262,12 @@ var Trilogy = function () {
 
                   v.form('table', '?column', '?amount', '?where', '?allowNegative');
                 }, function () {
-                  var _ref17 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee16(args) {
+                  var _ref18 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee17(args) {
                     var _Trilogy$_parseTableP5, _Trilogy$_parseTableP6, tbl, col, partial, rawStr, updated, query;
 
-                    return _regeneratorRuntime.wrap(function _callee16$(_context16) {
+                    return _regeneratorRuntime.wrap(function _callee17$(_context17) {
                       while (1) {
-                        switch (_context16.prev = _context16.next) {
+                        switch (_context17.prev = _context17.next) {
                           case 0:
                             _Trilogy$_parseTableP5 = Trilogy._parseTablePath(args.table, args.column);
                             _Trilogy$_parseTableP6 = _slicedToArray(_Trilogy$_parseTableP5, 2);
@@ -1211,52 +1275,53 @@ var Trilogy = function () {
                             col = _Trilogy$_parseTableP6[1];
 
                             if (col) {
-                              _context16.next = 6;
+                              _context17.next = 6;
                               break;
                             }
 
-                            return _context16.abrupt('return', _this8._errorHandler(constants.ERR_COL_MISSING));
+                            return _context17.abrupt('return', _this6._errorHandler(constants.ERR_COL_MISSING));
 
                           case 6:
-                            partial = _this8.knex.table(tbl);
+                            partial = _this6.knex.table(tbl);
                             rawStr = args.allowNegative ? col + ' - ' + args.amount : 'MAX(0, ' + col + ' - ' + args.amount + ')';
-                            updated = partial.update(_defineProperty({}, col, _this8.knex.raw(rawStr)));
+                            updated = partial.update(_defineProperty({}, col, _this6.knex.raw(rawStr)));
                             query = Trilogy._sanitizeWhere(args.where, updated);
-                            _context16.prev = 10;
-                            _context16.next = 13;
-                            return _this8.run(query);
+                            _context17.prev = 10;
+                            _context17.next = 13;
+                            return _this6.run(query);
 
                           case 13:
-                            return _context16.abrupt('return', Promise.resolve());
+                            _context17.next = 18;
+                            break;
 
-                          case 16:
-                            _context16.prev = 16;
-                            _context16.t0 = _context16['catch'](10);
-                            return _context16.abrupt('return', _this8._errorHandler(_context16.t0));
+                          case 15:
+                            _context17.prev = 15;
+                            _context17.t0 = _context17['catch'](10);
+                            return _context17.abrupt('return', _this6._errorHandler(_context17.t0));
 
-                          case 19:
+                          case 18:
                           case 'end':
-                            return _context16.stop();
+                            return _context17.stop();
                         }
                       }
-                    }, _callee16, _this8, [[10, 16]]);
+                    }, _callee17, _this6, [[10, 15]]);
                   }));
 
-                  return function (_x24) {
-                    return _ref17.apply(this, arguments);
+                  return function (_x25) {
+                    return _ref18.apply(this, arguments);
                   };
-                }()).apply(undefined, _args17));
+                }()).apply(undefined, _args18));
 
               case 1:
               case 'end':
-                return _context17.stop();
+                return _context18.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee18, this);
       }));
 
-      function decrement(_x23) {
-        return _ref16.apply(this, arguments);
+      function decrement(_x24) {
+        return _ref17.apply(this, arguments);
       }
 
       return decrement;
@@ -1291,15 +1356,15 @@ var Trilogy = function () {
   }, {
     key: 'del',
     value: function () {
-      var _ref18 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee19() {
-        var _this9 = this;
+      var _ref19 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee20() {
+        var _this7 = this;
 
-        var _args19 = arguments;
-        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
+        var _args20 = arguments;
+        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
-                return _context19.abrupt('return', arify(function (v) {
+                return _context20.abrupt('return', arify(function (v) {
                   v.str('table').add('where', {
                     test: function test(value) {
                       return Trilogy._isValidWhere(value);
@@ -1310,49 +1375,49 @@ var Trilogy = function () {
 
                   v.form('table', '?where');
                 }, function () {
-                  var _ref19 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee18(args) {
+                  var _ref20 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee19(args) {
                     var partial, query;
-                    return _regeneratorRuntime.wrap(function _callee18$(_context18) {
+                    return _regeneratorRuntime.wrap(function _callee19$(_context19) {
                       while (1) {
-                        switch (_context18.prev = _context18.next) {
+                        switch (_context19.prev = _context19.next) {
                           case 0:
-                            partial = _this9.knex.table(args.table).del();
+                            partial = _this7.knex.table(args.table).del();
                             query = Trilogy._sanitizeWhere(args.where, partial);
-                            _context18.prev = 2;
-                            _context18.next = 5;
-                            return _this9.run(query);
+                            _context19.prev = 2;
+                            _context19.next = 5;
+                            return _this7.run(query);
 
                           case 5:
-                            return _context18.abrupt('return', Promise.resolve(_this9.db.getRowsModified()));
+                            return _context19.abrupt('return', _this7.db.getRowsModified());
 
                           case 8:
-                            _context18.prev = 8;
-                            _context18.t0 = _context18['catch'](2);
-                            return _context18.abrupt('return', _this9._errorHandler(_context18.t0));
+                            _context19.prev = 8;
+                            _context19.t0 = _context19['catch'](2);
+                            return _context19.abrupt('return', _this7._errorHandler(_context19.t0));
 
                           case 11:
                           case 'end':
-                            return _context18.stop();
+                            return _context19.stop();
                         }
                       }
-                    }, _callee18, _this9, [[2, 8]]);
+                    }, _callee19, _this7, [[2, 8]]);
                   }));
 
-                  return function (_x26) {
-                    return _ref19.apply(this, arguments);
+                  return function (_x27) {
+                    return _ref20.apply(this, arguments);
                   };
-                }()).apply(undefined, _args19));
+                }()).apply(undefined, _args20));
 
               case 1:
               case 'end':
-                return _context19.stop();
+                return _context20.stop();
             }
           }
-        }, _callee19, this);
+        }, _callee20, this);
       }));
 
-      function del(_x25) {
-        return _ref18.apply(this, arguments);
+      function del(_x26) {
+        return _ref19.apply(this, arguments);
       }
 
       return del;
@@ -1401,7 +1466,7 @@ var Trilogy = function () {
   }, {
     key: 'count',
     value: function count() {
-      var _this10 = this;
+      var _this8 = this;
 
       return arify(function (v) {
         v.str('table', 'sqlite_master').str('column', '*').obj('options', { distinct: false }).add('where', {
@@ -1416,24 +1481,24 @@ var Trilogy = function () {
       }, function (args) {
         var partial = void 0;
         if (args.options.distinct) {
-          partial = _this10.knex.table(args.table).countDistinct(args.column + ' as count');
+          partial = _this8.knex.table(args.table).countDistinct(args.column + ' as count');
         } else {
-          partial = _this10.knex.table(args.table).count(args.column + ' as count');
+          partial = _this8.knex.table(args.table).count(args.column + ' as count');
         }
 
         var query = Trilogy._sanitizeWhere(args.where, partial).toString();
 
         try {
-          var statement = _this10.db.prepare(query);
+          var statement = _this8.db.prepare(query);
           var res = statement.getAsObject({});
 
           if (isPlainObject(res) && 'count' in res) {
-            return Promise.resolve(res.count);
+            return res.count;
           } else {
-            return Promise.resolve(0);
+            return 0;
           }
         } catch (e) {
-          return _this10._errorHandler(e);
+          return _this8._errorHandler(e);
         }
       }).apply(undefined, arguments);
     }
@@ -1457,54 +1522,32 @@ var Trilogy = function () {
   }, {
     key: 'raw',
     value: function () {
-      var _ref20 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee20(query) {
+      var _ref21 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee21(query) {
         var ret = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
         var done;
-        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+        return _regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context21.prev = _context21.next) {
               case 0:
-                _context20.prev = 0;
+                _context21.prev = 0;
+                done = ret ? this.exec(query) : this.run(query);
+                return _context21.abrupt('return', ret ? done : undefined);
 
-                if (!ret) {
-                  _context20.next = 7;
-                  break;
-                }
+              case 5:
+                _context21.prev = 5;
+                _context21.t0 = _context21['catch'](0);
+                return _context21.abrupt('return', this._errorHandler(_context21.t0));
 
-                _context20.next = 4;
-                return this.exec(query);
-
-              case 4:
-                _context20.t0 = _context20.sent;
-                _context20.next = 10;
-                break;
-
-              case 7:
-                _context20.next = 9;
-                return this.run(query);
-
-              case 9:
-                _context20.t0 = _context20.sent;
-
-              case 10:
-                done = _context20.t0;
-                return _context20.abrupt('return', Promise.resolve(ret ? done : undefined));
-
-              case 14:
-                _context20.prev = 14;
-                _context20.t1 = _context20['catch'](0);
-                return _context20.abrupt('return', this._errorHandler(_context20.t1));
-
-              case 17:
+              case 8:
               case 'end':
-                return _context20.stop();
+                return _context21.stop();
             }
           }
-        }, _callee20, this, [[0, 14]]);
+        }, _callee21, this, [[0, 5]]);
       }));
 
-      function raw(_x27, _x28) {
-        return _ref20.apply(this, arguments);
+      function raw(_x28, _x29) {
+        return _ref21.apply(this, arguments);
       }
 
       return raw;
@@ -1572,7 +1615,7 @@ var Trilogy = function () {
       if (err instanceof Error) {
         e = err;
       } else if (isString(err)) {
-        e.message = arguments.length === 1 ? 'Trilogy :: ' + err : 'Trilogy' + err + ' :: ' + msg;
+        e.message = arguments.length === 1 ? '' + err : err + ' :: ' + msg;
       }
 
       e.name = 'TrilogyError';
@@ -1620,7 +1663,7 @@ var Trilogy = function () {
         for (var i = 0; i < values.length; i++) {
           var line = {};
           for (var j = 0; j < columns.length; j++) {
-            line[columns[j]] = values[i][j];
+            line[columns[j]] = Trilogy._stringToBoolean(values[i][j]);
           }
           results.push(line);
         }
@@ -1686,13 +1729,28 @@ var Trilogy = function () {
     key: '_sanitizeWhere',
     value: function _sanitizeWhere(where, partial) {
       if (Array.isArray(where)) {
-        return partial.where.apply(partial, _toConsumableArray(where));
+        var arr = where.map(Trilogy._booleanToString);
+        return partial.where.apply(partial, _toConsumableArray(arr));
       } else if (isFunction(where)) {
         return partial.where(where.bind(partial));
       } else {
         // it's an object
+        each(where, function (v, k) {
+          where[k] = Trilogy._booleanToString(v);
+        });
         return partial.where(where);
       }
+    }
+  }, {
+    key: '_booleanToString',
+    value: function _booleanToString(value) {
+      return typeof value === 'boolean' ? '' + value : value;
+    }
+  }, {
+    key: '_stringToBoolean',
+    value: function _stringToBoolean(value) {
+      if (value !== 'true' && value !== 'false') return value;
+      return value === 'true';
     }
 
     /**
