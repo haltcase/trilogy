@@ -63,7 +63,7 @@
     "babel-register": "^6.14.0",
     "commitizen": "^2.8.6",
     "cz-conventional-changelog": "^1.1.6",
-    "docdash": "^0.4.0",
+    "docdash": "citycide/docdash",
     "eslint": "^3.5.0",
     "eslint-config-standard": "^6.0.0",
     "eslint-plugin-babel": "^3.3.0",
