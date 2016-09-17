@@ -1,15 +1,15 @@
 .pln {
-  color: #ddd;
+  color: #fff;
 }
 
 /* string content */
 .str {
-  color: #61ce3c;
+  color: #1cbf39;
 }
 
 /* a keyword */
 .kwd {
-  color: #fbde2d;
+  color: #30c6ea;
 }
 
 /* a comment */
@@ -19,7 +19,7 @@
 
 /* a type name */
 .typ {
-  color: #8da6ce;
+  color: #dea41b;
 }
 
 /* a literal value */

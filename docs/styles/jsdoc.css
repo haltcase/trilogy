@@ -1,4 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Montserrat:400,700);
+@import url(https://fonts.googleapis.com/css?family=Inconsolata:400,700);
 
 * {
   box-sizing: border-box
@@ -11,7 +12,7 @@ html, body {
 
 body {
   color: #4d4e53;
-  background-color: white;
+  background-color: #f9f9f9;
   margin: 0 auto;
   padding: 0 20px;
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
@@ -19,13 +20,18 @@ body {
   line-height: 160%;
 }
 
+img {
+  max-width: 100%;
+}
+
 a,
 a:active {
-  color: #606;
+  color: #323a4d;
   text-decoration: none;
 }
 
 a:hover {
+  color: #00e2ff;
   text-decoration: none;
 }
 
@@ -79,21 +85,27 @@ h4 {
 }
 
 h4.name {
+  font-family: Inconsolata, Consolas, monospace;
+  font-weight: 700;
   color: #fff;
-  background: #6d426d;
-  box-shadow: 0 .25em .5em #d3d3d3;
+  background: #2F9BD6;
+  box-shadow: 0 .1em .1em #d3d3d3;
   border-top: 1px solid #d3d3d3;
   border-bottom: 1px solid #d3d3d3;
   margin: 1.5em 0 0.5em;
-  padding: .75em 0 .75em 10px;
+  padding: .75em 0 .75em 20px;
+}
+
+h4.name > span {
+  font-weight: 400;
 }
 
 h4.name a {
-  color: #fc83ff;
+  color: #d4d4d4;
 }
 
 h4.name a:hover {
-  border-bottom-color: #fc83ff;
+  border-bottom-color: #d4d4d4;
 }
 
 h5, .container-overview .subsection-title {
@@ -110,9 +122,9 @@ h6 {
 }
 
 tt, code, kbd, samp {
-  font-family: Consolas, Monaco, 'Andale Mono', monospace;
-  background: #f4f4f4;
-  padding: 1px 5px;
+  font-family: Inconsolata, Consolas, monospace;
+  background: #E8E8E8;
+  padding: 1px 8px 3px 8px;
 }
 
 .class-description {
@@ -129,16 +141,16 @@ tt, code, kbd, samp {
 #main {
   float: right;
   min-width: 360px;
-  width: calc(100% - 240px);
+  width: calc(100% - 200px);
 }
 
 header {
-  display: block
+  display: none;
 }
 
 section {
   display: block;
-  background-color: #fff;
+  background-color: #f9f9f9;
   padding: 0 0 0 30px;
 }
 
@@ -147,7 +159,7 @@ section {
 }
 
 .signature-attributes {
-  font-size: 60%;
+  font-size: 70%;
   color: #eee;
   font-style: italic;
   font-weight: lighter;
@@ -156,16 +168,15 @@ section {
 nav {
   float: left;
   display: block;
-  width: 250px;
-  background: #fff;
+  width: 200px;
+  background: #f9f9f9;
   overflow: auto;
   position: fixed;
   height: 100%;
 }
 
 nav h3 {
-  margin-top: 12px;
-  font-size: 13px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 700;
@@ -190,12 +201,12 @@ nav ul a:active {
   line-height: 18px;
   padding: 0;
   display: block;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 nav a:hover,
 nav a:active {
-  color: #606;
+  color: #80cfff;
 }
 
 nav > ul {
@@ -203,7 +214,7 @@ nav > ul {
 }
 
 nav > ul > li > a {
-  color: #606;
+  color: #0375B8;
 }
 
 nav ul ul {
@@ -221,24 +232,24 @@ nav ul ul a {
 
 nav ul ul a,
 nav ul ul a:active {
-  padding-left: 20px
+  padding-left: 15px
 }
 
 nav h2 {
-   font-size: 12px;
-   margin: 0;
-   padding: 0;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
 }
 
 nav > h2 > a {
-   display: block;
-   margin: 10px 0 -10px;
-   color: #606 !important;
+  display: block;
+  margin: 10px 0 -10px;
+  color: #0375B8 !important;
 }
 
 footer {
   color: hsl(0, 0%, 28%);
-  margin-left: 250px;
+  margin-left: 200px;
   display: block;
   padding: 15px;
   font-style: italic;
@@ -250,7 +261,7 @@ footer {
 }
 
 .ancestors a {
-   color: #999 !important;
+  color: #999 !important;
 }
 
 .clear {
@@ -271,15 +282,15 @@ footer {
 }
 
 .type-signature:last-child {
-  color: #eee;
+  color: #fff;
 }
 
 .name, .signature {
-  font-family: Consolas, Monaco, 'Andale Mono', monospace
+  font-family: Inconsolata, Consolas, monospace;
 }
 
 .signature {
-    color: #fc83ff;
+  color: #E8E8E8;
 }
 
 .details {
@@ -290,31 +301,31 @@ footer {
 }
 
 .details dt {
-   width: 120px;
-   float: left;
-   padding-left: 10px;
+  width: 120px;
+  float: left;
+  padding-left: 10px;
 }
 
 .details dd {
-   margin-left: 70px;
-   margin-top: 6px;
-   margin-bottom: 6px;
+  margin-left: 70px;
+  margin-top: 6px;
+  margin-bottom: 6px;
 }
 
 .details ul {
-   margin: 0
+  margin: 0
 }
 
 .details ul {
-   list-style-type: none
+  list-style-type: none
 }
 
 .details pre.prettyprint {
-   margin: 0
+  margin: 0
 }
 
 .details .object-value {
-   padding-top: 0
+  padding-top: 0
 }
 
 .description {
@@ -329,7 +340,7 @@ footer {
 }
 
 .prettyprint {
-  font-size: 14px;
+  font-size: 15px;
   overflow: auto;
 }
 
@@ -342,9 +353,9 @@ footer {
 }
 
 .prettyprint code {
-  line-height: 18px;
+  line-height: 20px;
   display: block;
-  background-color: #0d152a;
+  background-color: #031A34;
   color: #4D4E53;
 }
 
@@ -373,22 +384,22 @@ footer {
 }
 
 .prettyprint.linenums ol {
-   padding-left: 0
+  padding-left: 0
 }
 
 .prettyprint.linenums li {
-   border-left: 3px #34446B solid;
+  border-left: 3px #34446B solid;
 }
 
 .prettyprint.linenums li.selected, .prettyprint.linenums li.selected * {
-   background-color: #34446B;
+  background-color: #34446B;
 }
 
 .prettyprint.linenums li * {
-   -webkit-user-select: text;
-   -moz-user-select: text;
-   -ms-user-select: text;
-   user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .params, .props {
@@ -411,46 +422,46 @@ footer {
 }
 
 .params td, .params .name, .props .name, .name code {
-   color: #4D4E53;
-   font-family: Consolas, Monaco, 'Andale Mono', monospace;
-   font-size: 100%;
+  color: #4D4E53;
+  font-family: Inconsolata, Consolas, monospace;
+  font-size: 100%;
 }
 
 .params td, .params th, .props td, .props th {
-   margin: 0px;
-   text-align: left;
-   vertical-align: top;
-   padding: 10px;
-   display: table-cell;
+  margin: 0px;
+  text-align: left;
+  vertical-align: top;
+  padding: 10px;
+  display: table-cell;
 }
 
 .params td {
-   border-top: 1px solid #eee
+  border-top: 1px solid #eee
 }
 
 .params thead tr, .props thead tr {
-   background-color: #fff;
-   font-weight: bold;
+  background-color: #fff;
+  font-weight: bold;
 }
 
 .params .params thead tr, .props .props thead tr {
-   background-color: #fff;
-   font-weight: bold;
+  background-color: #fff;
+  font-weight: bold;
 }
 
 .params td.description > p:first-child, .props td.description > p:first-child {
-   margin-top: 0;
-   padding-top: 0;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .params td.description > p:last-child, .props td.description > p:last-child {
-   margin-bottom: 0;
-   padding-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 span.param-type, .params td .param-type, .param-type dd {
-   color: #606;
-  font-family: Consolas, Monaco, 'Andale Mono', monospace
+  font-family: Inconsolata, Consolas, monospace;
+  color: #2F9BD6;
 }
 
 .param-type dt, .param-type dd {
@@ -473,9 +484,9 @@ span.param-type, .params td .param-type, .param-type dd {
   transition: 0.25s;
   cursor: pointer;
   -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   opacity: .8;
 }
 .navicon-button .navicon:before, .navicon-button .navicon:after {
@@ -536,7 +547,7 @@ span.param-type, .params td .param-type, .param-type dd {
 /* Minus */
 .nav-trigger:checked + label {
   -webkit-transform: scale(0.75);
-          transform: scale(0.75);
+  transform: scale(0.75);
 }
 
 /* × and + */
@@ -548,20 +559,20 @@ span.param-type, .params td .param-type, .param-type dd {
 .nav-trigger:checked + label.plus .navicon:before,
 .nav-trigger:checked + label.x .navicon:before {
   -webkit-transform: rotate(-45deg);
-          transform: rotate(-45deg);
+  transform: rotate(-45deg);
   background: #FFF;
 }
 
 .nav-trigger:checked + label.plus .navicon:after,
 .nav-trigger:checked + label.x .navicon:after {
   -webkit-transform: rotate(45deg);
-          transform: rotate(45deg);
+  transform: rotate(45deg);
   background: #FFF;
 }
 
 .nav-trigger:checked + label.plus {
   -webkit-transform: scale(0.75) rotate(45deg);
-          transform: scale(0.75) rotate(45deg);
+  transform: scale(0.75) rotate(45deg);
 }
 
 .nav-trigger:checked ~ nav {
@@ -598,13 +609,13 @@ span.param-type, .params td .param-type, .param-type dd {
 
   nav {
     background: #FFF;
-    width: 250px;
+    width: 200px;
     height: 100%;
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
-    left: -250px;
+    left: -200px;
     z-index: 3;
     padding: 0 10px;
     transition: left 0.2s;
