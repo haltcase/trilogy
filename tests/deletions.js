@@ -42,8 +42,8 @@ test.serial('removes a row from the specified table', async t => {
 test.serial('removes all rows from the specified table', async t => {
   await db.del('people')
 
-  morePeople.forEach(async person => {
-    const res = await db.first('people', { name: person })
+  morePeople.forEach(async ({ name }) => {
+    const res = await db.first('people', { name })
     t.falsy(res)
   })
 })
