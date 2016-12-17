@@ -1,10 +1,10 @@
 import Trilogy from '../dist/trilogy'
 
 import test from 'ava'
-import { basename } from 'path'
 import { remove } from 'fs-jetpack'
+import { join, basename } from 'path'
 
-const filePath = `${basename(__filename, '.js')}.db`
+const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
 const db = new Trilogy(filePath)
 
 const people = [

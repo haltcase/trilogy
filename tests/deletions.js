@@ -1,10 +1,10 @@
 import Trilogy from '../dist/trilogy'
 
 import test from 'ava'
-import { basename } from 'path'
 import { remove } from 'fs-jetpack'
+import { join, basename } from 'path'
 
-const filePath = `${basename(__filename, '.js')}.db`
+const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
 const db = new Trilogy(filePath)
 
 const somePeople = [
@@ -43,7 +43,7 @@ test.serial('removes all rows from the specified table', async t => {
   await db.del('people')
 
   morePeople.forEach(async ({ name }) => {
-    const res = await db.first('people', { name })
+    let res = await db.first('people', { name })
     t.falsy(res)
   })
 })
