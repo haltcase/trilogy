@@ -27,7 +27,7 @@ test.before(() => {
 test.after.always('remove test database file', () => remove(filePath))
 
 test('inserts values into the database', async t => {
-  const inserts = [
+  let inserts = [
     { name: 'one', value: { first: 'hello', second: 1 } },
     { name: 'two', value: { first: 'hello', second: 2 } },
     { name: 'three', value: { first: 'hello', second: 3 } }

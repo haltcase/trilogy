@@ -25,7 +25,7 @@ test.before(async () => {
     { name: 'age', type: 'integer' }
   ])
 
-  const arr = [...somePeople, ...morePeople]
+  let arr = [...somePeople, ...morePeople]
   arr.forEach(async person => await db.insert('people', person))
 })
 
@@ -34,7 +34,7 @@ test.after.always('remove test database file', () => remove(filePath))
 test.serial('removes a row from the specified table', async t => {
   somePeople.forEach(async ({ name }) => {
     await db.del('people', { name })
-    const res = await db.first('people', { name })
+    let res = await db.first('people', { name })
     t.falsy(res)
   })
 })

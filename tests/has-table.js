@@ -28,6 +28,6 @@ test('is true for existing tables', t => {
 })
 
 test('is false for non-existent tables', async t => {
-  const noTables = ['four', 'five', 'six']
+  let noTables = ['four', 'five', 'six']
   noTables.map(async table => t.false(await db.hasTable(table)))
 })

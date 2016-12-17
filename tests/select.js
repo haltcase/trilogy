@@ -20,7 +20,7 @@ test.before(async () => {
 test.after.always('remove test database file', () => remove(filePath))
 
 test('retrieves rows as arrays of objects', async t => {
-  const res = await db.select('select')
+  let res = await db.select('select')
 
   t.true(Array.isArray(res))
   res.forEach((obj, i) => t.is(obj.first, arr[i]))

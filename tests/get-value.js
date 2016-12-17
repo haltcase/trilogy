@@ -18,13 +18,13 @@ test.before(async () => {
 test.after.always('remove test database file', () => remove(filePath))
 
 test('retrieves the value at a single column & row', async t => {
-  const res = await db.getValue('one.second', { first: 'fee' })
+  let res = await db.getValue('one.second', { first: 'fee' })
   t.is(res, 'blah')
 })
 
 test('is undefined when no value at the path exists', async t => {
-  const noRow = await db.getValue('one.second', { first: 'worst' })
-  const noColumn = await db.getValue('one.third', { first: 'fee' })
+  let noRow = await db.getValue('one.second', { first: 'worst' })
+  let noColumn = await db.getValue('one.third', { first: 'fee' })
   t.is(noRow, undefined)
   t.is(noColumn, undefined)
 })

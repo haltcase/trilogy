@@ -18,7 +18,7 @@ test.before(async () => {
 test.after.always('remove test database file', () => remove(filePath))
 
 test('retrieves a single row as an object', async t => {
-  const expected = { first: 'fee', second: 'blah' }
-  const res = await db.first('first')
+  let expected = { first: 'fee', second: 'blah' }
+  let res = await db.first('first')
   t.deepEqual(res, expected)
 })

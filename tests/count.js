@@ -25,11 +25,11 @@ test.before(async () => {
 test.after.always('remove test database file', () => remove(filePath))
 
 test('returns the total number of rows', async t => {
-  const res = await db.count('people')
+  let res = await db.count('people')
   t.is(res, 3)
 })
 
 test('returns the number of matching rows', async t => {
-  const res = await db.count('people', ['age', '<', '200'])
+  let res = await db.count('people', ['age', '<', '200'])
   t.is(res, 2)
 })

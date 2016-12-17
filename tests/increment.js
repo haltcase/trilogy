@@ -28,7 +28,7 @@ test.serial('increments by 1 when no amount is provied', async t => {
   people.forEach(async ({ name, age }, i) => {
     people[i].age += 1
     await db.increment('people.age', { name })
-    const res = await db.getValue('people.age', { name })
+    let res = await db.getValue('people.age', { name })
     t.is(res, age + 1)
   })
 })
@@ -37,7 +37,7 @@ test.serial('increments by a specified amount', async t => {
   people.forEach(async ({ name, age }, i) => {
     people[i].age += 4
     await db.increment('people.age', 4, { name })
-    const res = await db.getValue('people.age', { name })
+    let res = await db.getValue('people.age', { name })
     t.is(res, age + 4)
   })
 })

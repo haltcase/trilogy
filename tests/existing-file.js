@@ -15,7 +15,6 @@ test.before('insert default data', async () => {
 })
 
 test('successfully reads in an existing file', async t => {
-  return t.is(await db.getValue('data.price', {
-    item: 'freedom'
-  }), 'not free')
+  let res = await db.getValue('data.price', { item: 'freedom' })
+  t.is(res, 'not free')
 })

@@ -19,6 +19,6 @@ test.after.always('remove test database file', () => remove(filePath))
 
 test('changes the value of an existing key', async t => {
   await db.update('one', { second: 'blurg' }, { first: 'fee' })
-  const res = await db.getValue('one.second', { first: 'fee' })
+  let res = await db.getValue('one.second', { first: 'fee' })
   t.is(res, 'blurg')
 })
