@@ -9,20 +9,8 @@ export default {
   plugins: [
     babel({
       babelrc: false,
-      presets: [
-        ['modern-async', {
-          'fast-async': {
-            compiler: {
-              noRuntime: true
-            }
-          },
-          promise: 'bluebird',
-          esModules: true
-        }]
-      ],
-      plugins: [
-        'transform-runtime'
-      ],
+      presets: [['es2015', { modules: false }], 'stage-0'],
+      plugins: ['transform-runtime'],
       runtimeHelpers: true,
       exclude: 'node_modules/**'
     })
