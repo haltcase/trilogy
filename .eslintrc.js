@@ -12,7 +12,6 @@ module.exports = {
   extends: 'standard',
   plugins: [
     'babel',
-    'flowtype'
   ],
   rules: {
     quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
@@ -29,22 +28,5 @@ module.exports = {
     'babel/flow-object-type': 1,
     'babel/func-params-comma-dangle': 1,
 
-    'flowtype/define-flow-type': 1,
-    'flowtype/require-parameter-type': ['warn', {
-      excludeArrowFunctions: true
-    }],
-    'flowtype/require-return-type': ['warn', 'always', {
-      annotateUndefined: 'never',
-      excludeArrowFunctions: true
-    }],
-    'flowtype/space-after-type-colon': ['error', 'always'],
-    'flowtype/space-before-type-colon': ['error', 'never'],
-    'flowtype/type-id-match': ['error', '^([A-Z][a-z0-9]+)+Type$'],
-    'flowtype/use-flow-type': 1
   },
-  settings: {
-    flowtype: {
-      onlyFilesWithFlowAnnotation: false
-    }
-  }
 }

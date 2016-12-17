@@ -10,8 +10,15 @@ export default {
     babel({
       babelrc: false,
       presets: [
-        ['es2015', { modules: false }],
-        'stage-0'
+        ['modern-async', {
+          'fast-async': {
+            compiler: {
+              noRuntime: true
+            }
+          },
+          promise: 'bluebird',
+          esModules: true
+        }]
       ],
       plugins: [
         'syntax-flow',
