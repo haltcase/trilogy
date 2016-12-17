@@ -38,3 +38,19 @@ test.serial('returns boolean strings to boolean on selection', async t => {
   let res = await db.getValue('booleans.booleanField', { key: 'two' })
   t.is(res, false)
 })
+
+test.serial('does not coerce booleans when `options.coercion` is set to false', async t => {
+  db.coercion = false
+
+  let x = `update "booleans" set "booleanField" = 1 where "key" = 'two'`
+  db.verbose = y => t.is(y, x, 'true becomes 1')
+
+  await db.update('booleans', { booleanField: true }, { key: 'two' })
+
+  let z = `update "booleans" set "booleanField" = 0 where "key" = 'two'`
+  db.verbose = y => t.is(y, z, 'false becomes 0')
+
+  await db.update('booleans', { booleanField: false }, { key: 'two' })
+
+  db.coercion = true
+})
