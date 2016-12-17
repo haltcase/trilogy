@@ -1,3 +1,7 @@
+const OFF = 0
+const WARN = 1
+const ERROR = 2
+
 module.exports = {
   root: true,
   parser: 'babel-eslint',
@@ -6,27 +10,29 @@ module.exports = {
   },
   env: {
     browser: true,
-    node: true,
-    mocha: true
+    node: true
   },
   extends: 'standard',
   plugins: [
-    'babel',
+    'prefer-let',
+    'babel'
   ],
   rules: {
-    quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
-    'generator-star-spacing': 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
+    quotes: [ERROR, 'single', { avoidEscape: true, allowTemplateLiterals: true }],
+    'generator-star-spacing': OFF,
+    'no-debugger': process.env.NODE_ENV === 'production' ? ERROR : OFF,
 
-    'babel/generator-star-spacing': ['error', { 'before': true, 'after': true }],
-    'babel/new-cap': 1,
-    'babel/array-bracket-spacing': ['error', 'never'],
-    'babel/object-curly-spacing': ['error', 'always'],
-    'babel/object-shorthand': ['error', 'always'],
-    'babel/arrow-parens': ['error', 'as-needed'],
-    'babel/no-await-in-loop': 1,
-    'babel/flow-object-type': 1,
-    'babel/func-params-comma-dangle': 1,
+    'babel/generator-star-spacing': [ERROR, { 'before': true, 'after': true }],
+    'babel/new-cap': WARN,
+    'babel/array-bracket-spacing': [ERROR, 'never'],
+    'babel/object-curly-spacing': [ERROR, 'always'],
+    'babel/object-shorthand': [ERROR, 'always'],
+    'babel/arrow-parens': [ERROR, 'as-needed'],
+    'babel/no-await-in-loop': WARN,
+    'babel/flow-object-type': WARN,
+    'babel/func-params-comma-dangle': WARN,
 
+    'prefer-let/prefer-let': WARN
   },
+  settings: {}
 }
