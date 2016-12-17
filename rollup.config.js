@@ -23,7 +23,6 @@ export default {
       plugins: [
         'transform-runtime'
       ],
-      externalHelpers: false,
       runtimeHelpers: true,
       exclude: 'node_modules/**'
     })
