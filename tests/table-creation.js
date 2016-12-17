@@ -9,11 +9,31 @@ const db = new Trilogy(filePath)
 
 test.after.always('remove test database file', () => remove(filePath))
 
-test('adds a table to the database', async t => {
+test('adds a table to the database (array syntax)', async t => {
   await db.createTable('people', [
     { name: 'name' },
     { name: 'age', type: 'integer' }
   ])
+
+  t.true(await db.hasTable('people'))
+})
+
+test('adds a table to the database (function syntax)', async t => {
+  let schema = function (table) {
+    table.text('title')
+    table.integer('release_year')
+  }
+
+  await db.createTable('movies', schema)
+
+  t.true(await db.hasTable('movies'))
+})
+
+test('adds a table to the database (object syntax)', async t => {
+  await db.createTable('teams', {
+    name: { type: 'text' },
+    playoffs: { type: 'text', defaultTo: false }
+  })
 
   t.true(await db.hasTable('people'))
 })
