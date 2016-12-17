@@ -21,8 +21,6 @@ export default {
         }]
       ],
       plugins: [
-        'syntax-flow',
-        'transform-flow-strip-types',
         'transform-runtime'
       ],
       externalHelpers: false,
