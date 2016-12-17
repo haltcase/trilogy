@@ -512,11 +512,11 @@ class Trilogy {
     }
   }
 
-  getSchemaBuilder (): Object {
+  get schemaBuilder () {
     return this.sb
   }
 
-  getQueryBuilder (): Object {
+  get queryBuilder () {
     return this.knex
   }
 
