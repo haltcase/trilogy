@@ -1,73 +1,28 @@
-/* @flow */
-
-import Promise from 'native-or-lie'
+import Promise from 'bluebird'
 import jetpack from 'fs-jetpack'
 import arify from 'arify'
 import knex from 'knex'
 import SQL from 'sql.js'
-import each from 'lodash.foreach'
-import isPlainObject from 'is-plain-obj'
+
+import { resolve, isAbsolute } from 'path'
 
 import constants from './constants'
-import { isFunction, isString } from './util'
+import * as helpers from './helpers'
+import { map, isBoolean, isFunction, isObject, isString } from './util'
 
-export default class Trilogy {
-  fileName: string;
-  verbose: Function;
-  errorListener: Function | null;
-  knex: any;
-  db: any;
-  sb: any;
-
-  /**
-   * Initialize a new datastore instance, creating an SQLite database
-   * file at the `fileName` path if it does not yet exist, or reading
-   * it if it does.
-   *
-   * @param {string} fileName
-   *  Either a path to an existing database or the path at which one
-   *  should be created.
-   * @param {Object} [opts={}]
-   * @param {Function} [opts.verbose]
-   *  A function that will receive every query run against the database
-   * @param {Function} [opts.errorListener]
-   *  A function that receives any errors thrown during query execution
-   * @throws if `fileName` is not provided
-   *
-   * @example
-   *
-   * import Trilogy from 'trilogy'
-   *
-   * const db = new Trilogy('./storage.db')
-   *
-   * // WITH OPTIONS:
-   * // verbose function
-   * const db = new Trilogy('./storage.db', {
-   *   verbose: console.log.bind(console)
-   * })
-   *
-   * // errorListener function
-   * function errorHandler (err) {
-   *   if (err.message === `Trilogy#createTable :: 'columns' must be an array`) {
-   *     console.log('Crap. Should have read the docs!')
-   *   }
-   * }
-   *
-   * const db = new Trilogy('./storage.db', {
-   *   errorListener: errorHandler
-   * })
-   */
-  constructor (
-    fileName: string,
-    opts?: ClassOptions = {
-      verbose: () => {},
-      errorListener: null
+class Trilogy {
+  constructor (path, opts = {}) {
+    if (!path) {
+      throw new Error('Trilogy constructor must be provided a file path.')
     }
-  ) {
-    if (!fileName) throw new Error('Trilogy constructor must be provided a file path.')
+
+    if (!isAbsolute(path)) {
+      let { dir = process.cwd() } = opts
+      path = resolve(dir, path)
+    }
 
     Object.assign(this, {
-      fileName,
+      path,
       db: null,
       verbose: isFunction(opts.verbose)
         ? opts.verbose
@@ -77,6 +32,10 @@ export default class Trilogy {
         : null
     })
 
+    this.coercion = opts.coercion != null
+      ? !!opts.coercion
+      : helpers.coercion.active
+
     this._init()
   }
 
@@ -85,18 +44,20 @@ export default class Trilogy {
    * @private
    */
   _init () {
-    if (jetpack.exists(this.fileName)) {
-      const file = jetpack.read(this.fileName, 'buffer')
+    if (jetpack.exists(this.path) === 'file') {
+      let file = jetpack.read(this.path, 'buffer')
       this.db = new SQL.Database(file)
     } else {
       this.db = new SQL.Database()
       this._write()
     }
 
-    const kn = knex({ client: 'sqlite', useNullAsDefault: true })
+    let kn = knex({ client: 'sqlite3', useNullAsDefault: true })
 
-    this.knex = kn
-    this.sb = kn.schema
+    Object.defineProperties(this, {
+      knex: { get () { return kn } },
+      sb: { get () { return kn.schema } }
+    })
   }
 
   /**
@@ -109,10 +70,10 @@ export default class Trilogy {
     }
 
     try {
-      const data = this.db.export()
-      const buffer = new Buffer(data)
+      let data = this.db.export()
+      let buffer = new Buffer(data)
 
-      jetpack.file(this.fileName, {
+      jetpack.file(this.path, {
         content: buffer, mode: '777'
       })
     } catch (e) {
@@ -122,20 +83,17 @@ export default class Trilogy {
 
   /**
    * Execute a query on the database, ignoring its results.
-   *
-   * @param {(Object|string)} query
-   *  Any SQLite query string. If an Object is provided, a `toString`
-   *  conversion will be attempted in the case it's a knex query object.
-   * @returns {Promise}
-   *
-   * @see {@link Trilogy#exec} if you need a return value
+   * @private
    */
-  async run (query: Object | string): Promise<void|Error> {
+  async run (query) {
     if (!this.db) {
       return this._errorHandler(constants.ERR_NO_DATABASE)
     }
 
-    if (!isString(query)) query = query.toString()
+    if (!isString(query)) {
+      query = query.toString()
+    }
+
     this.verbose(query)
 
     try {
@@ -148,20 +106,17 @@ export default class Trilogy {
 
   /**
    * Execute a query on the database and return its results.
-   *
-   * @param {(Object|string)} query
-   *  Any SQLite query string. If an Object is provided, a `toString`
-   *  conversion will be attempted in the case it's a knex query object.
-   * @returns {Promise<Array>} an `Array` containing query result objects
-   *
-   * @see {@link Trilogy#run} if you don't care about a return value
+   * @private
    */
-  async exec (query: Object | string): Promise<Array<Object>|Error> {
+  async exec (query) {
     if (!this.db) {
       return this._errorHandler(constants.ERR_NO_DATABASE)
     }
 
-    if (!isString(query)) query = query.toString()
+    if (!isString(query)) {
+      query = query.toString()
+    }
+
     this.verbose(query)
 
     try {
@@ -171,185 +126,69 @@ export default class Trilogy {
     }
   }
 
-  /**
-   * Add a table to the database. The `columns` argument must be an array of
-   * either strings or Objects, which can be mixed and matched. String values
-   * default to a column of the SQLite 'text' type. If another type is needed
-   * or any other attributes, use an Object.
-   *
-   * All the properties of the supplied column Object are passed to knex. Some
-   * attributes require no values, such as `primary` or `nullable`. In these
-   * cases, their presence in the object is enough to add that flag.
-   *
-   * If the column property is not present in knex's methods it will be ignored.
-   * See <a href="http://knexjs.org/#Schema-Building">knex's documentation</a>
-   * on Schema Building for the available attributes when creating column tables.
-   *
-   * @param {string} tableName
-   * @param {Object[]} columns
-   * @param {Object} [options={}]
-   * @param {string[]} [options.compositeKey]
-   *  An array of column names as strings. A composite primary key will be
-   *  created on all of these columns.
-   * @returns {Promise}
-   *
-   * @example
-   *
-   * // `columns` should be an Array
-   * // each item in the Array should be either a string or an Object
-   *
-   * // a string in the Array defaults to a text column in the table
-   * db.createTable('people', ['email'])
-   *
-   * // use an object to specify other attributes
-   * db.createTable('people', [
-   *   { name: 'age', type: 'integer' }
-   * ])
-   *
-   * // you can mix and match
-   * db.createTable('people', [
-   *   'name',
-   *   { name: 'age', type: 'integer' },
-   *   'email',
-   *   // note that the value of `primary` doesn't make a difference
-   *   // this would still be a primary key column
-   *   { name: '', primary: false }
-   * ])
-   */
-  async createTable (
-    tableName: string,
-    columns: Array<Object>,
-    options: Object = {}
-  ): Promise<void|Error> {
-    if (!Array.isArray(columns) || !columns.length) {
-      return this._errorHandler('#createTable', `'columns' must be an array`)
-    }
+  async createTable (name, columns, options = {}) {
+    let query
+    if (isFunction(columns)) {
+      query = this.sb.createTableIfNotExists(name, columns)
+    } else {
+      query = this.sb.createTableIfNotExists(name, table => {
+        if (Array.isArray(columns)) {
+          return helpers.processArraySchema(table, columns)
+        } else if (isObject(columns)) {
+          return helpers.processObjectSchema(table, columns)
+        }
 
-    const query = this.sb.createTableIfNotExists(tableName, table => {
-      each(columns, column => {
-        if (isPlainObject(column)) {
-          if (!column.name) return
-          if (!column.type || !(column.type in table)) column.type = 'text'
-          if ('unique' in column && column.unique === 'inline') {
-            // bypass knex's usual unique method
-            column['__TYPE__'] = `${column.type} unique`
-            column.type = 'specificType'
-            delete column.unique
-          }
-
-          let partial = table[column.type](column.name, column['__TYPE__'])
-          each(column, (attr, prop: string) => {
-            // name & type are handled above
-            if (prop === 'name' || prop === 'type') return
-            if (!(prop in partial)) return
-
-            // handle methods that take no arguments
-            switch (prop) {
-              case 'unique':
-              case 'primary':
-              case 'notNull':
-              case 'notNullable':
-              case 'nullable':
-              case 'unsigned':
-                partial = partial[prop]()
-                break
-              default:
-                partial = partial[prop](attr)
-            }
-          })
-        } else if (isString(column)) {
-          table.text(column)
+        if (options.compositeKey) {
+          table.primary(options.compositeKey)
         }
       })
-
-      if ('compositeKey' in options) {
-        table.primary(options.compositeKey)
-      }
-    })
+    }
 
     try {
-      await this.run(query)
+      return this.run(query)
     } catch (e) {
       return this._errorHandler(e)
     }
   }
 
-  /**
-   * Check if a table exists in the database
-   * @param {string} tableName
-   * @returns {Promise<boolean>}
-   */
-  async hasTable (
-    tableName: string
-  ): Promise<boolean|Error> {
+  async hasTable (name) {
     try {
-      const res = await this.count('sqlite_master', 'name', {
-        name: tableName
-      })
-
+      let res = await this.count('sqlite_master', 'name', { name })
       return res > 0
     } catch (e) {
       return this._errorHandler(e)
     }
   }
 
-  /**
-   * Remove a table from the database
-   * @param {string} tableName
-   * @returns {Promise<boolean>}
-   */
-  async dropTable (
-    tableName: string
-  ): Promise<?Error> {
+  async dropTable (name) {
     try {
-      await this.run(this.sb.dropTable(tableName))
+      await this.run(this.sb.dropTable(name))
     } catch (e) {
       return this._errorHandler(e)
     }
   }
 
-  /**
-   * Insert values into a table in the database.
-   *
-   * @param {string} tableName
-   * @param {Object} values
-   * @param {Object} [options={}]
-   * @param {string} [options.conflict]
-   *  An SQLite conflict type, one of: `fail`, `abort`, `ignore`,
-   *  `replace`, `rollback`.
-   * @returns {Promise<number>} The number of rows inserted
-   *
-   * @example
-   *
-   * db.insert('people', {
-   *   name: 'Bob',
-   *   age: 17
-   * })
-   *
-   * // insert or replace
-   * db.insert('people', {
-   *   name: 'Bob',
-   *   age: 17
-   * }, { conflict: 'replace' })
-   */
-  async insert (
-    tableName: string,
-    values: Object,
-    options?: { conflict?: string } = {}
-  ): Promise<number|Error> {
-    if (!tableName || !isString(tableName)) {
+  async insert (name, values, options = {}) {
+    if (!name || !isString(name)) {
       return this._errorHandler('#insert', `'tableName' must be a string`)
     }
 
-    each(values, (v, k) => {
-      if (typeof v === 'boolean') values[k] = `${v}`
+    let obj = map(values, v => {
+      if (isBoolean(v)) {
+        // without some kind of boolean coercion, the query will fail
+        // native sqlite leans toward 0s and 1s for booleans
+        // with coercion active we convert booleans to strings
+        return this.coercion ? `${v}` : v | 0
+      } else {
+        return v
+      }
     })
 
-    let query = this.knex.table(tableName).insert(values)
+    let query = this.knex.table(name).insert(obj)
 
     // Knex doesn't have support for conflict clauses yet :(
     if (options.conflict) {
-      const str = Trilogy._getConflictString(options.conflict)
+      let str = helpers.getConflictString(options.conflict)
       query = query.toString().replace('insert into', `insert${str}into`)
     }
 
@@ -361,71 +200,36 @@ export default class Trilogy {
     }
   }
 
-  /**
-   * Execute a select query on the database. Allows overloading of arguments,
-   * ie. `table` is the only required argument. In this case, `columns`
-   * defaults to selecting all columns.
-   *
-   * @function
-   * @name select
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {(string|Array)} [columns=['*']]
-   *  Defaults to selecting all columns.
-   * @param {(Object|Array|Function)} [where=['1', '=', '1']]
-   *  Defaults to no restriction on selection.
-   * @param {Object} [options={}]
-   * @param {boolean} [options.random=false]
-   *  Pass `true` to return records in random order.
-   * @returns {Promise<Array>}
-   *
-   * @example
-   *
-   * // select all records in the 'people' table
-   * db.select('people')
-   *
-   * // select just the 'age' and 'favColor' columns where name is 'Bob'
-   * db.select('people', ['age', 'favColor'], { name: 'Bob' })
-   *
-   * // select just 'name' where age is at least 18
-   * db.select('people', 'age', ['age', '>=', '18'])
-   */
-
-  /**
-   * @private
-   */
-  async select (...params: Array<mixed>): Promise<Array<Object>|Error> {
+  async select (...params) {
     return (arify(v => {
       v.str('table')
        .obj('options', { random: false })
        .add('columns', {
-         test: (value: mixed): boolean => isString(value) || Array.isArray(value),
-         description: 'a string or an array of strings',
-         defaultValue: ['*']
+         test: value => isString(value) || Array.isArray(value),
+         description: 'a string or an Array of strings',
+         defaultValue: constants.DEFAULT_COLUMNS
        })
        .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
        })
+       .form('table', '?columns', '?where', '?options')
+    }, async args => {
+      let columns = helpers.sanitizeColumns(args.columns)
 
-      v.form('table', '?columns', '?where', '?options')
-    }, async (args: Object): * => {
-      const columns = Trilogy._sanitizeColumns(args.columns)
-
-      const partial = this.knex.column(columns).table(args.table)
-      let query = Trilogy._sanitizeWhere(args.where, partial)
+      let partial = this.knex.column(columns).table(args.table)
+      let query = helpers.sanitizeWhere(args.where, partial)
 
       if (args.options.random) {
         query = query.orderByRaw('RANDOM()')
       } else if (args.options.order) {
-        query = Trilogy._sanitizeOrder(args.options.order, partial)
+        query = helpers.sanitizeOrder(args.options.order, partial)
       }
 
       try {
-        const result = await this.exec(query)
-        return Trilogy._parseResponse(result)
+        let result = await this.exec(query)
+        return helpers.parseResponse(result)
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
@@ -437,138 +241,62 @@ export default class Trilogy {
     }))(...params)
   }
 
-  /**
-   * Return the first row selected by the query. Allows overloading
-   * of arguments, ie. `table` is the only required argument. In this
-   * case, `columns` defaults to selecting all columns.
-   *
-   * @function
-   * @name first
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {(string|Array)} [columns=['*']]
-   *  Defaults to selecting all columns.
-   * @param {(Object|Array|Function)} [where=['1', '=', '1']]
-   *  Defaults to no restriction on selection.
-   * @param {Object} [options={}]
-   * @param {boolean} [options.random=false]
-   *  Pass `true` to return a random record.
-   * @returns {Promise<Object>}
-   *
-   * @example
-   *
-   * // select the first record in 'people'
-   * db.first('people')
-   *
-   * // select a random record from 'people'
-   * // the second argument is a where clause but is always true for all records
-   * db.first('people', ['1', '=', '1'], { random: true })
-   *
-   * // NOTE:
-   * // even with overloading, in this case `where` needs to be provided if we
-   * // have an `options` object. this is because `where` could also be an object
-   * // so the function has no way to know which one you meant to provide.
-   */
+  async first (...params) {
+    let inner = async args => {
+      let columns = helpers.sanitizeColumns(args.columns)
 
-  /**
-   * @private
-   */
-  async first (...params: Array<mixed>): Promise<Object|Error> {
-    return (arify(v => {
-      v.str('table')
-       .obj('options', { random: false })
-       .add('columns', {
-         test: (value: mixed): boolean => Array.isArray(value) || isString(value),
-         description: 'a string or an array of strings',
-         defaultValue: ['*']
-       })
-       .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
-       })
-
-      v.form('table', '?columns', '?where', '?options')
-    }, async (args: Object): * => {
-      const columns = Trilogy._sanitizeColumns(args.columns)
-
-      const partial = this.knex.table(args.table).first(columns)
-      let query = Trilogy._sanitizeWhere(args.where, partial)
+      let partial = this.knex.table(args.table).first(columns)
+      let query = helpers.sanitizeWhere(args.where, partial)
 
       if (args.options.random) {
         query = query.orderByRaw('RANDOM()')
       }
 
       try {
-        const result = await this.exec(query)
-        return Trilogy._parseResponse(result)[0]
+        let result = await this.exec(query)
+        return helpers.parseResponse(result)[0]
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
           // resolve to undefined rather than reject
           return
         }
+
         return this._errorHandler(e)
       }
-    }))(...params)
-  }
+    }
 
-  /**
-   * Retrieve the value at a specific row in a specific column.
-   * Allows function overloading, ie. `table` is the only required
-   * argument. In this case, `column` must be provided as dot- or
-   * bracket-notation syntax of `table.column` or `table[column]`.
-   *
-   * @function
-   * @name getValue
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {string} [column]
-   *  If this argument is not explicitly provided, it must be
-   *  included as part of `tableName` using either dot- or
-   *  bracket-notation.
-   * @param {(Object|Array|Function)} [where=['1', '=', '1']]
-   *  Defaults to no restriction on selection.
-   * @returns {Promise<*>}
-   *
-   * @example
-   *
-   * db.getValue('people', 'age', { name: 'Bob' })
-   *
-   * // dot- or bracket-notation of table and column
-   * db.getValue('people.age', { name: 'Bob' })
-   * db.getValue('people[age]', { name: 'Bob' })
-   */
-
-  /**
-   * @private
-   */
-  async getValue (...params: Array<mixed>): Promise<mixed|Error> {
     return (arify(v => {
       v.str('table')
-       .str('column')
-       .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
+       .obj('options', { random: false })
+       .add('columns', {
+         test: value => Array.isArray(value) || isString(value),
+         description: 'a string or an Array of strings',
+         defaultValue: constants.DEFAULT_COLUMNS
        })
+       .add('where', {
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
+       })
+       .form('table', '?columns', '?where', '?options')
+    }, inner))(...params)
+  }
 
-      v.form('table', '?column', 'where')
-    }, async (args: Object): * => {
-      const [tbl, col] = Trilogy._parseTablePath(args.table, args.column)
+  async getValue (...params) {
+    let inner = async args => {
+      let [tbl, col] = helpers.parseTablePath(args.table, args.column)
 
       if (!col) {
         return this._errorHandler(constants.ERR_COL_MISSING)
       }
 
-      const partial = this.knex.table(tbl).first(col)
-      const query = Trilogy._sanitizeWhere(args.where, partial)
+      let partial = this.knex.table(tbl).first(col)
+      let query = helpers.sanitizeWhere(args.where, partial)
 
       try {
-        const result = await this.exec(query)
-        return Trilogy._parseResponse(result)[0][col]
+        let result = await this.exec(query)
+        return helpers.parseResponse(result)[0][col]
       } catch (e) {
         if (e.message.endsWith('of undefined')) {
           // the value probably just doesn't exist
@@ -577,73 +305,44 @@ export default class Trilogy {
         }
         return this._errorHandler(e)
       }
-    }))(...params)
-  }
+    }
 
-  /**
-   * Update rows in the database.
-   *
-   * @function
-   * @name update
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {(Object|Array)} values
-   *  Must either be an object or a key / value array (length === 2)
-   * @param {(Object|Array|Function)} [where=['1', '=', '1']]
-   *  Defaults to no restriction on selection.
-   * @param {Object} [options={}]
-   * @param {string} [options.conflict]
-   *  An SQLite conflict type, one of: `fail`, `abort`, `ignore`,
-   *  `replace`, `rollback`.
-   * @returns {Promise<number>} The number of rows affected
-   *
-   * @example
-   *
-   * db.update('people', { age: 18 }, { name: 'Bob' })
-   */
-
-  /**
-   * @private
-   */
-  async update (...params: Array<mixed>): Promise<number|Error> {
     return (arify(v => {
       v.str('table')
-       .obj('options', {})
-       .add('values', {
-         test: (value: mixed): boolean => {
-           return (
-             isPlainObject(value) || (Array.isArray(value) && value.length === 2)
-           )
-         },
-         description: 'either an Object or an Array with a length of 2'
-       })
+       .str('column')
        .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
        })
+       .form('table', '?column', 'where')
+    }, inner))(...params)
+  }
 
-      v.form('table', 'values', '?where', '?options')
-    }, async (args: Object): * => {
-      const partial = this.knex.table(args.table)
+  async update (...params) {
+    let inner = async args => {
+      let partial = this.knex.table(args.table)
 
-      let update
-      if (isPlainObject(args.values)) {
-        each(args.values, (v, k) => {
-          if (typeof v === 'boolean') args.values[k] = `${v}`
-        })
-        update = partial.update(args.values)
-      } else {
-        const arr = args.values.map(v => typeof v === 'boolean' ? `${v}` : v)
-        update = partial.update(...arr)
-      }
+      let col = map(args.values, v => {
+        // without some kind of boolean coercion, the query will fail
+        // native sqlite leans toward 0s and 1s for booleans
+        // with coercion active we convert booleans to strings
+        if (isBoolean(v)) {
+          return this.coercion ? `${v}` : v | 0
+        } else {
+          return v
+        }
+      })
 
-      let query = Trilogy._sanitizeWhere(args.where, update)
+      let update = isObject(col)
+        ? partial.update(col)
+        : partial.update(...col)
+
+      let query = helpers.sanitizeWhere(args.where, update)
 
       // Knex doesn't have support for conflict clauses yet :(
       if (args.options.conflict) {
-        const str = Trilogy._getConflictString(args.options.conflict)
+        let str = helpers.getConflictString(args.options.conflict)
         query = query.toString().replace('update', `update${str}`)
       }
 
@@ -653,178 +352,99 @@ export default class Trilogy {
       } catch (e) {
         return this._errorHandler(e)
       }
-    }))(...params)
-  }
+    }
 
-  /**
-   * Increment a value at `column` by a specified `amount`.
-   * Allows function overloading, ie. `table` is the only
-   * required argument. In that case, column must be provided
-   * as part of `table` using dot- or bracket-notation. This
-   * allows for a short-and-sweet syntax in the case you only
-   * want to increment by 1.
-   *
-   * @function
-   * @name increment
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {string} [column]
-   *  If this argument is not explicitly provided, it must be
-   *  included as part of `tableName` using either dot- or
-   *  bracket-notation.
-   * @param {number} [amount=1]
-   * @param {(Object|Array|Function)} [where=['1', '=', '1']]
-   *  Defaults to no restriction on selection.
-   * @returns {Promise}
-   *
-   * @example
-   *
-   * db.increment('people', 'age', 1, { name: 'Bob' })
-   *
-   * // we can make that much sweeter :)
-   * db.increment('people.age', { name: 'Bob' })
-   */
-
-  /**
-   * @private
-   */
-  async increment (...params: Array<mixed>): Promise<void|Error> {
     return (arify(v => {
       v.str('table')
-       .str('column')
-       .num('amount', 1)
-       .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
+       .obj('options', {})
+       .add('values', {
+         test: value => {
+           return (
+             isObject(value) || (Array.isArray(value) && value.length === 2)
+           )
+         },
+         description: 'either an Object or an Array with a length of 2'
        })
+       .add('where', {
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
+       })
+       .form('table', 'values', '?where', '?options')
+    }, inner))(...params)
+  }
 
-      v.form('table', '?column', '?amount', '?where')
-    }, async (args: Object): * => {
-      const [tbl, col] = Trilogy._parseTablePath(args.table, args.column)
+  async increment (...params) {
+    let inner = async args => {
+      let [tbl, col] = helpers.parseTablePath(args.table, args.column)
 
       if (!col) {
         return this._errorHandler(constants.ERR_COL_MISSING)
       }
 
-      const partial = this.knex.table(tbl).increment(col, args.amount)
-      const query = Trilogy._sanitizeWhere(args.where, partial)
+      let partial = this.knex.table(tbl).increment(col, args.amount)
+      let query = helpers.sanitizeWhere(args.where, partial)
 
       try {
         await this.run(query)
       } catch (e) {
         return this._errorHandler(e)
       }
-    }))(...params)
+    }
+
+    return (arify(v => {
+      v.str('table')
+       .str('column')
+       .num('amount', 1)
+       .add('where', {
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
+       })
+       .form('table', '?column', '?amount', '?where')
+    }, inner))(...params)
   }
 
-  /**
-   * Decrement a value at `column` by a specified `amount`.
-   * Allows function overloading, ie. `table` is the only
-   * required argument. In that case, column must be provided
-   * as part of `table` using dot- or bracket-notation. This
-   * allows for a short-and-sweet syntax in the case you only
-   * want to decrement by 1.
-   *
-   * @function
-   * @name decrement
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {string} [column]
-   *  If this argument is not explicitly provided, it must be
-   *  included as part of `tableName` using either dot- or
-   *  bracket-notation.
-   * @param {(Object|Array|Function)} [where=['1', '=', '1']]
-   *  Defaults to no restriction on selection.
-   * @param {boolean} allowNegative
-   *  Unless set to `true`, the value will not be allowed to go
-   *  below a value of `0`.
-   * @returns {Promise}
-   *
-   * db.decrement('people', 'age', 1, { name: 'Bob' })
-   *
-   * // we can make that much sweeter :)
-   * db.decrement('people.age', { name: 'Bob' })
-   */
+  async decrement (...params) {
+    let inner = async args => {
+      let [tbl, col] = helpers.parseTablePath(args.table, args.column)
 
-  /**
-   * @private
-   */
-  async decrement (...params: Array<mixed>): Promise<void|Error> {
+      if (!col) {
+        return this._errorHandler(constants.ERR_COL_MISSING)
+      }
+
+      let partial = this.knex.table(tbl)
+      let rawStr = args.allowNegative
+        ? `${col} - ${args.amount}`
+        : `MAX(0, ${col} - ${args.amount})`
+      let updated = partial.update({ [col]: this.knex.raw(rawStr) })
+      let query = helpers.sanitizeWhere(args.where, updated)
+
+      try {
+        return this.run(query)
+      } catch (e) {
+        return this._errorHandler(e)
+      }
+    }
+
     return (arify(v => {
       v.str('table')
        .str('column')
        .num('amount', 1)
        .bln('allowNegative', false)
        .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
        })
-
-      v.form('table', '?column', '?amount', '?where', '?allowNegative')
-    }, async (args: Object): * => {
-      const [tbl, col] = Trilogy._parseTablePath(args.table, args.column)
-
-      if (!col) {
-        return this._errorHandler(constants.ERR_COL_MISSING)
-      }
-
-      const partial = this.knex.table(tbl)
-      const rawStr = args.allowNegative
-        ? `${col} - ${args.amount}`
-        : `MAX(0, ${col} - ${args.amount})`
-      const updated = partial.update({ [col]: this.knex.raw(rawStr) })
-      const query = Trilogy._sanitizeWhere(args.where, updated)
-
-      try {
-        await this.run(query)
-      } catch (e) {
-        return this._errorHandler(e)
-      }
-    }))(...params)
+       .form('table', '?column', '?amount', '?where', '?allowNegative')
+    }, inner))(...params)
   }
 
-  /**
-   * Delete rows from a table. Allows deletion of all records in
-   * a table by passing only a table name.
-   *
-   * @function
-   * @name del
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {(Object|Array|Function)} [where=['1','=','1']]
-   *  Defaults to no restriction on selection.
-   * @returns {Promise<number>} The number of rows deleted
-   *
-   * @example
-   *
-   * // delete all records from 'people'
-   * db.del('people')
-   *
-   * // delete only where age is under 21
-   * db.del('people', ['age', '<', '21'])
-   */
-
-  /**
-   * @private
-   */
-  async del (...params: Array<mixed>): Promise<number|Error> {
-    return (arify(v => {
-      v.str('table')
-       .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
-       })
-
-      v.form('table', '?where')
-    }, async (args: Object): * => {
-      const partial = this.knex.table(args.table).del()
-      const query = Trilogy._sanitizeWhere(args.where, partial)
+  async del (...params) {
+    let inner = async args => {
+      let partial = this.knex.table(args.table).del()
+      let query = helpers.sanitizeWhere(args.where, partial)
 
       try {
         await this.run(query)
@@ -832,61 +452,21 @@ export default class Trilogy {
       } catch (e) {
         return this._errorHandler(e)
       }
-    }))(...params)
+    }
+
+    return (arify(v => {
+      v.str('table')
+       .add('where', {
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
+       })
+       .form('table', '?where')
+    }, inner))(...params)
   }
 
-  /**
-   * Return the number of rows, matching a criteria if specified.
-   *
-   * @function
-   * @name count
-   * @memberOf Trilogy#
-   *
-   * @param {string} table
-   * @param {String} [column='*']
-   *  Defaults to selecting all columns.
-   * @param {(Object|Array|Function)} [where=['1','=','1']]
-   *  Defaults to no restriction on selection.
-   * @param {Object} [options={}]
-   * @param {boolean} [options.distinct=false]
-   *  Counts only unique values if `true`.
-   * @returns {Promise<number>} The number of rows (meeting criteria if supplied)
-   *
-   * @example
-   *
-   * // given we have this data in our 'people' table:
-   * // |  name   |   age   |
-   * // |  Bob    |   18    |
-   * // |  Dale   |   25    |
-   * // |  Harry  |   32    |
-   *
-   * db.count('people')
-   * // -> 3
-   *
-   * // given we have tables `people`, `places`, `things`, & `ideas`
-   * // thanks to function overloading we can do this
-   * // to count number of tables in the database:
-   *
-   * db.count()
-   * // -> 4
-   */
-
-  /**
-   * @private
-   */
-  count (...params: Array<mixed>): Promise<number|Error> {
-    return (arify(v => {
-      v.str('table', 'sqlite_master')
-       .str('column', '*')
-       .obj('options', { distinct: false })
-       .add('where', {
-         test: (value: mixed): boolean => Trilogy._isValidWhere(value),
-         description: 'an object, array, or function',
-         defaultValue: ['1', '=', '1']
-       })
-
-      v.form('?table', '?column', '?where', '?options')
-    }, (args: Object): * => {
+  async count (...params) {
+    let inner = args => {
       let partial
       if (args.options.distinct) {
         partial = this.knex.table(args.table).countDistinct(`${args.column} as count`)
@@ -894,13 +474,13 @@ export default class Trilogy {
         partial = this.knex.table(args.table).count(`${args.column} as count`)
       }
 
-      const query = Trilogy._sanitizeWhere(args.where, partial).toString()
+      let query = helpers.sanitizeWhere(args.where, partial).toString()
 
       try {
-        const statement = this.db.prepare(query)
-        const res = statement.getAsObject({})
+        let statement = this.db.prepare(query)
+        let res = statement.getAsObject({})
 
-        if (isPlainObject(res) && 'count' in res) {
+        if (isObject(res) && res.count) {
           return res.count
         } else {
           return 0
@@ -908,233 +488,45 @@ export default class Trilogy {
       } catch (e) {
         return this._errorHandler(e)
       }
-    }))(...params)
+    }
+
+    return (arify(v => {
+      v.str('table', 'sqlite_master')
+       .str('column', '*')
+       .obj('options', { distinct: false })
+       .add('where', {
+         test: value => helpers.isValidWhere(value),
+         description: 'an Object or an Array of length 2 or 3',
+         defaultValue: constants.DEFAULT_WHERE
+       })
+       .form('?table', '?column', '?where', '?options')
+    }, inner))(...params)
   }
 
-  /**
-   * Execute arbitrary SQLite queries. You can either write your
-   * own queries as you would with typical SQLite, or you can build
-   * them with knex and use the knex `toString` method before passing
-   * it here.
-   *
-   * Pass `true` as the second argument to return the results, otherwise
-   * the query will be assumed to be execution only.
-   *
-   * @param {string} query
-   *  Any arbitrary SQLite query string
-   * @param {boolean} ret
-   *  Pass `true` to return the results of the query
-   * @returns {Promise<(Object|undefined)>}
-   */
-  async raw (
-    query: string,
-    ret?: boolean = false
-  ): Promise<Object|void|Error> {
+  async raw (query, ret = false) {
     try {
-      const done = ret ? this.exec(query) : this.run(query)
+      let done = ret ? this.exec(query) : this.run(query)
       return ret ? done : undefined
     } catch (e) {
       return this._errorHandler(e)
     }
   }
 
-  /**
-   * Exposes the Knex schema builder object
-   * @returns {Object}
-   *
-   * @see {@link Trilogy#raw} to run queries built with this
-   */
   getSchemaBuilder (): Object {
-    /**
-     * @prop sb
-     * @type {Object}
-     * @memberOf this
-     */
     return this.sb
   }
 
-  /**
-   * Exposes the Knex query builder object
-   * @returns {Object}
-   *
-   * @see {@link Trilogy#raw} to run queries built with this
-   */
   getQueryBuilder (): Object {
     return this.knex
   }
 
-  /**
-   * Build an 'on conflict' clause query component
-   * @param {string} conflict - the type of query to build
-   * @returns {string} query component
-   * @static
-   * @private
-   */
-  static _getConflictString (conflict: string): string {
-    switch (conflict.toLowerCase()) {
-      case 'fail': return ' or fail '
-      case 'abort': return ' or abort '
-      case 'ignore': return ' or ignore '
-      case 'replace': return ' or replace '
-      case 'rollback': return ' or rollback '
-      default: return ' '
-    }
+  static get coercion () {
+    return helpers.coercion.active
   }
 
-  /**
-   * Parse an sql.js return value into a sane JS array
-   * @param {Array} contents
-   * @returns {Array}
-   * @static
-   * @private
-   */
-  static _parseResponse (contents: Array<Object>): Array<Object> {
-    if (contents.length) {
-      const columns = contents[0].columns
-      const values = contents[0].values
-      const results = []
-      for (let i = 0; i < values.length; i++) {
-        let line = {}
-        for (let j = 0; j < columns.length; j++) {
-          line[columns[j]] = Trilogy._stringToBoolean(values[i][j])
-        }
-        results.push(line)
-      }
-      return results
-    } else {
-      return []
-    }
-  }
-
-  /**
-   * Check that a where argument is a valid type
-   * Valid types are: Object | Array | Function
-   * @param {*} where
-   * @returns {boolean}
-   * @static
-   * @private
-   */
-  static _isValidWhere (where: any): boolean {
-    if (isPlainObject(where)) return true
-
-    if (Array.isArray(where)) {
-      const len = where.length
-      return len === 2 || len === 3
-    }
-
-    return isFunction(where)
-  }
-
-  /**
-   * Normalize a columns argument to an Array
-   * Returns ['*'] if the input is not a string or Array
-   * This means it defaults to 'all columns'
-   * @param {*} columns
-   * @returns {Array}
-   * @static
-   * @private
-   */
-  static _sanitizeColumns (
-    columns: string | Array<string>
-  ): Array<string> {
-    if (Array.isArray(columns)) return columns
-    if (isString(columns)) return [columns]
-    return ['*']
-  }
-
-  /**
-   * Complete a where query component based on type
-   * Arrays are spread into arguments
-   * Functions get bound to the knex instance
-   * Objects are passed along as is
-   * @param {(Object|Array|Function)} where
-   * @param {Object} partial - the current knex query chain
-   * @returns {Object} a continued knex query chain
-   * @static
-   * @private
-   */
-  static _sanitizeWhere (where: Function|Array<string>, partial: Object): Object {
-    if (Array.isArray(where)) {
-      const arr = where.map(Trilogy._booleanToString)
-      return partial.where(...arr)
-    } else if (isFunction(where)) {
-      return partial.where(where.bind(partial))
-    } else {
-      // it's an object
-      each(where, (v, k) => {
-        where[k] = Trilogy._booleanToString(v)
-      })
-      return partial.where(where)
-    }
-  }
-
-  static _booleanToString (value: boolean): string|any {
-    return typeof value === 'boolean' ? `${value}` : value
-  }
-
-  static _stringToBoolean (value: 'true'|'false'): boolean|any {
-    if (value !== 'true' && value !== 'false') return value
-    return value === 'true'
-  }
-
-  /**
-   * Complete an 'order by' query component
-   * Arrays are spread into arguments
-   * Strings are passed along as is
-   * @param {(Array|string)} order
-   * @param {Object} partial - the current knex query chain
-   * @returns {Object} a continued knex query chain
-   * @private
-   */
-  static _sanitizeOrder (
-    order: Array<mixed> | string,
-    partial: Object
-  ): Object {
-    if (Array.isArray(order) && order.length === 2) {
-      return partial.orderBy(...order)
-    } else if (isString(order)) {
-      return partial.orderBy(order)
-    } else {
-      return partial
-    }
-  }
-
-  /**
-   * Parse a dot-notated path into table, column, & row
-   * @param {string} table
-   * @param {string} column
-   * @param {string} row
-   * @returns {Array<string>}
-   * @private
-   */
-  static _parseTablePath (
-    table: string,
-    column: ?string,
-    row: ?string
-  ): Array<?string> {
-    if (table.includes('.')) {
-      const [top, inner, nested] = table.split('.')
-      return Trilogy._parseTablePath(top, inner, nested)
-    } else if (table.includes('[')) {
-      const opener = table.indexOf('[')
-      const closer = table.indexOf(']', opener)
-
-      const top = table.substr(0, opener)
-      const inner = table.slice(opener + 1, closer)
-
-      const rowIndex = top.length + inner.length + 2
-
-      let extra, nested
-      if (rowIndex < table.length) {
-        extra = table.slice(rowIndex + 1)
-        const rowCloser = extra.indexOf(']')
-        nested = extra.substr(0, rowCloser)
-      }
-
-      return Trilogy._parseTablePath(top, inner, nested)
-    } else {
-      return [table, column, row]
-    }
+  static set coercion (value) {
+    helpers.coercion.active = !!value
+    return !!value
   }
 
   /**
@@ -1148,10 +540,7 @@ export default class Trilogy {
    * @returns {Promise<Error>} a rejected promise with the `Error` object
    * @private
    */
-  _errorHandler (
-    err: string | Error,
-    msg?: string = constants.ERR_UNKNOWN
-  ): Promise<Error> {
+  _errorHandler (err, msg = constants.ERR_UNKNOWN) {
     let e = new Error()
 
     if (err instanceof Error) {
@@ -1171,3 +560,5 @@ export default class Trilogy {
     return Promise.reject(e)
   }
 }
+
+module.exports = Trilogy
