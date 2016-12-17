@@ -22,7 +22,7 @@
 - Simple database embedding
 
   Combine SQLite's relational power with the simplicity of something like the `nedb` embedded database. That's what you get when you use trilogy. Since trilogy doesn't require any kind of build-step ala `sqlite3`, your build steps can be simpler.
-  
+
 - Powerful polymorphic API
 
   trilogy's API can let you do your thing in different ways. You can overload most of the functions to use them in varying ways by providing different arguments or leaving them out entirely. This is built using [arify][arify].
@@ -50,5 +50,5 @@ See [LICENSE](LICENSE)
 [electron]: https://github.com/electron/electron
 [nwjs]: https://github.com/nwjs/nw.js
 [arify]: https://github.com/citycide/arify
-[docs]: https://citycide.github.io/trilogy
+[docs]: https://citycide.github.io/trilogy/#/api
 [mdnslice]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice

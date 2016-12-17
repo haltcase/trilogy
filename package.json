@@ -14,19 +14,17 @@
     "prepublish": "npm test",
     "commit": "git-cz"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/citycide/trilogy.git"
-  },
+  "repository": "https://github.com/citycide/trilogy",
   "keywords": [
     "es6",
     "es2015",
     "es2016",
-    "modules",
-    "rollup",
     "knex",
     "sqlite",
-    "sql.js"
+    "sql.js",
+    "database",
+    "storage",
+    "electron"
   ],
   "author": "citycide",
   "license": "MIT",
@@ -36,9 +34,10 @@
   "files": [
     "src",
     "dist",
-    "flow"
+    "LICENSE",
+    "README.md"
   ],
-  "homepage": "https://github.com/citycide/trilogy#readme",
+  "homepage": "https://citycide.github.io/trilogy",
   "dependencies": {
     "arify": "^0.7.0",
     "babel-runtime": "^6.11.6",
