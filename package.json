@@ -67,7 +67,7 @@
     "rimraf": "^2.5.4",
     "rollup": "0.38.3",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-watch": "^2.5.0",
+    "rollup-watch": "^3.0.0",
     "standard-changelog": "0.0.1"
   },
   "config": {
