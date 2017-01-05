@@ -1,9 +1,9 @@
 {
   "name": "trilogy",
   "version": "0.10.0",
-  "description": "100% pure JS SQLite, built on Knex & SQL.js",
+  "description": "No-hassle SQLite with a document-store-like API.",
   "main": "dist/trilogy.js",
-  "jsnext:main": "dist/trilogy.mjs",
+  "module": "dist/trilogy.mjs",
   "scripts": {
     "prebuild": "eslint src tests",
     "build": "rimraf dist/** && rollup -c && cpy README.md docs",
@@ -11,20 +11,22 @@
     "pretest": "npm run build",
     "test": "ava",
     "docs": "cpy README.md docs && docsify serve docs",
+    "changelog": "standard-changelog -i CHANGELOG.md -o CHANGELOG.md",
     "prepublish": "npm test",
     "commit": "git-cz"
   },
   "repository": "https://github.com/citycide/trilogy",
   "keywords": [
-    "es6",
-    "es2015",
-    "es2016",
     "knex",
+    "model",
+    "schema",
     "sqlite",
     "sql.js",
-    "database",
     "storage",
-    "electron"
+    "database",
+    "electron",
+    "mongoose",
+    "document"
   ],
   "author": "citycide",
   "license": "MIT",
@@ -35,29 +37,31 @@
     "src",
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "homepage": "https://citycide.github.io/trilogy",
   "dependencies": {
-    "arify": "^0.7.0",
-    "babel-runtime": "^6.20.0",
-    "bluebird": "^3.4.6",
+    "component-type": "^1.2.1",
     "fs-jetpack": "^0.10.5",
     "knex": "^0.12.6",
+    "osom": "^2.1.2",
     "sql.js": "^0.4.0"
   },
   "devDependencies": {
     "ava": "^0.17.0",
     "babel-core": "^6.21.0",
     "babel-eslint": "^7.1.1",
-    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-preset-env": "^1.1.5",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-stage-0": "^6.16.0",
     "babel-register": "^6.18.0",
+    "babel-runtime": "^6.20.0",
     "commitizen": "^2.9.0",
     "cpy-cli": "^1.0.1",
     "cz-conventional-changelog": "^1.2.0",
-    "docsify-cli": "^1.0.0",
+    "docsify-cli": "^1.2.1",
     "eslint": "^3.12.2",
     "eslint-config-standard": "^6.2.1",
     "eslint-plugin-babel": "^4.0.0",
@@ -65,9 +69,9 @@
     "eslint-plugin-promise": "^3.4.0",
     "eslint-plugin-standard": "^2.0.1",
     "rimraf": "^2.5.4",
-    "rollup": "0.37.0",
+    "rollup": "0.39.2",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-watch": "^2.5.0",
+    "rollup-watch": "^3.1.0",
     "standard-changelog": "0.0.1"
   },
   "config": {
@@ -83,11 +87,19 @@
   },
   "babel": {
     "presets": [
-      "es2015",
+      [
+        "env",
+        {
+          "targets": {
+            "node": 4
+          }
+        }
+      ],
       "stage-0"
     ],
     "plugins": [
-      "transform-es2015-modules-commonjs"
+      "transform-runtime",
+      "add-module-exports"
     ]
   }
 }

@@ -9,17 +9,20 @@ export default {
   plugins: [
     babel({
       babelrc: false,
-      presets: [['es2015', { modules: false }], 'stage-0'],
-      plugins: ['transform-runtime'],
+      presets: [['env', {
+        targets: { node: 4 },
+        modules: false
+      }], 'stage-0'],
+      plugins: ['add-module-exports'],
       runtimeHelpers: true,
       exclude: 'node_modules/**'
     })
   ],
   targets: [{
-    dest: pkg['main'],
+    dest: pkg.main,
     format: 'cjs'
   }, {
-    dest: pkg['jsnext:main'],
+    dest: pkg.module,
     format: 'es'
   }]
 }

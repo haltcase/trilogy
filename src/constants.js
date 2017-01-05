@@ -1,12 +1,5 @@
 export default {
-  ERR_UNKNOWN:
-    'an unknown error occurred. Check the stacktrace or report an ' +
-    'issue if there is a problem with trilogy itself.',
-  ERR_COL_MISSING:
-    'column name is required. Pass it as an independent argument ' +
-    'or as dot-notation along with the table argument.',
   ERR_NO_DATABASE: 'could not write - no database initialized.',
-
-  DEFAULT_WHERE: {},
-  DEFAULT_COLUMNS: ['*']
+  COLUMN_TYPES: ['increments', 'json', 'string', 'number', 'boolean', 'date'],
+  KNEX_NO_ARGS: ['primary', 'unique', 'nullable', 'notNullable']
 }

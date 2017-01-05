@@ -2,32 +2,12 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var _defineProperty = _interopDefault(require('babel-runtime/helpers/defineProperty'));
-var _toConsumableArray = _interopDefault(require('babel-runtime/helpers/toConsumableArray'));
-var _slicedToArray = _interopDefault(require('babel-runtime/helpers/slicedToArray'));
-var _regeneratorRuntime = _interopDefault(require('babel-runtime/regenerator'));
-var _asyncToGenerator = _interopDefault(require('babel-runtime/helpers/asyncToGenerator'));
-var _Object$defineProperties = _interopDefault(require('babel-runtime/core-js/object/define-properties'));
-var _Object$assign = _interopDefault(require('babel-runtime/core-js/object/assign'));
-var _classCallCheck = _interopDefault(require('babel-runtime/helpers/classCallCheck'));
-var _createClass = _interopDefault(require('babel-runtime/helpers/createClass'));
-var Promise = _interopDefault(require('bluebird'));
-var jetpack = _interopDefault(require('fs-jetpack'));
-var arify = _interopDefault(require('arify'));
 var knex = _interopDefault(require('knex'));
-var SQL = _interopDefault(require('sql.js'));
 var path = require('path');
-var _Object$keys = _interopDefault(require('babel-runtime/core-js/object/keys'));
-var _typeof = _interopDefault(require('babel-runtime/helpers/typeof'));
-
-var constants = {
-  ERR_UNKNOWN: 'an unknown error occurred. Check the stacktrace or report an ' + 'issue if there is a problem with trilogy itself.',
-  ERR_COL_MISSING: 'column name is required. Pass it as an independent argument ' + 'or as dot-notation along with the table argument.',
-  ERR_NO_DATABASE: 'could not write - no database initialized.',
-
-  DEFAULT_WHERE: {},
-  DEFAULT_COLUMNS: ['*']
-};
+var osom = _interopDefault(require('osom'));
+var type = _interopDefault(require('component-type'));
+var jetpack = _interopDefault(require('fs-jetpack'));
+var SQL = _interopDefault(require('sql.js'));
 
 var map = function map(object, fn) {
   return each(object, fn, true);
@@ -39,7 +19,7 @@ function each(object, fn, map) {
       var _ret = function () {
         var res = {};
 
-        _Object$keys(object).forEach(function (key) {
+        Object.keys(object).forEach(function (key) {
           res[key] = fn.call(object, object[key], key, object);
         });
 
@@ -48,1352 +28,856 @@ function each(object, fn, map) {
         };
       }();
 
-      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+      if (typeof _ret === "object") return _ret.v;
     } else {
-      _Object$keys(object).forEach(function (key) {
+      Object.keys(object).forEach(function (key) {
         fn.call(object, object[key], key, object);
       });
     }
-  } else if (Array.isArray(object)) {
+  } else if (isArray(object)) {
     var method = map ? 'map' : 'forEach';
     return object[method](fn);
+  } else {
+    return object;
   }
 }
 
-function isObject(value) {
-  return value === Object(value) && !Array.isArray(value);
+function isOneOf(array, value) {
+  return array.some(function (v) {
+    return v === value;
+  });
 }
 
-var objToStr = Object.prototype.toString;
+var isType = function isType(value, kind) {
+  if (!kind) return type(value);
+  return type(value) === kind.toLowerCase();
+};
 
-function isFunction(value) {
-  var type = isObject(value) ? objToStr.call(value) : '';
-  return type === '[object Function]' || type === '[object GeneratorFunction]';
+var isArray = function isArray(value) {
+  return isType(value, 'array');
+};
+var isObject = function isObject(value) {
+  return isType(value, 'object');
+};
+var isFunction = function isFunction(value) {
+  return isType(value, 'function');
+};
+var isString = function isString(value) {
+  return isType(value, 'string');
+};
+
+
+function invariant(condition, message) {
+  if (!condition) {
+    var error = new Error(message || 'Invariant Violation');
+    error.name = 'InvariantError';
+    error.framesToPop = 1;
+    throw error;
+  } else {
+    return condition;
+  }
 }
 
-function isString(value) {
-  var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-  if (type == null) return false;
-
-  return type === 'string' || !Array.isArray(value) && type === 'object' && objToStr.call(value) === '[object String]';
+function Any(value) {
+  return value;
 }
 
-function isBoolean(value) {
-  return value === true || value === false;
+function toArray(value) {
+  if (typeof value === 'undefined') return;
+  return isArray(value) ? value : [value];
 }
 
-var coercion = { active: true };
+var setup = osom({
+  client: {
+    type: String,
+    default: 'sqlite3',
+    validate(value) {
+      return value === 'sqlite3' || value === 'sql.js';
+    }
+  },
+  dir: {
+    type: String,
+    default: process.cwd
+  },
+  connection: {
+    type: Object,
+    default: {},
+    validate(value) {
+      return isObject(value);
+    }
+  },
+  verbose: {
+    type: Any,
+    validate(value) {
+      return isFunction(value);
+    }
+  }
+});
+
+var findOptions = osom({
+  order: Any,
+  limit: Number,
+  skip: Number
+});
+
+var aggregateOptions = osom({
+  order: Any,
+  groupBy: {
+    type: Any,
+    transform: [toArray]
+  }
+});
+
+var columnDescriptor = osom({
+  type: {
+    type: Any,
+    required: true,
+    validate(value) {
+      return isOneOf(['increments', 'json', String, Number, Boolean, Date], value);
+    }
+  },
+  defaultTo: Any,
+  unique: Boolean,
+  primary: Boolean,
+  nullable: Boolean,
+  notNullable: Boolean
+});
+
+var constants = {
+  ERR_NO_DATABASE: 'could not write - no database initialized.',
+  COLUMN_TYPES: ['increments', 'json', 'string', 'number', 'boolean', 'date'],
+  KNEX_NO_ARGS: ['primary', 'unique', 'nullable', 'notNullable']
+};
+
+function toKnexSchema(model) {
+  return function (table) {
+    // every property of `model.schema` is a column
+    each(model.schema, function (descriptor, name) {
+      // each column's value is either its type or a descriptor
+      var type$$1 = getDataType(descriptor);
+      var partial = table[toKnexMethod(type$$1)](name);
+
+      if (isFunction(descriptor) || !isObject(descriptor)) return;
+
+      var columnProperties = columnDescriptor(descriptor);
+      each(columnProperties, function (value, property) {
+        if (isOneOf(['name', 'type'], property)) return;
+
+        if (isOneOf(constants.KNEX_NO_ARGS, property)) {
+          columnProperties[property] && partial[property]();
+        } else {
+          partial[property](value);
+        }
+      });
+    });
+  };
+}
+
+// for insertions / updates
+function toDefinition(model, object) {
+  return map(object, function (value, column) {
+    return toColumnDefinition(model, column, value);
+  });
+}
+
+// for selects
+function fromDefinition(model, object) {
+  return map(object, function (value, column) {
+    return fromColumnDefinition(model, column, value);
+  });
+}
+
+// for insertions / updates
+function toColumnDefinition(model, column, value) {
+  var type$$1 = getDataType(model.schema[column]);
+  return toInputType(type$$1, value);
+}
+
+// for selects
+function fromColumnDefinition(model, column, value) {
+  var type$$1 = getDataType(model.schema[column]);
+  return toReturnType(type$$1, value);
+}
+
+function castValue(value) {
+  var type$$1 = isType(value);
+  if (type$$1 === 'number' || type$$1 === 'string') {
+    return value;
+  }
+
+  if (type$$1 === 'boolean') return Number(value);
+
+  if (type$$1 === 'array' || type$$1 === 'object') {
+    return JSON.stringify(value);
+  }
+
+  return value;
+}
+
+function getDataType(property) {
+  var type$$1 = property;
+
+  if (isFunction(property)) {
+    type$$1 = property.name;
+  } else if (isObject(property)) {
+    type$$1 = isFunction(property.type) ? property.type.name : property.type;
+  }
+
+  if (isString(type$$1)) {
+    type$$1 = type$$1.toLowerCase();
+  }
+
+  if (!isOneOf(constants.COLUMN_TYPES, type$$1)) {
+    type$$1 = 'string';
+  }
+
+  return type$$1;
+}
+
+function toKnexMethod(type$$1) {
+  switch (type$$1) {
+    case 'string':
+    case 'json':
+      return 'text';
+    case 'number':
+    case 'boolean':
+      return 'integer';
+    case 'date':
+      return 'dateTime';
+    case 'increments':
+    default:
+      return type$$1;
+  }
+}
+
+function toInputType(type$$1, value) {
+  switch (type$$1) {
+    case 'string':
+      return String(value);
+    case 'json':
+      return JSON.stringify(value);
+    case 'number':
+    case 'boolean':
+    case 'increments':
+      return Number(value);
+    case 'date':
+      return new Date(value);
+    default:
+      return value;
+  }
+}
+
+function toReturnType(type$$1, value) {
+  switch (type$$1) {
+    case 'string':
+      return String(value);
+    case 'json':
+      return JSON.parse(value);
+    case 'number':
+    case 'increments':
+      return Number(value);
+    case 'boolean':
+      return Boolean(value);
+    case 'date':
+      return new Date(value);
+    default:
+      return value;
+  }
+}
+
+function readDatabase(instance) {
+  var atPath = instance.options.connection.filename;
+  if (jetpack.exists(atPath) === 'file') {
+    var file = jetpack.read(atPath, 'buffer');
+    instance.db = new SQL.Database(file);
+  } else {
+    instance.db = new SQL.Database();
+    writeDatabase(instance);
+  }
+}
+
+function writeDatabase(instance) {
+  if (!instance.db) {
+    throw new Error(constants.ERR_NO_DATABASE);
+  }
+
+  try {
+    var data = instance.db.export();
+    var buffer = new Buffer(data);
+
+    var atPath = instance.options.connection.filename;
+
+    jetpack.file(atPath, {
+      content: buffer, mode: '777'
+    });
+  } catch (e) {
+    throw new Error(e.message);
+  }
+}
+
+var _slicedToArray$2 = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+function _toConsumableArray$1(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function parseResponse(contents) {
-  if (contents.length) {
-    var columns = contents[0].columns;
-    var values = contents[0].values;
-    var results = [];
-    for (var i = 0; i < values.length; i++) {
-      var line = {};
-      for (var j = 0; j < columns.length; j++) {
-        line[columns[j]] = coercion.active ? stringToBoolean(values[i][j]) : values[i][j];
-      }
-      results.push(line);
-    }
-    return results;
-  } else {
-    return [];
-  }
-}
+  if (!contents || !contents.length) return [];
 
-// parse a dot or bracket notated string into table, column, & row
-// the row value isn't actually used currently
-function parseTablePath(table, column, row) {
-  if (table.includes('.')) {
-    var _table$split = table.split('.'),
-        _table$split2 = _slicedToArray(_table$split, 3),
-        top = _table$split2[0],
-        inner = _table$split2[1],
-        nested = _table$split2[2];
+  var _contents$ = contents[0],
+      columns = _contents$.columns,
+      values = _contents$.values;
 
-    return parseTablePath(top, inner, nested);
-  } else if (table.includes('[')) {
-    var opener = table.indexOf('[');
-    var closer = table.indexOf(']', opener);
+  var results = [];
 
-    var _top = table.substr(0, opener);
-    var _inner = table.slice(opener + 1, closer);
+  for (var i = 0; i < values.length; i++) {
+    var line = {};
 
-    var rowIndex = _top.length + _inner.length + 2;
-
-    var extra = void 0,
-        _nested = void 0;
-    if (rowIndex < table.length) {
-      extra = table.slice(rowIndex + 1);
-      var rowCloser = extra.indexOf(']');
-      _nested = extra.substr(0, rowCloser);
+    for (var j = 0; j < columns.length; j++) {
+      line[columns[j]] = values[i][j];
     }
 
-    return parseTablePath(_top, _inner, _nested);
-  } else {
-    return [table, column, row];
+    results.push(line);
   }
+
+  return results;
 }
 
-function sanitizeOrder(order, partial) {
-  if (Array.isArray(order) && order.length === 2) {
-    return partial.orderBy.apply(partial, _toConsumableArray(order));
-  } else if (isString(order)) {
+function buildOrder(partial, order) {
+  if (isString(order)) {
+    if (order === 'random') {
+      return partial.orderByRaw('RANDOM()');
+    }
     return partial.orderBy(order);
+  }
+
+  if (isArray(order)) {
+    var length = order.length;
+    if (length === 1 || length === 2) {
+      return partial.orderBy.apply(partial, _toConsumableArray$1(order));
+    }
+  }
+
+  return partial;
+}
+
+function buildWhere(partial, where) {
+  var _isValidWhere = isValidWhere(where),
+      _isValidWhere2 = _slicedToArray$2(_isValidWhere, 2),
+      isValid = _isValidWhere2[0],
+      arrayLength = _isValidWhere2[1];
+
+  if (!isValid) return partial;
+
+  var cast = where;
+  if (!arrayLength) {
+    cast = map(where, castValue);
   } else {
-    return partial;
+    var i = arrayLength - 1;
+    cast[i] = castValue(where[i]);
   }
-}
 
-function sanitizeWhere(where, partial) {
-  if (Array.isArray(where)) {
-    var arr = coercion.active ? where.map(booleanToString) : where;
-    return partial.where.apply(partial, _toConsumableArray(arr));
-  } else if (isFunction(where)) {
-    return partial.where(where.bind(partial));
-  } else {
-    // it's an object
-    return partial.where(map(where, function (v) {
-      return coercion.active ? booleanToString(v) : v;
-    }));
-  }
-}
-
-function getConflictString(conflict) {
-  switch (conflict.toLowerCase()) {
-    case 'fail':
-      return ' or fail ';
-    case 'abort':
-      return ' or abort ';
-    case 'ignore':
-      return ' or ignore ';
-    case 'replace':
-      return ' or replace ';
-    case 'rollback':
-      return ' or rollback ';
-    default:
-      return ' ';
-  }
-}
-
-function sanitizeColumns(columns) {
-  if (Array.isArray(columns)) return columns;
-  if (isString(columns)) return [columns];
-  return ['*'];
+  if (!arrayLength) return partial.where(cast);
+  return partial.where.apply(partial, _toConsumableArray$1(cast));
 }
 
 function isValidWhere(where) {
-  if (isObject(where)) return true;
+  if (isObject(where)) return [true];
 
-  if (Array.isArray(where)) {
+  if (isArray(where)) {
     var len = where.length;
-    return len === 2 || len === 3;
+    return [len === 2 || len === 3, len];
   }
 
-  return false;
+  return [false];
 }
 
-function processColumn(table, column) {
-  if (!column.name) {
-    throw new Error('column name required');
+
+
+function runQuery(instance, query, needResponse) {
+  if (isFunction(instance.verbose)) {
+    instance.verbose(query.toString());
   }
 
-  var name = column.name,
-      _column$type = column.type,
-      type = _column$type === undefined ? 'text' : _column$type;
+  if (instance.isNative) return query;
 
+  var response = void 0;
 
-  if (column.unique === 'inline') {
-    // bypass knex's usual unique method
-    column['__TYPE__'] = type + ' unique';
-    type = 'specificType';
-    delete column.unique;
+  if (needResponse) {
+    response = parseResponse(instance.db.exec(query.toString()));
+    if (query._sequence && query._sequence[0].method === 'hasTable') {
+      return !!response.length;
+    }
+  } else {
+    instance.db.run(query.toString());
+
+    if (isOneOf(['insert', 'update', 'delete'], query._method)) {
+      response = instance.db.getRowsModified();
+    }
   }
 
-  var partial = table[type](name, column['__TYPE__']);
-
-  mapColumnProperties(partial, column);
+  writeDatabase(instance);
+  return Promise.resolve(response);
 }
 
-function processArraySchema(table, columns) {
-  each(columns, function (column) {
-    if (isString(column)) {
-      table.text(column);
-      return;
+var _extends$1 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _slicedToArray$1 = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass$1 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Model = function () {
+  function Model(ctx, name, schema, options) {
+    _classCallCheck$1(this, Model);
+
+    Object.assign(this, {
+      ctx, name, schema, options
+    });
+  }
+
+  _createClass$1(Model, [{
+    key: 'create',
+    value: function create(object, options) {
+      var _this = this;
+
+      var insertion = toDefinition(this, object);
+
+      var query = this.ctx.knex.raw(this.ctx.knex(this.name).insert(insertion).toString().replace(/^insert/i, 'INSERT OR IGNORE'));
+
+      return runQuery(this.ctx, query).then(function () {
+        return _this.findOne(object);
+      });
     }
+  }, {
+    key: 'find',
+    value: function find(column, criteria) {
+      var _this2 = this;
 
-    if (isObject(column)) {
-      processColumn(table, column);
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (!isString(column)) {
+        options = criteria;
+        criteria = column;
+        column = '';
+      }
+
+      options = findOptions(options);
+
+      var order = options.random ? 'random' : options.order;
+      var query = this.ctx.knex(this.name).select();
+      query = buildWhere(query, criteria);
+
+      if (order) query = buildOrder(query, order);
+      if (options.limit) query = query.limit(options.limit);
+      if (options.skip) query = query.offset(options.skip);
+
+      return runQuery(this.ctx, query, true).then(function (response) {
+        if (!isArray(response)) {
+          return response ? [response] : [];
+        }
+
+        return response.map(function (object) {
+          if (!column) {
+            return fromDefinition(_this2, object);
+          } else {
+            return fromColumnDefinition(_this2, column, object[column]);
+          }
+        });
+      });
     }
-  });
-}
+  }, {
+    key: 'findOne',
+    value: function findOne(column, criteria) {
+      var _this3 = this;
 
-function processObjectSchema(table, columns) {
-  each(columns, function (value, name) {
-    if (isString(value) && isFunction(table[value])) {
-      table[value](name);
-    } else if (isObject(value)) {
-      var column = _Object$assign({}, { name: name }, value);
-      processColumn(table, column);
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (!isString(column)) {
+        options = criteria;
+        criteria = column;
+        column = '';
+      }
+
+      options = findOptions(options);
+
+      var order = options.random ? 'random' : options.order;
+      var query = this.ctx.knex(this.name).first();
+      query = buildWhere(query, criteria);
+
+      if (order) query = buildOrder(query, order);
+      if (options.skip) query = query.offset(options.skip);
+
+      return runQuery(this.ctx, query, true).then(function (response) {
+        if (!isArray(response)) return;
+
+        var _response = _slicedToArray$1(response, 1),
+            result = _response[0];
+
+        if (!column) {
+          return fromDefinition(_this3, result);
+        } else {
+          // if a column was provided, skip casting
+          // the entire object and just process then
+          // return that particular property
+          return fromColumnDefinition(_this3, column, result[column]);
+        }
+      });
     }
-  });
-}
+  }, {
+    key: 'findOrCreate',
+    value: function findOrCreate(criteria, creation, options) {
+      var _this4 = this;
 
-function mapColumnProperties(partial, column) {
-  return _Object$keys(column).reduce(function (acc, key) {
-    // name & type are handled already
-    if (key === 'name' || key === 'type') return acc;
-
-    var value = column[key];
-    var method = acc[key];
-
-    if (typeof method !== 'function') {
-      return;
+      return this.findOne(criteria, options).then(function (existing) {
+        if (existing) return existing;
+        return _this4.create(_extends$1({}, criteria, creation));
+      });
     }
+  }, {
+    key: 'update',
+    value: function update(criteria, data, options) {
+      var query = this.ctx.knex(this.name).update(data);
+      query = buildWhere(query, criteria);
 
-    return value === undefined ? method.call(acc) : method.call(acc, value);
-  }, partial);
-}
+      return runQuery(this.ctx, query);
+    }
+  }, {
+    key: 'updateOrCreate',
+    value: function updateOrCreate(criteria, data, options) {
+      var _this5 = this;
 
-function stringToBoolean(value) {
-  if (value !== 'true' && value !== 'false') return value;
-  return value === 'true';
-}
+      return this.find(criteria, options).then(function (found) {
+        if (!found || !found.length) {
+          return _this5.create(_extends$1({}, criteria, data), options);
+        } else {
+          return _this5.update(criteria, data, options);
+        }
+      });
+    }
+  }, {
+    key: 'get',
+    value: function get(column, criteria, defaultValue) {
+      return this.findOne(criteria).then(function (data) {
+        if (!data) return defaultValue;
+        if (typeof data[column] === 'undefined') {
+          return defaultValue;
+        }
 
-function booleanToString(value) {
-  return isBoolean ? '' + value : value;
-}
+        return data[column];
+      });
+    }
+  }, {
+    key: 'set',
+    value: function set(column, criteria, value) {
+      if (!this.schema[column]) {
+        throw new Error('no such column in schema');
+      }
+
+      return this.update(criteria, {
+        [column]: value
+      });
+    }
+  }, {
+    key: 'incr',
+    value: function incr(column, criteria, amount) {
+      amount = Number(amount) || 1;
+      var query = this.ctx.knex(this.name).increment(column, amount);
+      query = buildWhere(query, criteria);
+
+      return runQuery(this.ctx, query);
+    }
+  }, {
+    key: 'decr',
+    value: function decr(column, criteria, amount, allowNegative) {
+      amount = Number(amount) || 1;
+      var query = this.ctx.knex(this.name);
+      var raw = allowNegative ? `${ column } - ${ amount }` : `MAX(0, ${ column } - ${ amount })`;
+      query = query.update({ [column]: this.ctx.knex.raw(raw) });
+      query = buildWhere(query, criteria);
+
+      return runQuery(this.ctx, query);
+    }
+  }, {
+    key: 'remove',
+    value: function remove(criteria) {
+      var query = this.ctx.knex(this.name).del();
+      query = buildWhere(query, criteria);
+
+      return runQuery(this.ctx, query);
+    }
+  }, {
+    key: 'count',
+    value: function count(column, criteria) {
+      var _query;
+
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (!isString(column)) {
+        options = criteria;
+        criteria = column;
+        column = '*';
+      }
+
+      options = aggregateOptions(options);
+
+      var val = `${ column } as count`;
+      var method = options.distinct ? 'countDistinct' : 'count';
+      var query = this.ctx.knex(this.name)[method](val);
+      query = buildWhere(query, criteria);
+
+      if (options.groupBy) query = (_query = query).groupBy.apply(_query, _toConsumableArray(options.groupBy));
+
+      return runQuery(this.ctx, query, true).then(function (res) {
+        if (!isArray(res)) return;
+        return res[0].count;
+      });
+    }
+  }, {
+    key: 'min',
+    value: function min(column, criteria) {
+      var _query2;
+
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      options = aggregateOptions(options);
+
+      var val = `${ column } as min`;
+      var query = this.ctx.knex(this.name).min(val);
+      query = buildWhere(query, criteria);
+
+      if (options.groupBy) query = (_query2 = query).groupBy.apply(_query2, _toConsumableArray(options.groupBy));
+
+      return runQuery(this.ctx, query, true).then(function (res) {
+        if (!isArray(res)) return;
+        return res[0].min;
+      });
+    }
+  }, {
+    key: 'max',
+    value: function max(column, criteria, options) {
+      var _query3;
+
+      options = aggregateOptions(options);
+
+      var val = `${ column } as max`;
+      var query = this.ctx.knex(this.name).max(val);
+      query = buildWhere(query, criteria);
+
+      if (options.groupBy) query = (_query3 = query).groupBy.apply(_query3, _toConsumableArray(options.groupBy));
+
+      return runQuery(this.ctx, query, true).then(function (res) {
+        if (!isArray(res)) return;
+        return res[0].max;
+      });
+    }
+  }]);
+
+  return Model;
+}();
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Trilogy = function () {
   function Trilogy(path$$1) {
-    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     _classCallCheck(this, Trilogy);
 
     if (!path$$1) {
-      throw new Error('Trilogy constructor must be provided a file path.');
+      throw new Error('trilogy constructor must be provided a file path.');
     }
 
-    if (!path.isAbsolute(path$$1)) {
-      var _opts$dir = opts.dir,
-          dir = _opts$dir === undefined ? process.cwd() : _opts$dir;
+    this.options = setup(options);
+    this.options.connection.filename = path.resolve(this.options.dir, path$$1);
+    this.isNative = this.options.client === 'sqlite3';
+    this.verbose = options.verbose;
 
-      path$$1 = path.resolve(dir, path$$1);
+    var config = { client: 'sqlite3', useNullAsDefault: true };
+
+    if (this.isNative) {
+      this.knex = knex(_extends({}, config, { connection: this.options.connection }));
+    } else {
+      this.knex = knex(config);
+      readDatabase(this, this.options.connection.filename);
     }
 
-    _Object$assign(this, {
-      path: path$$1,
-      db: null,
-      verbose: isFunction(opts.verbose) ? opts.verbose : function () {},
-      errorListener: isFunction(opts.errorListener) ? opts.errorListener : null
-    });
-
-    this.coercion = opts.coercion != null ? !!opts.coercion : coercion.active;
-
-    this._init();
+    this.definitions = new Map();
   }
 
-  /**
-   * Initialize the instance and create or access the database file
-   * @private
-   */
-
-
   _createClass(Trilogy, [{
-    key: '_init',
-    value: function _init() {
-      if (jetpack.exists(this.path) === 'file') {
-        var file = jetpack.read(this.path, 'buffer');
-        this.db = new SQL.Database(file);
-      } else {
-        this.db = new SQL.Database();
-        this._write();
+    key: 'model',
+    value: function model(name, schema, options) {
+      if (this.definitions.has(name)) {
+        return this.definitions.get(name);
       }
 
-      var kn = knex({ client: 'sqlite3', useNullAsDefault: true });
+      var model = new Model(this, name, schema, options);
+      this.definitions.set(name, model);
 
-      _Object$defineProperties(this, {
-        knex: {
-          get: function get() {
-            return kn;
-          }
-        },
-        sb: {
-          get: function get() {
-            return kn.schema;
-          }
-        }
-      });
-    }
+      var check = this.knex.schema.hasTable(name);
+      var query = this.knex.schema.createTableIfNotExists(name, toKnexSchema(model));
 
-    /**
-     * Export the data in memory to the database file
-     * @private
-     */
-
-  }, {
-    key: '_write',
-    value: function _write() {
-      if (!this.db) {
-        this._errorHandler(constants.ERR_NO_DATABASE);
-      }
-
-      try {
-        var data = this.db.export();
-        var buffer = new Buffer(data);
-
-        jetpack.file(this.path, {
-          content: buffer, mode: '777'
+      if (this.isNative) {
+        check.then(function (tableExists) {
+          if (tableExists) return;
+          query.then(function () {});
         });
-      } catch (e) {
-        this._errorHandler(e);
+      } else {
+        var exists = runQuery(this, check, true);
+        if (!exists) runQuery(this, query);
       }
+
+      return model;
     }
-
-    /**
-     * Execute a query on the database, ignoring its results.
-     * @private
-     */
-
   }, {
-    key: 'run',
-    value: function () {
-      var _ref = _asyncToGenerator(_regeneratorRuntime.mark(function _callee(query) {
-        return _regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                if (this.db) {
-                  _context.next = 2;
-                  break;
-                }
-
-                return _context.abrupt('return', this._errorHandler(constants.ERR_NO_DATABASE));
-
-              case 2:
-
-                if (!isString(query)) {
-                  query = query.toString();
-                }
-
-                this.verbose(query);
-
-                _context.prev = 4;
-
-                this.db.run(query);
-                this._write();
-                _context.next = 12;
-                break;
-
-              case 9:
-                _context.prev = 9;
-                _context.t0 = _context['catch'](4);
-                throw _context.t0;
-
-              case 12:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, this, [[4, 9]]);
-      }));
-
-      function run(_x2) {
-        return _ref.apply(this, arguments);
-      }
-
-      return run;
-    }()
-
-    /**
-     * Execute a query on the database and return its results.
-     * @private
-     */
-
+    key: 'create',
+    value: function create(table, object, options) {
+      var model = checkModel(this, table);
+      return model.create(object, options);
+    }
   }, {
-    key: 'exec',
-    value: function () {
-      var _ref2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee2(query) {
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                if (this.db) {
-                  _context2.next = 2;
-                  break;
-                }
+    key: 'find',
+    value: function find(location, criteria, options) {
+      var _location$split = location.split('.', 2),
+          _location$split2 = _slicedToArray(_location$split, 2),
+          table = _location$split2[0],
+          column = _location$split2[1];
 
-                return _context2.abrupt('return', this._errorHandler(constants.ERR_NO_DATABASE));
-
-              case 2:
-
-                if (!isString(query)) {
-                  query = query.toString();
-                }
-
-                this.verbose(query);
-
-                _context2.prev = 4;
-                return _context2.abrupt('return', this.db.exec(query));
-
-              case 8:
-                _context2.prev = 8;
-                _context2.t0 = _context2['catch'](4);
-                throw _context2.t0;
-
-              case 11:
-              case 'end':
-                return _context2.stop();
-            }
-          }
-        }, _callee2, this, [[4, 8]]);
-      }));
-
-      function exec(_x3) {
-        return _ref2.apply(this, arguments);
-      }
-
-      return exec;
-    }()
+      var model = checkModel(this, table);
+      return model.find(column, criteria, options);
+    }
   }, {
-    key: 'createTable',
-    value: function () {
-      var _ref3 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee3(name, columns) {
-        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-        var query;
-        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                query = void 0;
+    key: 'findOne',
+    value: function findOne(location, criteria, options) {
+      var _location$split3 = location.split('.', 2),
+          _location$split4 = _slicedToArray(_location$split3, 2),
+          table = _location$split4[0],
+          column = _location$split4[1];
 
-                if (isFunction(columns)) {
-                  query = this.sb.createTableIfNotExists(name, columns);
-                } else {
-                  query = this.sb.createTableIfNotExists(name, function (table) {
-                    if (Array.isArray(columns)) {
-                      return processArraySchema(table, columns);
-                    } else if (isObject(columns)) {
-                      return processObjectSchema(table, columns);
-                    }
-
-                    if (options.compositeKey) {
-                      table.primary(options.compositeKey);
-                    }
-                  });
-                }
-
-                _context3.prev = 2;
-                return _context3.abrupt('return', this.run(query));
-
-              case 6:
-                _context3.prev = 6;
-                _context3.t0 = _context3['catch'](2);
-                return _context3.abrupt('return', this._errorHandler(_context3.t0));
-
-              case 9:
-              case 'end':
-                return _context3.stop();
-            }
-          }
-        }, _callee3, this, [[2, 6]]);
-      }));
-
-      function createTable(_x4, _x5) {
-        return _ref3.apply(this, arguments);
-      }
-
-      return createTable;
-    }()
+      var model = checkModel(this, table);
+      return model.findOne(column, criteria, options);
+    }
   }, {
-    key: 'hasTable',
-    value: function () {
-      var _ref4 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(name) {
-        var res;
-        return _regeneratorRuntime.wrap(function _callee4$(_context4) {
-          while (1) {
-            switch (_context4.prev = _context4.next) {
-              case 0:
-                _context4.prev = 0;
-                _context4.next = 3;
-                return this.count('sqlite_master', 'name', { name: name });
-
-              case 3:
-                res = _context4.sent;
-                return _context4.abrupt('return', res > 0);
-
-              case 7:
-                _context4.prev = 7;
-                _context4.t0 = _context4['catch'](0);
-                return _context4.abrupt('return', this._errorHandler(_context4.t0));
-
-              case 10:
-              case 'end':
-                return _context4.stop();
-            }
-          }
-        }, _callee4, this, [[0, 7]]);
-      }));
-
-      function hasTable(_x7) {
-        return _ref4.apply(this, arguments);
-      }
-
-      return hasTable;
-    }()
-  }, {
-    key: 'dropTable',
-    value: function () {
-      var _ref5 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee5(name) {
-        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                _context5.prev = 0;
-                _context5.next = 3;
-                return this.run(this.sb.dropTable(name));
-
-              case 3:
-                _context5.next = 8;
-                break;
-
-              case 5:
-                _context5.prev = 5;
-                _context5.t0 = _context5['catch'](0);
-                return _context5.abrupt('return', this._errorHandler(_context5.t0));
-
-              case 8:
-              case 'end':
-                return _context5.stop();
-            }
-          }
-        }, _callee5, this, [[0, 5]]);
-      }));
-
-      function dropTable(_x8) {
-        return _ref5.apply(this, arguments);
-      }
-
-      return dropTable;
-    }()
-  }, {
-    key: 'insert',
-    value: function () {
-      var _ref6 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee6(name, values) {
-        var _this = this;
-
-        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-        var obj, query, str;
-        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
-              case 0:
-                if (!(!name || !isString(name))) {
-                  _context6.next = 2;
-                  break;
-                }
-
-                return _context6.abrupt('return', this._errorHandler('#insert', '\'tableName\' must be a string'));
-
-              case 2:
-                obj = map(values, function (v) {
-                  if (isBoolean(v)) {
-                    // without some kind of boolean coercion, the query will fail
-                    // native sqlite leans toward 0s and 1s for booleans
-                    // with coercion active we convert booleans to strings
-                    return _this.coercion ? '' + v : v | 0;
-                  } else {
-                    return v;
-                  }
-                });
-                query = this.knex.table(name).insert(obj);
-
-                // Knex doesn't have support for conflict clauses yet :(
-
-                if (options.conflict) {
-                  str = getConflictString(options.conflict);
-
-                  query = query.toString().replace('insert into', 'insert' + str + 'into');
-                }
-
-                _context6.prev = 5;
-                _context6.next = 8;
-                return this.run(query);
-
-              case 8:
-                return _context6.abrupt('return', this.db.getRowsModified());
-
-              case 11:
-                _context6.prev = 11;
-                _context6.t0 = _context6['catch'](5);
-                return _context6.abrupt('return', this._errorHandler(_context6.t0));
-
-              case 14:
-              case 'end':
-                return _context6.stop();
-            }
-          }
-        }, _callee6, this, [[5, 11]]);
-      }));
-
-      function insert(_x9, _x10) {
-        return _ref6.apply(this, arguments);
-      }
-
-      return insert;
-    }()
-  }, {
-    key: 'select',
-    value: function () {
-      var _ref7 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee8() {
-        var _this2 = this;
-
-        var _args8 = arguments;
-        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                return _context8.abrupt('return', arify(function (v) {
-                  v.str('table').obj('options', { random: false }).add('columns', {
-                    test: function test(value) {
-                      return isString(value) || Array.isArray(value);
-                    },
-                    description: 'a string or an Array of strings',
-                    defaultValue: constants.DEFAULT_COLUMNS
-                  }).add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', '?columns', '?where', '?options');
-                }, function () {
-                  var _ref8 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee7(args) {
-                    var columns, partial, query, result;
-                    return _regeneratorRuntime.wrap(function _callee7$(_context7) {
-                      while (1) {
-                        switch (_context7.prev = _context7.next) {
-                          case 0:
-                            columns = sanitizeColumns(args.columns);
-                            partial = _this2.knex.column(columns).table(args.table);
-                            query = sanitizeWhere(args.where, partial);
-
-
-                            if (args.options.random) {
-                              query = query.orderByRaw('RANDOM()');
-                            } else if (args.options.order) {
-                              query = sanitizeOrder(args.options.order, partial);
-                            }
-
-                            _context7.prev = 4;
-                            _context7.next = 7;
-                            return _this2.exec(query);
-
-                          case 7:
-                            result = _context7.sent;
-                            return _context7.abrupt('return', parseResponse(result));
-
-                          case 11:
-                            _context7.prev = 11;
-                            _context7.t0 = _context7['catch'](4);
-
-                            if (!_context7.t0.message.endsWith('of undefined')) {
-                              _context7.next = 15;
-                              break;
-                            }
-
-                            return _context7.abrupt('return');
-
-                          case 15:
-                            return _context7.abrupt('return', _this2._errorHandler(_context7.t0));
-
-                          case 16:
-                          case 'end':
-                            return _context7.stop();
-                        }
-                      }
-                    }, _callee7, _this2, [[4, 11]]);
-                  }));
-
-                  return function (_x12) {
-                    return _ref8.apply(this, arguments);
-                  };
-                }()).apply(undefined, _args8));
-
-              case 1:
-              case 'end':
-                return _context8.stop();
-            }
-          }
-        }, _callee8, this);
-      }));
-
-      function select() {
-        return _ref7.apply(this, arguments);
-      }
-
-      return select;
-    }()
-  }, {
-    key: 'first',
-    value: function () {
-      var _ref9 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee10() {
-        var _this3 = this;
-
-        var inner,
-            _args10 = arguments;
-        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
-          while (1) {
-            switch (_context10.prev = _context10.next) {
-              case 0:
-                inner = function () {
-                  var _ref10 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee9(args) {
-                    var columns, partial, query, result;
-                    return _regeneratorRuntime.wrap(function _callee9$(_context9) {
-                      while (1) {
-                        switch (_context9.prev = _context9.next) {
-                          case 0:
-                            columns = sanitizeColumns(args.columns);
-                            partial = _this3.knex.table(args.table).first(columns);
-                            query = sanitizeWhere(args.where, partial);
-
-
-                            if (args.options.random) {
-                              query = query.orderByRaw('RANDOM()');
-                            }
-
-                            _context9.prev = 4;
-                            _context9.next = 7;
-                            return _this3.exec(query);
-
-                          case 7:
-                            result = _context9.sent;
-                            return _context9.abrupt('return', parseResponse(result)[0]);
-
-                          case 11:
-                            _context9.prev = 11;
-                            _context9.t0 = _context9['catch'](4);
-
-                            if (!_context9.t0.message.endsWith('of undefined')) {
-                              _context9.next = 15;
-                              break;
-                            }
-
-                            return _context9.abrupt('return');
-
-                          case 15:
-                            return _context9.abrupt('return', _this3._errorHandler(_context9.t0));
-
-                          case 16:
-                          case 'end':
-                            return _context9.stop();
-                        }
-                      }
-                    }, _callee9, _this3, [[4, 11]]);
-                  }));
-
-                  return function inner(_x13) {
-                    return _ref10.apply(this, arguments);
-                  };
-                }();
-
-                return _context10.abrupt('return', arify(function (v) {
-                  v.str('table').obj('options', { random: false }).add('columns', {
-                    test: function test(value) {
-                      return Array.isArray(value) || isString(value);
-                    },
-                    description: 'a string or an Array of strings',
-                    defaultValue: constants.DEFAULT_COLUMNS
-                  }).add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', '?columns', '?where', '?options');
-                }, inner).apply(undefined, _args10));
-
-              case 2:
-              case 'end':
-                return _context10.stop();
-            }
-          }
-        }, _callee10, this);
-      }));
-
-      function first() {
-        return _ref9.apply(this, arguments);
-      }
-
-      return first;
-    }()
-  }, {
-    key: 'getValue',
-    value: function () {
-      var _ref11 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee12() {
-        var _this4 = this;
-
-        var inner,
-            _args12 = arguments;
-        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
-          while (1) {
-            switch (_context12.prev = _context12.next) {
-              case 0:
-                inner = function () {
-                  var _ref12 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee11(args) {
-                    var _helpers$parseTablePa, _helpers$parseTablePa2, tbl, col, partial, query, result;
-
-                    return _regeneratorRuntime.wrap(function _callee11$(_context11) {
-                      while (1) {
-                        switch (_context11.prev = _context11.next) {
-                          case 0:
-                            _helpers$parseTablePa = parseTablePath(args.table, args.column), _helpers$parseTablePa2 = _slicedToArray(_helpers$parseTablePa, 2), tbl = _helpers$parseTablePa2[0], col = _helpers$parseTablePa2[1];
-
-                            if (col) {
-                              _context11.next = 3;
-                              break;
-                            }
-
-                            return _context11.abrupt('return', _this4._errorHandler(constants.ERR_COL_MISSING));
-
-                          case 3:
-                            partial = _this4.knex.table(tbl).first(col);
-                            query = sanitizeWhere(args.where, partial);
-                            _context11.prev = 5;
-                            _context11.next = 8;
-                            return _this4.exec(query);
-
-                          case 8:
-                            result = _context11.sent;
-                            return _context11.abrupt('return', parseResponse(result)[0][col]);
-
-                          case 12:
-                            _context11.prev = 12;
-                            _context11.t0 = _context11['catch'](5);
-
-                            if (!_context11.t0.message.endsWith('of undefined')) {
-                              _context11.next = 16;
-                              break;
-                            }
-
-                            return _context11.abrupt('return');
-
-                          case 16:
-                            return _context11.abrupt('return', _this4._errorHandler(_context11.t0));
-
-                          case 17:
-                          case 'end':
-                            return _context11.stop();
-                        }
-                      }
-                    }, _callee11, _this4, [[5, 12]]);
-                  }));
-
-                  return function inner(_x14) {
-                    return _ref12.apply(this, arguments);
-                  };
-                }();
-
-                return _context12.abrupt('return', arify(function (v) {
-                  v.str('table').str('column').add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', '?column', 'where');
-                }, inner).apply(undefined, _args12));
-
-              case 2:
-              case 'end':
-                return _context12.stop();
-            }
-          }
-        }, _callee12, this);
-      }));
-
-      function getValue() {
-        return _ref11.apply(this, arguments);
-      }
-
-      return getValue;
-    }()
+    key: 'findOrCreate',
+    value: function findOrCreate(table, criteria, creation, options) {
+      var model = checkModel(this, table);
+      return model.findOrCreate(criteria, creation, options);
+    }
   }, {
     key: 'update',
-    value: function () {
-      var _ref13 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee14() {
-        var _this5 = this;
-
-        var inner,
-            _args14 = arguments;
-        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
-          while (1) {
-            switch (_context14.prev = _context14.next) {
-              case 0:
-                inner = function () {
-                  var _ref14 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee13(args) {
-                    var partial, col, update, query, str;
-                    return _regeneratorRuntime.wrap(function _callee13$(_context13) {
-                      while (1) {
-                        switch (_context13.prev = _context13.next) {
-                          case 0:
-                            partial = _this5.knex.table(args.table);
-                            col = map(args.values, function (v) {
-                              // without some kind of boolean coercion, the query will fail
-                              // native sqlite leans toward 0s and 1s for booleans
-                              // with coercion active we convert booleans to strings
-                              if (isBoolean(v)) {
-                                return _this5.coercion ? '' + v : v | 0;
-                              } else {
-                                return v;
-                              }
-                            });
-                            update = isObject(col) ? partial.update(col) : partial.update.apply(partial, _toConsumableArray(col));
-                            query = sanitizeWhere(args.where, update);
-
-                            // Knex doesn't have support for conflict clauses yet :(
-
-                            if (args.options.conflict) {
-                              str = getConflictString(args.options.conflict);
-
-                              query = query.toString().replace('update', 'update' + str);
-                            }
-
-                            _context13.prev = 5;
-                            _context13.next = 8;
-                            return _this5.run(query);
-
-                          case 8:
-                            return _context13.abrupt('return', _this5.db.getRowsModified());
-
-                          case 11:
-                            _context13.prev = 11;
-                            _context13.t0 = _context13['catch'](5);
-                            return _context13.abrupt('return', _this5._errorHandler(_context13.t0));
-
-                          case 14:
-                          case 'end':
-                            return _context13.stop();
-                        }
-                      }
-                    }, _callee13, _this5, [[5, 11]]);
-                  }));
-
-                  return function inner(_x15) {
-                    return _ref14.apply(this, arguments);
-                  };
-                }();
-
-                return _context14.abrupt('return', arify(function (v) {
-                  v.str('table').obj('options', {}).add('values', {
-                    test: function test(value) {
-                      return isObject(value) || Array.isArray(value) && value.length === 2;
-                    },
-                    description: 'either an Object or an Array with a length of 2'
-                  }).add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', 'values', '?where', '?options');
-                }, inner).apply(undefined, _args14));
-
-              case 2:
-              case 'end':
-                return _context14.stop();
-            }
-          }
-        }, _callee14, this);
-      }));
-
-      function update() {
-        return _ref13.apply(this, arguments);
-      }
-
-      return update;
-    }()
+    value: function update(table, criteria, data, options) {
+      var model = checkModel(this, table);
+      return model.update(criteria, data, options);
+    }
   }, {
-    key: 'increment',
-    value: function () {
-      var _ref15 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee16() {
-        var _this6 = this;
-
-        var inner,
-            _args16 = arguments;
-        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
-          while (1) {
-            switch (_context16.prev = _context16.next) {
-              case 0:
-                inner = function () {
-                  var _ref16 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee15(args) {
-                    var _helpers$parseTablePa3, _helpers$parseTablePa4, tbl, col, partial, query;
-
-                    return _regeneratorRuntime.wrap(function _callee15$(_context15) {
-                      while (1) {
-                        switch (_context15.prev = _context15.next) {
-                          case 0:
-                            _helpers$parseTablePa3 = parseTablePath(args.table, args.column), _helpers$parseTablePa4 = _slicedToArray(_helpers$parseTablePa3, 2), tbl = _helpers$parseTablePa4[0], col = _helpers$parseTablePa4[1];
-
-                            if (col) {
-                              _context15.next = 3;
-                              break;
-                            }
-
-                            return _context15.abrupt('return', _this6._errorHandler(constants.ERR_COL_MISSING));
-
-                          case 3:
-                            partial = _this6.knex.table(tbl).increment(col, args.amount);
-                            query = sanitizeWhere(args.where, partial);
-                            _context15.prev = 5;
-                            _context15.next = 8;
-                            return _this6.run(query);
-
-                          case 8:
-                            _context15.next = 13;
-                            break;
-
-                          case 10:
-                            _context15.prev = 10;
-                            _context15.t0 = _context15['catch'](5);
-                            return _context15.abrupt('return', _this6._errorHandler(_context15.t0));
-
-                          case 13:
-                          case 'end':
-                            return _context15.stop();
-                        }
-                      }
-                    }, _callee15, _this6, [[5, 10]]);
-                  }));
-
-                  return function inner(_x16) {
-                    return _ref16.apply(this, arguments);
-                  };
-                }();
-
-                return _context16.abrupt('return', arify(function (v) {
-                  v.str('table').str('column').num('amount', 1).add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', '?column', '?amount', '?where');
-                }, inner).apply(undefined, _args16));
-
-              case 2:
-              case 'end':
-                return _context16.stop();
-            }
-          }
-        }, _callee16, this);
-      }));
-
-      function increment() {
-        return _ref15.apply(this, arguments);
-      }
-
-      return increment;
-    }()
+    key: 'updateOrCreate',
+    value: function updateOrCreate(table, criteria, data, options) {
+      var model = checkModel(this, table);
+      return model.updateOrCreate(criteria, data, options);
+    }
   }, {
-    key: 'decrement',
-    value: function () {
-      var _ref17 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee18() {
-        var _this7 = this;
+    key: 'get',
+    value: function get(location, criteria, defaultValue) {
+      var _location$split5 = location.split('.', 2),
+          _location$split6 = _slicedToArray(_location$split5, 2),
+          table = _location$split6[0],
+          column = _location$split6[1];
 
-        var inner,
-            _args18 = arguments;
-        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
-          while (1) {
-            switch (_context18.prev = _context18.next) {
-              case 0:
-                inner = function () {
-                  var _ref18 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee17(args) {
-                    var _helpers$parseTablePa5, _helpers$parseTablePa6, tbl, col, partial, rawStr, updated, query;
-
-                    return _regeneratorRuntime.wrap(function _callee17$(_context17) {
-                      while (1) {
-                        switch (_context17.prev = _context17.next) {
-                          case 0:
-                            _helpers$parseTablePa5 = parseTablePath(args.table, args.column), _helpers$parseTablePa6 = _slicedToArray(_helpers$parseTablePa5, 2), tbl = _helpers$parseTablePa6[0], col = _helpers$parseTablePa6[1];
-
-                            if (col) {
-                              _context17.next = 3;
-                              break;
-                            }
-
-                            return _context17.abrupt('return', _this7._errorHandler(constants.ERR_COL_MISSING));
-
-                          case 3:
-                            partial = _this7.knex.table(tbl);
-                            rawStr = args.allowNegative ? col + ' - ' + args.amount : 'MAX(0, ' + col + ' - ' + args.amount + ')';
-                            updated = partial.update(_defineProperty({}, col, _this7.knex.raw(rawStr)));
-                            query = sanitizeWhere(args.where, updated);
-                            _context17.prev = 7;
-                            return _context17.abrupt('return', _this7.run(query));
-
-                          case 11:
-                            _context17.prev = 11;
-                            _context17.t0 = _context17['catch'](7);
-                            return _context17.abrupt('return', _this7._errorHandler(_context17.t0));
-
-                          case 14:
-                          case 'end':
-                            return _context17.stop();
-                        }
-                      }
-                    }, _callee17, _this7, [[7, 11]]);
-                  }));
-
-                  return function inner(_x17) {
-                    return _ref18.apply(this, arguments);
-                  };
-                }();
-
-                return _context18.abrupt('return', arify(function (v) {
-                  v.str('table').str('column').num('amount', 1).bln('allowNegative', false).add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', '?column', '?amount', '?where', '?allowNegative');
-                }, inner).apply(undefined, _args18));
-
-              case 2:
-              case 'end':
-                return _context18.stop();
-            }
-          }
-        }, _callee18, this);
-      }));
-
-      function decrement() {
-        return _ref17.apply(this, arguments);
-      }
-
-      return decrement;
-    }()
+      var model = checkModel(this, table);
+      return model.get(column, criteria, defaultValue);
+    }
   }, {
-    key: 'del',
-    value: function () {
-      var _ref19 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee20() {
-        var _this8 = this;
+    key: 'set',
+    value: function set(location, criteria, value) {
+      var _location$split7 = location.split('.', 2),
+          _location$split8 = _slicedToArray(_location$split7, 2),
+          table = _location$split8[0],
+          column = _location$split8[1];
 
-        var inner,
-            _args20 = arguments;
-        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
-          while (1) {
-            switch (_context20.prev = _context20.next) {
-              case 0:
-                inner = function () {
-                  var _ref20 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee19(args) {
-                    var partial, query;
-                    return _regeneratorRuntime.wrap(function _callee19$(_context19) {
-                      while (1) {
-                        switch (_context19.prev = _context19.next) {
-                          case 0:
-                            partial = _this8.knex.table(args.table).del();
-                            query = sanitizeWhere(args.where, partial);
-                            _context19.prev = 2;
-                            _context19.next = 5;
-                            return _this8.run(query);
+      var model = checkModel(this, table);
+      return model.set(column, criteria, value);
+    }
+  }, {
+    key: 'incr',
+    value: function incr(location, criteria, amount) {
+      var _location$split9 = location.split('.', 2),
+          _location$split10 = _slicedToArray(_location$split9, 2),
+          table = _location$split10[0],
+          column = _location$split10[1];
 
-                          case 5:
-                            return _context19.abrupt('return', _this8.db.getRowsModified());
+      var model = checkModel(this, table);
+      return model.incr(column, criteria, amount);
+    }
+  }, {
+    key: 'decr',
+    value: function decr(location, criteria, amount, allowNegative) {
+      var _location$split11 = location.split('.', 2),
+          _location$split12 = _slicedToArray(_location$split11, 2),
+          table = _location$split12[0],
+          column = _location$split12[1];
 
-                          case 8:
-                            _context19.prev = 8;
-                            _context19.t0 = _context19['catch'](2);
-                            return _context19.abrupt('return', _this8._errorHandler(_context19.t0));
-
-                          case 11:
-                          case 'end':
-                            return _context19.stop();
-                        }
-                      }
-                    }, _callee19, _this8, [[2, 8]]);
-                  }));
-
-                  return function inner(_x18) {
-                    return _ref20.apply(this, arguments);
-                  };
-                }();
-
-                return _context20.abrupt('return', arify(function (v) {
-                  v.str('table').add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('table', '?where');
-                }, inner).apply(undefined, _args20));
-
-              case 2:
-              case 'end':
-                return _context20.stop();
-            }
-          }
-        }, _callee20, this);
-      }));
-
-      function del() {
-        return _ref19.apply(this, arguments);
-      }
-
-      return del;
-    }()
+      var model = checkModel(this, table);
+      return model.decr(column, criteria, amount, allowNegative);
+    }
+  }, {
+    key: 'remove',
+    value: function remove(location, criteria) {
+      var model = checkModel(this, location);
+      return model.remove(criteria);
+    }
   }, {
     key: 'count',
-    value: function () {
-      var _ref21 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee21() {
-        var _this9 = this;
+    value: function count(location, criteria, options) {
+      var _location$split13 = location.split('.', 2),
+          _location$split14 = _slicedToArray(_location$split13, 2),
+          table = _location$split14[0],
+          column = _location$split14[1];
 
-        var inner,
-            _args21 = arguments;
-        return _regeneratorRuntime.wrap(function _callee21$(_context21) {
-          while (1) {
-            switch (_context21.prev = _context21.next) {
-              case 0:
-                inner = function inner(args) {
-                  var partial = void 0;
-                  if (args.options.distinct) {
-                    partial = _this9.knex.table(args.table).countDistinct(args.column + ' as count');
-                  } else {
-                    partial = _this9.knex.table(args.table).count(args.column + ' as count');
-                  }
-
-                  var query = sanitizeWhere(args.where, partial).toString();
-
-                  try {
-                    var statement = _this9.db.prepare(query);
-                    var res = statement.getAsObject({});
-
-                    if (isObject(res) && res.count) {
-                      return res.count;
-                    } else {
-                      return 0;
-                    }
-                  } catch (e) {
-                    return _this9._errorHandler(e);
-                  }
-                };
-
-                return _context21.abrupt('return', arify(function (v) {
-                  v.str('table', 'sqlite_master').str('column', '*').obj('options', { distinct: false }).add('where', {
-                    test: function test(value) {
-                      return isValidWhere(value);
-                    },
-                    description: 'an Object or an Array of length 2 or 3',
-                    defaultValue: constants.DEFAULT_WHERE
-                  }).form('?table', '?column', '?where', '?options');
-                }, inner).apply(undefined, _args21));
-
-              case 2:
-              case 'end':
-                return _context21.stop();
-            }
-          }
-        }, _callee21, this);
-      }));
-
-      function count() {
-        return _ref21.apply(this, arguments);
-      }
-
-      return count;
-    }()
-  }, {
-    key: 'raw',
-    value: function () {
-      var _ref22 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee22(query) {
-        var ret = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-        var done;
-        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
-          while (1) {
-            switch (_context22.prev = _context22.next) {
-              case 0:
-                _context22.prev = 0;
-                done = ret ? this.exec(query) : this.run(query);
-                return _context22.abrupt('return', ret ? done : undefined);
-
-              case 5:
-                _context22.prev = 5;
-                _context22.t0 = _context22['catch'](0);
-                return _context22.abrupt('return', this._errorHandler(_context22.t0));
-
-              case 8:
-              case 'end':
-                return _context22.stop();
-            }
-          }
-        }, _callee22, this, [[0, 5]]);
-      }));
-
-      function raw(_x19) {
-        return _ref22.apply(this, arguments);
-      }
-
-      return raw;
-    }()
-  }, {
-    key: '_errorHandler',
-
-
-    /**
-     * Normalize errors to `Error` objects. If `err` is a string,
-     * it is used as the method path, with `msg` as the message.
-     * If an `errorListener` function was provided in the constructor,
-     * it will be called with the resulting error.
-     *
-     * @param {(string|Error)} err
-     * @param {string} [msg]
-     * @returns {Promise<Error>} a rejected promise with the `Error` object
-     * @private
-     */
-    value: function _errorHandler(err) {
-      var msg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : constants.ERR_UNKNOWN;
-
-      var e = new Error();
-
-      if (err instanceof Error) {
-        e = err;
-      } else if (isString(err)) {
-        e.message = arguments.length === 1 ? '' + err : err + ' :: ' + msg;
-      }
-
-      e.name = 'TrilogyError';
-
-      if (this.errorListener) {
-        this.errorListener(e);
-      }
-
-      return Promise.reject(e);
+      var model = checkModel(this, table);
+      return model.count(column, criteria, options);
     }
   }, {
-    key: 'schemaBuilder',
-    get: function get() {
-      return this.sb;
+    key: 'min',
+    value: function min(location, criteria, options) {
+      var _location$split15 = location.split('.', 2),
+          _location$split16 = _slicedToArray(_location$split15, 2),
+          table = _location$split16[0],
+          column = _location$split16[1];
+
+      var model = checkModel(this, table);
+      return model.min(column, criteria, options);
     }
   }, {
-    key: 'queryBuilder',
-    get: function get() {
-      return this.knex;
+    key: 'max',
+    value: function max(location, criteria, options) {
+      var _location$split17 = location.split('.', 2),
+          _location$split18 = _slicedToArray(_location$split17, 2),
+          table = _location$split18[0],
+          column = _location$split18[1];
+
+      var model = checkModel(this, table);
+      return model.max(column, criteria, options);
     }
-  }], [{
-    key: 'coercion',
+  }, {
+    key: 'models',
     get: function get() {
-      return coercion.active;
-    },
-    set: function set(value) {
-      coercion.active = !!value;
-      return !!value;
+      return this.definitions.keys();
     }
   }]);
 
   return Trilogy;
 }();
+
+function checkModel(instance, name) {
+  return invariant(instance.definitions.get(name), `no such table '${ name }'`);
+}
 
 module.exports = Trilogy;
