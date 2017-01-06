@@ -53,8 +53,9 @@ class Trilogy {
         query.then(() => {})
       })
     } else {
-      let exists = runQuery(this, check, true)
-      if (!exists) runQuery(this, query)
+      runQuery(this, check, true).then(exists => {
+        if (!exists) runQuery(this, query)
+      })
     }
 
     return model
