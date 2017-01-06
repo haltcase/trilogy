@@ -1,77 +1,470 @@
 # Trilogy (`Class`)
 
-```javascript
+```js
 new Trilogy(path, [options])
 ```
 
-Initialize a new datastore instance, creating an SQLite database
+Initialize a new datastore instance, creating a SQLite database
 file at the provided `path` if it does not yet exist, or reading
 it if it does.
 
-**Arguments**
+Trilogy can use both the native `sqlite3` module or `sql.js` -
+the latter does not require compiling, whereas the former must
+be built against its runtime environment. The goal is that the
+difference should be invisible to you, so usage from Trilogy's
+standpoint stays the same no matter which one you choose. You
+should also be able to change it at any time without any hitches.
+
+See ["Choosing a Backend"](/backends) for more on how these two
+modules may differ.
+
+> **Arguments**
+
 - `{string} path`:
   absolute or relative file path. If relative it is resolved against
   `process.cwd()`, or the `options.dir` property if it is provided.
 - _optional_ `{Object} options`:
 
-|     property    |     type    |     default     |                                    description                                |
-|-----------------|:-----------:|:---------------:|-------------------------------------------------------------------------------|
-| `dir`           |   `string`  | `process.cwd()` | The working directory with which to resolve `path`.                           |
-| `verbose`       |  `Function` |   `() => {}`    | Receives every query run against the database.                                |
-| `errorListener` |  `Function` |     `null`      | Function that if provided, receives any errors thrown during query execution. |
+| property  | type       | default         | description                                         |
+| --------- | :-------:  | :-------------: | --------------------------------------------------- |
+| `client`  | `string`   | `sqlite3`       | Must be one of `sqlite3` or `sql.js`.               |
+| `dir`     | `string`   | `process.cwd()` | The working directory with which to resolve `path`. |
+| `verbose` | `Function` | `() => {}`      | Receives every query run against the database.      |
 
-**Usage**
+> **Usage**
 
-```javascript
+```js
 import Trilogy from 'trilogy'
 
+// defaults to using `sqlite3`
 const db = new Trilogy('./storage.db')
 
-// WITH OPTIONS:
-// verbose function
+// with options:
+
+// use `sql.js` to avoid build issues like gyp
 const db = new Trilogy('./storage.db', {
+  client: 'sql.js',
+  
+  // directory with which to resolve `path`
+  // it defaults to `process.cwd()`
+  dir: path.resolve('./here'),
+  
+  // pass a function that receives all queries run
   verbose: console.log.bind(console)
-})
-
-// errorListener function
-function errorHandler (err) {
-  if (err.message === `Trilogy#createTable :: 'columns' must be an Array, Object, or Function.`) {
-    console.log('Crap. Should have read the docs!')
-  }
-}
-
-const db = new Trilogy('./storage.db', {
-  errorListener: errorHandler
 })
 ```
 
-**Throws**: if `path` is not provided.
+> **Throws**
+
+if `path` is not provided.
 
 ## Methods
 
-### count
-```javascript
-db.count(table, [column], [where], [options])
+### model
+```js
+db.model(name, schema, [options])
 ```
 
-Count the number of rows, matching a criteria if specified.
+Define a new model with the provided `schema`, or return the
+existing model if one is already defined with `name`.
 
-**Arguments**
-- `{string} table`
-- _optional_ `{string} column`: column to select on
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
+Each property of `schema` describes a column, where its key is
+the name of the column and its value describes its attributes.
+The value can be either a type, such as `String`, `Number`, or
+`'increments'`, or a more descriptive object. See the docs on
+[column descriptors](/api#column-descriptor) for more information.
+
+This schema controls the handling of values inserted into and
+retreived from the database, casting them as needed. For example,
+SQLite does not support a Boolean data type and instead stores
+them as integers. Trilogy will transparently cast Booleans to
+integers when inserting them and back to Booleans when retreiving
+them. The same goes for all other supported data types, which include:
+
+If any property of `schema` is not present in knex's methods
+it will be ignored. See [knex's documentation](http://knexjs.org/#Schema-Building)
+on Schema Building for the available attributes when creating column tables.
+
+> **Arguments**
+
+  - `{string} name`: name of the model
+  - `{Object} schema`: describes the schema of the table
+  - _optional_ `{Object} options`:
+
+| property       | type            | default | description                                                                                        |
+| -------------- | :-------------: | :-----: | ---------------------------------------------------------------------------------------------------|
+| `compositeKey` | `Array<string>` | -       | Array of column names as strings. A composite primary key will be created on all of these columns. |
+
+> **Returns**
+
+[`Model`](/api#model-codeclasscode)
+
+> **Usage**
+
+```js
+db.model('people', {
+  name: String,
+  age: Number,
+  email: String,
+  uid: { type: Number, primary: true }
+})
+
+db.find('people', { /* ... */ })
+db.create('people', { /* ... */ })
+db.min('people.age', { /* ... */ })
+
+// already defined, so it's returned
+const people = db.model('people')
+
+// since `model()` returns a model instance,
+// you can use methods on that instance like so:
+people.find({ /* ... */ })
+people.create({ /* ... */ })
+people.min('age', { /* ... */ })
+```
+
+## Properties
+
+### models
+
+An array of all model names defined on the instance.
+
+> **Type**
+
+`Array<string>`
+
+# Model (`Class`)
+
+Model instances are created using [`model()`](/api#model).
+All model instance methods are also accessible at the top
+level of a trilogy instance, meaning the following calls are
+equivalent:
+
+```js
+// given this setup:
+const db = new Trilogy('./storage.db')
+const users = db.model('users', { /* some schema */ })
+
+// these are equivalent:
+db.find('users', { name: 'citycide' })
+users.find({ name: 'citycide' })
+```
+
+The function signatures remain the same except you provide
+the model name and, in some cases, the column name, as the
+first argument. Column names should be passed along with
+the table in dot-notation, ie. `'users.name'`.
+
+## Methods
+
+### create
+```js
+model.create(object, [options])
+```
+
+Insert an object into the table. `object` should match the
+model's defined schema, values will cast into types as needed.
+
+> **Arguments**
+
+  - _optional_ `{Object} object`: the data to insert
+  - _optional_ `{Object} options`
+    - _currently unused_
+
+> **Returns**
+
+`Promise<Object>`: the created object
+
+### find
+```js
+model.find([column], [criteria], [options])
+```
+
+Find all objects matching `criteria`. If `column` is provided, the resulting
+array will contain only the `column` property of the found objects.
+
+> **Arguments**
+
+  - _optional_ `{string} column`: if provided, only this column's value will be selected
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-  - _default_ = `{}`: no restriction on selection
-- _optional_ `{Object} options`:
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - _optional_ `{Object} options`:
 
-|     property    |     type    |     default     |                                    description                                |
-|-----------------|:-----------:|:---------------:|-------------------------------------------------------------------------------|
-| `distinct`      |  `boolean`  |     `false`     | Counts only unique values if `true`.                                          |
+| property | type                        | default | description                                                                         |
+| -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
+| `random` | `boolean`                   | `false` | Select a single random record.                                                      |
+| `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
+| `limit`  | `number`                    | -       | Limit the rows returned.                                                            |
+| `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
 
-**Returns**: `Promise<number>` resolves to the number of rows found, matching criteria if specified.
+_Note: if `options.random` is provided, `options.order` is ignored._
 
-**Usage**
+> **Returns**
+
+`Promise<Array<Object | mixed>>`: array of found objects, or `object[column]` if a column was provided
+
+### findOne
+```js
+model.findOne([column], [criteria], [options])
+```
+
+Find a single object. Returns either the object or, if `column` is
+provided, the value at `object[column]`.
+
+> **Arguments**
+
+  - _optional_ `{string} column`: if provided, only this column's value will be selected
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - _optional_ `{Object} options`:
+
+| property | type                        | default | description                                                                         |
+| -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
+| `random` | `boolean`                   | `false` | Select a single random record.                                                      |
+| `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
+| `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
+
+_Note: if `options.random` is provided, `options.order` is ignored._
+
+> **Returns**
+
+`Promise<Object | mixed>`: the found object, or `object[column]` if a column was provided
+
+### findOrCreate
+```js
+model.findOrCreate(criteria, creation, [options])
+```
+
+Find a matching object based on `criteria`, or create it if it doesn't
+exist. When creating the object, a merged object created from `criteria`
+and `creation` will be used, with the properties from `creation` taking
+precedence.
+
+> **Arguments**
+
+  - `{Object} criteria`: criteria to search for
+  - `{Object} creation`: data used to create the object if it doesn't exist
+  - _optional_ `{Object} options`: same as [`findOne()`](/api#findOne)
+
+> **Returns**
+
+`Promise<Object>`: the found object, after creation if necessary
+
+### update
+```js
+model.update([criteria], data, [options])
+```
+
+Modify the properties of an existing object.
+
+> **Arguments**
+
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - `{Object} data`: the updates to be made
+  - _optional_ `{Object} options`
+    - _currently unused_
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+### updateOrCreate
+```js
+model.updateOrCreate(criteria, creation, [options])
+```
+
+Update an existing object or create it if it doesn't exist.
+
+> **Arguments**
+
+  - `{Object} criteria`: criteria to search for
+  - `{Object} creation`: data used to create the object if it doesn't exist
+  - _optional_ `{Object} options`:
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+### get
+```js
+model.get(column, criteria, [defaultValue])
+```
+
+Works similarly to the `get` methods in lodash, underscore, etc. Returns
+the value at `column` or, if it does not exist, the supplied `defaultValue`.
+
+> **Arguments**
+
+  - `{string} column`: the property to retrieve
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - _optional_ `{mixed} defaultValue`: returned if the result doesn't exist
+
+> **Returns**
+
+`Promise<mixed>`
+
+### set
+```js
+model.set(column, criteria, value)
+```
+
+Works similarly to the `set` methods in lodash, underscore, etc. Updates
+the value at `column` to be `value` where `criteria` is met.
+
+> **Arguments**
+
+  - `{string} column`: the column to update
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - `{mixed} value`: the new value
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+### incr
+```js
+model.incr(column, criteria, [amount = 1])
+```
+
+Increment a value at `column` by a specified `amount`, which defaults
+to `1` if not provided.
+
+> **Arguments**
+
+  - `{string} column`: the target value
+  - _optional_ `{number} amount`
+    - _default_ = `1`
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+> **Usage**
+
+```js
+// the amount defaults to 1, so these are equivalent
+people.increment('age', { name: 'Bob' }, 1)
+people.increment('age', { name: 'Bob' })
+
+// happy birthday, Bob!
+```
+
+### decr
+```js
+model.decr(column, criteria, [amount = 1], [allowNegative = false])
+```
+
+Decrement a value at `column` by a specified `amount`, which defaults
+to `1` if not provided. To allow the target value to dip below `0`,
+pass `true` as the final argument.
+
+> **Arguments**
+
+  - `{string} column`: the target value
+  - _optional_ `{number} amount`
+    - _default_ = `1`
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - _optional_ `{boolean} allowNegative`: unless set to `true`, the value will not be allowed to go below a value of `0`.
+    - _default_ = `false`
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+> **Usage**
+
+```js
+// the amount defaults to 1, so these are equivalent
+people.decrement('age', { name: 'Benjamin Button' }, 1)
+people.decrement('age', { name: 'Benjamin Button' })
+
+// to allow negative values as a result of this query:
+people.decrement('age', { name: 'Benjamin Button' }, 1, true)
+people.decrement('age', { name: 'Benjamin Button' }, true)
+```
+
+### remove
+```js
+model.remove(criteria)
+```
+
+Delete a row from the table matching `criteria`. If `criteria` is
+empty or absent, nothing will be done. This is a safeguard against
+unintentionally deleting everything in the table. Use
+[`#clear()`](/api#clear) if you want to remove all rows.
+
+> **Arguments**
+
+  - `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+> **Usage**
+
+```js
+users.remove({ expired: true })
+```
+
+### clear
+```js
+model.clear()
+```
+
+Removes all rows from the table.
+
+**Returns** `Promise<number>`: the number of rows affected
+
+### count
+```js
+model.count([column], [criteria], [options])
+```
+
+Count the number of rows, matching `criteria` if specified.
+
+> **Arguments**
+
+  - _optional_ `{string} column`: column to select on
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - _optional_ `{Object} options`:
+
+|  property   | type       | default | description                      |
+| ----------- | :--------: | :-----: | -------------------------------- |
+|  `distinct` | `boolean`  | `false` | Counts only unique values if `true`. |
+|  `group`    | `string`   | -       | Add a group clause to the query. |
+
+> **Returns**
+
+`Promise<number>`: the number of rows found, matching `criteria` if specified.
+
+> **Usage**
 
 Assuming we have this data in our `people` table:
 
@@ -81,520 +474,215 @@ Assuming we have this data in our `people` table:
 |  Dale  |  25   |
 |  Harry |  32   |
 
-```javascript
-db.count('people')
+```js
+people.count()
 // -> 3
 
-db.count('people', ['age', '>', 21])
+people.count(['age', '>', 21])
 // -> 2
 
-db.count('people', { age: 18 })
+people.count({ age: 18 })
 // -> 1
 ```
 
-Now assume we have tables `people`, `places`, `things`, & `ideas`.
-Thanks to function overloading we can do this to count number of
-tables in the database:
+Now assume we've defined models `people`, `places`, `things`, & `ideas`.
+If we use `count()` with no arguments on the Trilogy instance we can count
+the number of tables in the database:
 
-```javascript
+```js
 db.count()
 // -> 4
 ```
 
-Be aware of this gotcha in the API:
-
-```javascript
-db.count('people', 'name', { distinct: true })
-// -> 0
-// ??
+### min
+```js
+model.min(column, [criteria], [options])
 ```
 
-In the case above, `{ distinct: true }` is being interpreted as the
-`where` argument, since `where` can be an object just like `options`.
-In cases like this, trilogy's function overloading won't be able to
-differentiate them so you'll need to make it clear which is which.
-If you want no `where` criteria for example, just provide an empty
-object before the options argument:
+Find the minimum value contained in the model, comparing all values
+in `column` that match `criteria`.
 
-```javascript
-db.count('people', 'name', {}, { distinct: true })
-// -> 3
-```
+> **Arguments**
 
-### createTable
-```javascript
-db.createTable(name, schema, [options])
-```
-
-Add a table to the database with a schema described by
-`schema`, the options of which are passed to knex.
-Some attributes require no values, such as `primary` or
-`nullable`. In these cases, their presence in the object
-is enough to add that flag.
-
-If any column property is not present in knex's methods
-it will be ignored. See [knex's documentation](http://knexjs.org/#Schema-Building)
-on Schema Building for the available attributes when
-creating column tables.
-
-**Arguments**
-  - `{string} name`: name of the table to add
-  - `{Object | Array | Function} schema`: describes the schema of the table
+  - _optional_ `{string} column`: column to compare
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
   - _optional_ `{Object} options`:
 
-|     property    |       type      |     default     |                                               description                                          |
-|-----------------|:---------------:|:---------------:|----------------------------------------------------------------------------------------------------|
-| `compositeKey`  | `Array<string>` |      none       | Array of column names as strings. A composite primary key will be created on all of these columns. Not used with Function syntax. |
+| property | type     | default | description                      |
+| -------- | :------: | :-----: | -------------------------------- |
+| `group`  | `string` | -       | Add a group clause to the query. |
 
-**Returns** `Promise`
+> **Returns**
 
-**Usage**
+`Promise<number>`: the minimum number found by the query
 
-`schema` can be supplied in Array form:
+> **Usage**
 
-```javascript
-// a string in the Array defaults to a text column in the table
-db.createTable('people', ['email'])
+Given this data in the `people` model:
 
-// use an object to specify other attributes
-db.createTable('people', [
-  { name: 'age', type: 'integer' }
-])
+|  name  |  age  |
+|:------:|:-----:|
+|  Bob   |  18   |
+|  Dale  |  25   |
+|  Harry |  32   |
 
-// you can mix and match
-db.createTable('people', [
-  'name',
-  { name: 'age', type: 'integer' },
-  'email',
-  { name: 'uid', primary: true }
-])
+```js
+people.min('age')
+// -> 18
 ```
 
-... or in Object form:
+### max
+```js
+model.max(column, [criteria], [options])
+```
 
-```javascript
-db.createTable('people', {
-  name: { type: 'text' },
-  age: { type: 'integer' },
-  email: { type: 'text' },
-  uid: { type: 'integer', primary: true }
+Find the maximum value contained in the model, comparing all values
+in `column` that match `criteria`.
+
+> **Arguments**
+
+  - _optional_ `{string} column`: column to compare
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is either a key / value pair (equal to) or a length of 3,
+      ie. `['age', '<', 65]` (allows other comparisons)
+  - _optional_ `{Object} options`:
+
+| property | type     | default | description                      |
+| -------- | :------: | :-----: | -------------------------------- |
+| `group`  | `string` | -       | Add a group clause to the query. |
+
+> **Returns**
+
+`Promise<number>`: the maximum number found by the query
+
+> **Usage**
+
+Given this data in the `people` model:
+
+|  name  |  age  |
+|:------:|:-----:|
+|  Bob   |  18   |
+|  Dale  |  25   |
+|  Harry |  32   |
+
+```js
+people.max('age')
+// -> 32
+```
+
+# Information
+
+> miscellaneous info that should be helpful while using Trilogy
+
+## terminology
+
+Trilogy is a layer of the kind of APIs you'd normally find used with
+document stores over a SQLite backend. So there a few sort of
+interchangeable terms involved.
+
+'Table' will generally refer to the actual persisted SQLite
+representation of the data, just as 'row' and 'column' usually refer
+to the stored records and their values within those tables.
+
+On the other hand, 'model' will generally be used when referring to
+the definition provided to and handled by Trilogy. These models represent
+a more JavaScript-oriented version of the data, so 'rows' become objects that have properties representing their 'column'.
+
+## column descriptor
+
+Each property of the object you pass to define the schema of a model is called a 'column descriptor'. It's so named because it describes the
+column - its type, such as `String` or `Number`, and its attributes,
+like whether it is the primary key, is nullable, has a default value,
+etc.
+
+```js
+db.model('cars', {
+  id: { type: 'increments' },
+  make: { type: String, defaultTo: 'Ford' },
+  model: { type: String, nullable: false },
+  year: Number
 })
 ```
 
-... or in Function form:
+The schema is the object passed as the second argument to `model()`.
 
-```javascript
-let peopleSchema = function (person) {
-  person.text('name')
-  person.integer('age')
-  person.text('email')
-  person.integer('uid').primary()
+```js
+{
+  id: 'increments',
+  make: { type: String, defaultTo: 'Ford' },
+  model: { type: String, nullable: false },
+  year: Number
 }
-
-db.createTable('people', peopleSchema)
 ```
 
-Function form offers the full schema building power of
-[knex](https://knexjs.org/#Schema-Building), so you can
-use it to create schemas in ways that the other forms
-may not abstract over.
+Each key of this object is the name of a column, so in the table
+`cars`, there are 4 columns: `id`, `make`, `model`, and `year`.
 
-### decrement
-```javascript
-db.decrement(table, [column], [amount], [where], [allowNegative])
+Let's break down each descriptor.
+
+```js
+{
+  id: 'increments'
 ```
 
-Decrement a value at `column` by a specified `amount`.
-Allows function overloading, ie. `table` is the only
-required argument. In that case, column must be provided
-as part of `table` using dot- or bracket-notation. This
-allows for a short-and-sweet syntax in the case you only
-want to decrement by 1.
+The `id` property is defined with `'increments'` as its type. This is a
+special type that's really a shortcut for the super long SQL `integer not null primary key autoincrement`. It declares `id` as a field that will
+automatically set itself to the last inserted row's id + 1, and is the
+primary key of the table - the one that prevents duplicates.
 
-**Arguments**
-  - `{string} table`
-  - _optional_ `{string} column`: If this argument is not explicitly provided, it must be included as part of `table` using either dot- or bracket-notation.
-  - _optional_ `{number} amount`
-    - _default_ = `1`
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-  - _optional_ `{boolean} allowNegative`: unless set to `true`, the value will not be allowed to go below a value of `0`.
-    - _default_ = `false`
+You can define other types, and other attributes, by providing an object
+instead of just the type. This is done with the next descriptor, `make`:
 
-**Returns** `Promise`
-
-**Usage**
-
-```javascript
-db.decrement('people', 'age', 1, { name: 'Bob' })
-
-// we can make that a little sweeter:
-db.decrement('people.age', { name: 'Bob' })
+```js
+  make: { type: String, defaultTo: 'Ford' },
 ```
 
-### del
-```javascript
-db.del(table, [where], [all])
+Here, we don't use a string value to declare the type. We use the standard JS `String` constructor. You can do the same with `Number`,
+`Boolean`, and `Date`. This is stored as a `text` column in SQLite.
+
+We also use the `defaultTo` property to set a value that should be used
+when `make` isn't provided at creation time.
+
+```js
+  model: { type: String, nullable: false },
 ```
 
-Delete rows from a table. Allows deletion of all records
-in a table by passing only a table name and `true` as the
-second parameter.
+Next up is `model`, also a `String` type, but in this case we set
+the `nullable` property to false. This essentially means `model`
+is a required property.
 
-**Arguments**
-  - `{string} table`
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-  - _optional_ `{boolean} all`: set to `true` to remove all rows
-    - _default_ = `false`
-
-**Returns** `Promise<number>`
-
-**Usage**
-
-```javascript
-// delete only where age is under 21
-db.del('people', ['age', '<', '21'])
-
-// delete only those whose name is 'Bob'
-db.del('people', { name: 'Bob' })
-
-// delete all records from 'people'
-db.del('people', true)
+```js
+  year: Number
+}
 ```
 
-### dropTable
-```javascript
-db.dropTable(name)
-```
-
-Remove the specified table from the database.
-
-**Arguments**
-  - `{string} name`: name of the table to drop
-
-**Returns** `Promise`
-
-**Usage**
-
-```javascript
-db.dropTable('people').then(() => {
-  // the table doesn't exist anymore
-})
-```
-
-### first
-```javascript
-db.first(table, [columns], [where], [options])
-```
-
-Return the first row selected by the query. Allows overloading
-of arguments, ie. `table` is the only required argument. In this
-case, `columns` defaults to selecting all columns.
-
-**Arguments**
-  - `{string} table`
-  - _optional_ `{string | Array<string>} columns`: defaults to selecting all columns
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-  - _optional_ `{Object} options`:
-
-|     property    |     type    |     default     |                                    description                                |
-|-----------------|:-----------:|:---------------:|-------------------------------------------------------------------------------|
-| `random`        |  `boolean`  |     `false`     | Pass `true` to return a random record.                                        |
-
-**Returns** `Promise<number>`
-
-**Usage**
-
-### getValue
-```javascript
-db.getValue(table, [column], [where])
-```
-
-Retrieve the value at a specific row in a specific column.
-Allows function overloading, ie. `table` is the only required
-argument. In this case, `column` must be provided as dot- or
-bracket-notation syntax of `table.column` or `table[column]`.
-
-**Arguments**
-  - `{string} table`
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-
-**Returns** `Promise<number>`
-
-**Usage**
-
-```javascript
-db.getValue('people', 'age', { name: 'Bob' })
-
-// dot- or bracket-notation of table and column
-db.getValue('people.age', { name: 'Bob' })
-db.getValue('people[age]', { name: 'Bob' })
-```
-
-### hasTable
-```javascript
-db.hasTable(name)
-```
-
-Check if a table exists in the database.
-
-**Arguments**
-  - `{string} name`: name of the table to check for
-
-**Returns** `Promise<boolean>`
-
-**Usage**
-
-```javascript
-db.hasTable('coffee_shops').then(has => {
-  if (has) {
-    console.log(`We're good!`)
-  }
-})
-```
-
-### increment
-```javascript
-db.increment(table, [column], [amount], [where])
-```
-
-Increment a value at `column` by a specified `amount`.
-Allows function overloading, ie. `table` is the only
-required argument. In that case, column must be provided
-as part of `table` using dot- or bracket-notation. This
-allows for a short-and-sweet syntax in the case you only
-want to increment by 1.
-
-**Arguments**
-  - `{string} table`
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-
-**Returns** `Promise`
-
-**Usage**
-
-```javascript
-// happy birthday Bob!
-db.increment('people', 'age', 1, { name: 'Bob' })
-
-// we can make that much sweeter:
-db.increment('people.age', { name: 'Bob' })
-```
-
-### insert
-```javascript
-db.insert(table, values, [options])
-```
-
-Insert values into a table in the database.
-
-**Arguments**
-  - `{string} table`
-
-**Returns** `Promise`
-
-**Usage**
-
-```javascript
-db.insert('people', {
-  name: 'Bob',
-  age: 17,
-  favorite_color: 'blue'
-})
-
-// insert or replace
-// relies on the table schema having a unique restriction
-db.insert('people', {
-  name: 'Bob',
-  age: 17,
-  favorite_color: 'red'
-}, { conflict: 'replace' })
-```
-
-### raw
-```javascript
-db.raw(query, [ret])
-```
-
-Execute arbitrary SQLite queries. You can either write your
-own queries as you would with typical SQLite, or you can build
-them with knex. Trilogy makes this easy with [`.queryBuilder`](/api#querybuilder) and [`.schemaBuilder`](/api#schemabuilder).
-
-**Arguments**
-  - `{Object | string} query`: any SQLite query string. If an Object is provided,
-    a `toString` conversion will be attempted in the case it's a knex query object.
-  - _optional_ `{boolean} ret`: whether to return the results of the query
-    - _default_ = `false`
-
-**Returns** `Promise<number>`
-
-**Usage**
-
-```javascript
-let query =
-  `select * from "users" ` +
-  `inner join "accounts" on "accounts"."id" = "users"."account_id" ` +
-  `or "accounts"."owner_id" = "users"."id"`
-
-db.raw(query, true)
-```
-
-Or using [`.queryBuilder`](/api#querybuilder):
-
-```javascript
-let query = db.queryBuilder.table('users').innerJoin('accounts', function () {
-  this.on('accounts.id', '=', 'users.account_id').orOn('accounts.owner_id', '=', 'users.id')
-})
-
-db.raw(query, true)
-```
-
-### select
-```javascript
-db.select(table, [columns], [where], [options])
-```
-
-Execute a select query on the database. Allows overloading of arguments,
-ie. `table` is the only required argument. In this case, `columns`
-defaults to selecting all columns.
-
-**Arguments**
-  - `{string} table`
-  - _optional_ `{string | Array<string>} columns`: Defaults to selecting all columns.
-    - _default_ = `['*']`
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-  - _optional_ `{Object} options`:
-
-|     property    |     type    |     default     |                                    description                                |
-|-----------------|:-----------:|:---------------:|-------------------------------------------------------------------------------|
-| `random`        |  `boolean`  |     `false`     | Pass `true` to return a random record.                                        |
-
-**Returns** `Promise<number>`
-
-**Usage**
-
-```javascript
-// select all records in the 'people' table
-db.select('people')
-
-// select just the 'age' and 'favorite_color' columns where name is 'Bob'
-db.select('people', ['age', 'favorite_color'], { name: 'Bob' })
-
-// select just 'name' where age is at least 18
-db.select('people', 'age', ['age', '>=', '18'])
-```
-
-### update
-```javascript
-db.update(table, values, [where], [options])
-```
-
-Update rows in the database.
-
-**Arguments**
-  - `{string} table`
-  - `{Object | Array} values`: must either be an Object or a key / value Array `(length === 2)`
-  - _optional_ `{Object | Array} where`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-    - _default_ = `{}`: no restriction on selection
-  - _optional_ `{Object}`:
-
-|     property    |     type    |     default     |                                    description                                    |
-|-----------------|:-----------:|:---------------:|-----------------------------------------------------------------------------------|
-|    `conflict`   |   `string`  |      none       | an SQLite conflict type, one of: `fail`, `abort`, `ignore`, `replace`, `rollback` |
-
-**Returns** `Promise<number>`
-
-**Usage**
-
-```javascript
-await db.insert('who_on_first', {
-  first: 'who',
-  second: 'what',
-  pitcher: 'tomorrow'
-})
-
-await db.update('who_on_first', {
-    // update the value of 'first' to 'naturally'
-    first: 'naturally'
-  }, {
-    // where 'second' is equal to 'what'
-    second: 'what'
-  })
-})
-
-// "Now you've got it."
-// 'who_on_first.first' is now equal to 'naturally'
-```
-
-## Properties
-
-### coercion
-
-A boolean value controlling the way trilogy will coerce boolean values when inserting, updating, or retreiving data from the database. SQLite does not have a native `boolean` column type, so you have to use either `integer` where `true` is `1` and `false` is `0` or a `string` variant.
-
-By default, trilogy coerces booleans to strings and back automatically. If you'd rather they be treated more like SQLite's standard `integer` behavior, set `db.coercion = false` or pass `{ coercion: false }` in the constructor options object.
-
-```javascript
-const db = new Trilogy('./test.db', { coercion: false })
-
-db.coercion = true
-```
-
-### queryBuilder
-
-Exposes the knex query building interface. See the
-[knex documentation](http://knexjs.org/#Builder) for
-more info. `db.queryBuilder.[methodName]` with trilogy
-is equivalent to `knex.[methodName]` in that documentation.
-
-This is useful for situations where knex's chainable
-interface allows you to build queries that either aren't
-possible with trilogy's API or wouldn't make sense to
-abstract over since the chain can be more powerful.
-
-To run queries written with this, see [`#raw`](/api#raw)
-
-**Usage**
-```javascript
-let query = db.queryBuilder.avg('sum_column1').from(function() {
-  this.sum('column1 as sum_column1').from('t1').groupBy('column1').as('t1')
-}).as('ignored_alias')
-
-db.raw(query)
-```
-
-### schemaBuilder
-
-Exposes the knex schema building interface. See the
-[knex documentation](http://knexjs.org/#Schema) for
-more info. `db.schemaBuilder.[methodName]` with trilogy
-is equivalent to `knex.schema.[methodName]` in that
-documentation.
-
-To run queries written with this, see [`#raw`](/api#raw)
-
-**Usage**
-```javascript
-let query = db.schemaBuilder.renameTable('users', 'old_users')
-
-db.raw(query)
-```
+And finally `year` - back to basics on this one. It's defined with the
+same shorthand as `id`, only this time it's a `Number`. This is stored as an `integer` column in SQLite.
+
+### valid column types
+
+| type           | description                                                           |
+| -------------- | ----------------------------------------------------------------------|
+| `'json'`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
+| `'increments'` | set as an autoincrementing `integer` & primary key                    |
+| `String`       | stored as `text`                                                      |
+| `Number`       | stored as `integer`                                                   |
+| `Boolean`      | stored as `integer`                                                   |
+| `Date`         | stored as `datetime`                                                  |
+
+Unsupported / unknown types are cast using `String` and stored as `text`.
+
+### valid column attributes
+
+| attribute     | type       | description                                              |
+| ------------- | ---------- | -------------------------------------------------------- |
+| `primary`     | `Boolean`  | Whether to set this column as the primary key.           |
+| `defaultTo`   | `mixed`    | Default value to use when absent.                        |
+| `unique`      | `Boolean`  | Whether the column is required to be unique.             |
+| `nullable`    | `Boolean`  | Whether to allow null values.                            |
+| `notNullable` | `Boolean`  | Works inversely to `nullable`.                           |
+| `index`       | `String`   | Specifies the column as an index with the provided name. |
