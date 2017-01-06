@@ -61,5 +61,6 @@ export let columnDescriptor = osom({
   unique: Boolean,
   primary: Boolean,
   nullable: Boolean,
-  notNullable: Boolean
+  notNullable: Boolean,
+  index: String
 })
