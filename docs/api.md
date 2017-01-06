@@ -175,6 +175,16 @@ model's defined schema, values will cast into types as needed.
 
 `Promise<Object>`: the created object
 
+> **Usage**
+
+```js
+players.create({
+  id: 197397332,
+  username: 'xX420_sniperXx',
+  friends: ['xX420_kniferXx']
+})
+```
+
 ### find
 ```js
 model.find([column], [criteria], [options])
@@ -205,6 +215,27 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 
 `Promise<Array<Object | mixed>>`: array of found objects, or `object[column]` if a column was provided
 
+> **Usage**
+
+```js
+let todos = db.model('todos', {
+  name: String,
+  body: String,
+  priority: Number
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+todos.find('name', ['priority', '<', 3]).then(found => {
+  console.log(found)
+  // -> ['code', 'docs']
+})
+```
+
 ### findOne
 ```js
 model.findOne([column], [criteria], [options])
@@ -234,6 +265,27 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 
 `Promise<Object | mixed>`: the found object, or `object[column]` if a column was provided
 
+> **Usage**
+
+```js
+let todos = db.model('todos', {
+  name: String,
+  body: String,
+  priority: Number
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+todos.findOne('body', { name: 'docs' }).then(found => {
+  console.log(found)
+  // -> 'crap what did I create'
+})
+```
+
 ### findOrCreate
 ```js
 model.findOrCreate(criteria, creation, [options])
@@ -253,6 +305,21 @@ precedence.
 > **Returns**
 
 `Promise<Object>`: the found object, after creation if necessary
+
+> **Usage**
+
+```js
+let people = db.model('people', {
+  name: { type: String, primary: true },
+  age: Number,
+  adult: Boolean
+})
+
+people.findOrCreate({ name: 'Joe' }, { age: 13, adult: false }).then(person => {
+  console.log(person)
+  // -> { name: 'Joe', age: 13, adult: false }
+})
+```
 
 ### update
 ```js
@@ -275,6 +342,23 @@ Modify the properties of an existing object.
 
 `Promise<number>`: the number of rows affected
 
+> **Usage**
+
+```js
+let games = db.model('games', {
+  name: { type: String, primary: true },
+  genre: String,
+  owned: Boolean
+})
+
+await games.create({ name: 'Overwatch', genre: 'FPS', owned: false })
+
+games.update({ name: 'Overwatch' }, { owned: true }).then(rowsAffected => {
+  console.log(rowsAffected)
+  // -> 1
+})
+```
+
 ### updateOrCreate
 ```js
 model.updateOrCreate(criteria, creation, [options])
@@ -291,6 +375,31 @@ Update an existing object or create it if it doesn't exist.
 > **Returns**
 
 `Promise<number>`: the number of rows affected
+
+> **Usage**
+
+```js
+let games = db.model('games', {
+  name: { type: String, primary: true },
+  genre: String,
+  owned: Boolean
+})
+
+games.updateOrCreate({
+  name: 'Ms. PacMan'
+}, {
+  owned: false,
+  genre: 'arcade'
+}).then(rowsAffected => {
+  console.log(rowsAffected)
+  // -> 1
+  
+  return games.findOne({ name: 'Ms. PacMan' })
+}).then(game => {
+  console.log(game)
+  // -> { name: 'Ms. PacMan', owned: false, genre: 'arcade' }
+})
+```
 
 ### get
 ```js
@@ -313,6 +422,29 @@ the value at `column` or, if it does not exist, the supplied `defaultValue`.
 
 `Promise<mixed>`
 
+> **Usage**
+
+```js
+let todos = db.model('todos', {
+  name: String,
+  body: String,
+  priority: Number
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+console.log(await todos.get('priority', { name: 'code' }))
+// -> 1
+
+// with default value
+console.log(await todos.get('priority', { name: 'eat' }, 999))
+// -> 999
+```
+
 ### set
 ```js
 model.set(column, criteria, value)
@@ -333,6 +465,28 @@ the value at `column` to be `value` where `criteria` is met.
 > **Returns**
 
 `Promise<number>`: the number of rows affected
+
+> **Usage**
+
+```js
+let todos = db.model('todos', {
+  name: String,
+  body: String,
+  priority: Number
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+console.log(await todos.set('priority', { name: 'docs' }, 40))
+// -> 1
+
+console.log(await todos.set('body', ['priority', '>', 1], 'not important ;)'))
+// -> 2
+```
 
 ### incr
 ```js
