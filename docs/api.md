@@ -79,7 +79,7 @@ retreived from the database, casting them as needed. For example,
 SQLite does not support a Boolean data type and instead stores
 them as integers. Trilogy will transparently cast Booleans to
 integers when inserting them and back to Booleans when retreiving
-them. The same goes for all other supported data types, which include:
+them. The same goes for all other [supported data types](/api#valid-column-types).
 
 If any property of `schema` is not present in knex's methods
 it will be ignored. See [knex's documentation](http://knexjs.org/#Schema-Building)
