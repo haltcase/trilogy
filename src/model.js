@@ -176,7 +176,7 @@ export default class Model {
     let query = this.ctx.knex(this.name)[method](val)
     query = helpers.buildWhere(query, criteria)
 
-    if (options.groupBy) query = query.groupBy(...options.groupBy)
+    if (options.group) query = query.groupBy(...options.group)
 
     return helpers.runQuery(this.ctx, query, true).then(res => {
       if (!isArray(res)) return
@@ -191,7 +191,7 @@ export default class Model {
     let query = this.ctx.knex(this.name).min(val)
     query = helpers.buildWhere(query, criteria)
 
-    if (options.groupBy) query = query.groupBy(...options.groupBy)
+    if (options.group) query = query.groupBy(...options.group)
 
     return helpers.runQuery(this.ctx, query, true).then(res => {
       if (!isArray(res)) return
@@ -206,7 +206,7 @@ export default class Model {
     let query = this.ctx.knex(this.name).max(val)
     query = helpers.buildWhere(query, criteria)
 
-    if (options.groupBy) query = query.groupBy(...options.groupBy)
+    if (options.group) query = query.groupBy(...options.group)
 
     return helpers.runQuery(this.ctx, query, true).then(res => {
       if (!isArray(res)) return
