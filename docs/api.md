@@ -580,8 +580,8 @@ people.max('age')
 
 ## terminology
 
-Trilogy is a layer of the kind of APIs you'd normally find used with
-document stores over a SQLite backend. So there a few sort of
+Trilogy is a layer over a SQLite backend with the kind of API you
+normally find used with document stores. So there a few sort of
 interchangeable terms involved.
 
 'Table' will generally refer to the actual persisted SQLite
