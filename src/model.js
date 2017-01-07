@@ -1,7 +1,7 @@
 import * as types from './types'
 import * as helpers from './helpers'
 import * as enforcers from './enforcers'
-import { isArray, isString } from './util'
+import { isArray, isString, isObject } from './util'
 
 export default class Model {
   constructor (ctx, name, schema, options) {
@@ -155,9 +155,22 @@ export default class Model {
   }
 
   remove (criteria) {
+    if (!helpers.isValidWhere(criteria)) {
+      return Promise.resolve(0)
+    }
+
+    if (isObject(criteria) && !Object.keys(criteria).length) {
+      return Promise.resolve(0)
+    }
+
     let query = this.ctx.knex(this.name).del()
     query = helpers.buildWhere(query, criteria)
 
+    return helpers.runQuery(this.ctx, query)
+  }
+
+  clear () {
+    let query = this.ctx.knex(this.name).truncate()
     return helpers.runQuery(this.ctx, query)
   }
 

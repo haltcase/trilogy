@@ -122,6 +122,11 @@ class Trilogy {
     return model.remove(criteria)
   }
 
+  clear (location) {
+    let model = checkModel(this, location)
+    return model.clear()
+  }
+
   count (location, criteria, options) {
     let [table, column] = location.split('.', 2)
     let model = checkModel(this, table)
