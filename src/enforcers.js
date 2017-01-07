@@ -28,10 +28,7 @@ export let setup = osom({
     }
   },
   verbose: {
-    type: Any,
-    validate (value) {
-      return util.isFunction(value)
-    }
+    type: Any
   }
 })
 
