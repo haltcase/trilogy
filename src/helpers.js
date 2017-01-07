@@ -56,12 +56,12 @@ export function buildWhere (partial, where) {
 }
 
 export function isValidWhere (where) {
-  if (util.isObject(where)) return [true]
-
   if (util.isArray(where)) {
     let len = where.length
     return [len === 2 || len === 3, len]
   }
+
+  if (util.isObject(where)) return [true]
 
   return [false]
 }

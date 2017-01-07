@@ -126,7 +126,9 @@ export default class Model {
 
   set (column, criteria, value) {
     if (!this.schema[column]) {
-      throw new Error('no such column in schema')
+      throw new Error(
+        `no column by the name '${column}' is defined in '${this.name}'`
+      )
     }
 
     return this.update(criteria, {

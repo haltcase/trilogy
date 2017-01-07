@@ -11,7 +11,7 @@ import { invariant } from './util'
 class Trilogy {
   constructor (path, options = {}) {
     if (!path) {
-      throw new Error('trilogy constructor must be provided a file path.')
+      throw new Error('trilogy constructor must be provided a file path')
     }
 
     this.options = setup(options)
@@ -46,6 +46,9 @@ class Trilogy {
     let check = this.knex.schema.hasTable(name)
     let query = this.knex.schema
       .createTableIfNotExists(name, types.toKnexSchema(model))
+
+    // we still check to see if the table exists to prevent
+    // errors from creating indices that already exist
 
     if (this.isNative) {
       check.then(tableExists => {
@@ -147,7 +150,10 @@ class Trilogy {
 }
 
 function checkModel (instance, name) {
-  return invariant(instance.definitions.get(name), `no such table '${name}'`)
+  return invariant(
+    instance.definitions.get(name),
+    `no model defined by the name '${name}'`
+  )
 }
 
 export default Trilogy
