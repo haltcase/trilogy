@@ -158,9 +158,21 @@ class Trilogy {
   }
 
   count (location, criteria, options) {
+    if (arguments.length === 0) {
+      let query = this.knex('sqlite_master')
+        .whereNot('name', 'sqlite_sequence')
+        .where({ type: 'table' })
+        .count('* as count')
+
+      return runQuery(this, query, true)
+        .then(([{ count }]) => count)
+    }
+
     let [table, column] = location.split('.', 2)
     let model = checkModel(this, table)
-    return model.count(column, criteria, options)
+    return column
+      ? model.count(column, criteria, options)
+      : model.count(criteria, options)
   }
 
   min (location, criteria, options) {
