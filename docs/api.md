@@ -41,8 +41,8 @@ const db = new Trilogy('./storage.db')
 
 // with options:
 
-// use `sql.js` to avoid build issues like gyp
 const db = new Trilogy('./storage.db', {
+  // use `sql.js` to avoid build issues like gyp
   client: 'sql.js',
   
   // directory with which to resolve `path`
@@ -361,15 +361,17 @@ games.update({ name: 'Overwatch' }, { owned: true }).then(rowsAffected => {
 
 ### updateOrCreate
 ```js
-model.updateOrCreate(criteria, creation, [options])
+model.updateOrCreate(criteria, data, [options])
 ```
 
-Update an existing object or create it if it doesn't exist.
+Update an existing object or create it if it doesn't exist. If creation
+is necessary a merged object created from `criteria` and `data` will be
+used, with the properties from `data` taking precedence.
 
 > **Arguments**
 
   - `{Object} criteria`: criteria to search for
-  - `{Object} creation`: data used to create the object if it doesn't exist
+  - `{Object} data`: updates to be made, or used for object creation
   - _optional_ `{Object} options`:
 
 > **Returns**
@@ -385,20 +387,16 @@ let games = db.model('games', {
   owned: Boolean
 })
 
-games.updateOrCreate({
-  name: 'Ms. PacMan'
-}, {
-  owned: false,
-  genre: 'arcade'
-}).then(rowsAffected => {
-  console.log(rowsAffected)
-  // -> 1
+let rowsUpdated = await games.updateOrCreate(
+  { name: 'Ms. PacMan' },
+  { owned: false, genre: 'arcade' }
+)
+
+console.log(rowsUpdated)
+// -> 1
   
-  return games.findOne({ name: 'Ms. PacMan' })
-}).then(game => {
-  console.log(game)
-  // -> { name: 'Ms. PacMan', owned: false, genre: 'arcade' }
-})
+console.log(await games.findOne({ name: 'Ms. PacMan' }))
+// -> { name: 'Ms. PacMan', owned: false, genre: 'arcade' }
 ```
 
 ### get
