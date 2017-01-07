@@ -102,7 +102,7 @@ export default class Model {
     return helpers.runQuery(this.ctx, query)
   }
 
-  updateOrCreate (criteria, data, options) {
+  updateOrCreate (criteria, data, options = {}) {
     return this.find(criteria, options).then(found => {
       if (!found || !found.length) {
         return this.create({ ...criteria, ...data }, options)
