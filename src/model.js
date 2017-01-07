@@ -74,8 +74,7 @@ export default class Model {
     if (options.skip) query = query.offset(options.skip)
 
     return helpers.runQuery(this.ctx, query, true).then(response => {
-      if (!isArray(response)) return
-      let [result] = response
+      let result = isArray(response) ? response[0] : response
 
       if (!column) {
         return types.fromDefinition(this, result)
