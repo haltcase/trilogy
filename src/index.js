@@ -51,17 +51,18 @@ class Trilogy {
     // errors from creating indices that already exist
 
     if (this.isNative) {
-      check.then(tableExists => {
-        if (tableExists) return
-        query.then(() => {})
+      return check.then(exists => {
+        if (exists) return model
+        return query.then(() => model)
       })
     } else {
-      runQuery(this, check, true).then(exists => {
-        if (!exists) runQuery(this, query)
+      return runQuery(this, check, true).then(exists => {
+        if (exists) return model
+        return runQuery(this, query)
       })
     }
+  }
 
-    return model
   }
 
   create (table, object, options) {
