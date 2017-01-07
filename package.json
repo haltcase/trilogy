@@ -53,6 +53,7 @@
     "babel-core": "^6.21.0",
     "babel-eslint": "^7.1.1",
     "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-external-helpers": "^6.18.0",
     "babel-preset-env": "^1.1.5",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-stage-0": "^6.16.0",
@@ -83,7 +84,8 @@
     "files": [
       "tests/**/*.js"
     ],
-    "verbose": true
+    "verbose": true,
+    "babel": "inherit"
   },
   "babel": {
     "presets": [
@@ -91,14 +93,15 @@
         "env",
         {
           "targets": {
-            "node": 4
-          }
+            "node": 4.7
+          },
+          "loose": true
         }
       ],
       "stage-0"
     ],
     "plugins": [
-      "transform-runtime",
+      "external-helpers",
       "add-module-exports"
     ]
   }

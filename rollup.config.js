@@ -10,10 +10,14 @@ export default {
     babel({
       babelrc: false,
       presets: [['env', {
-        targets: { node: 4 },
-        modules: false
+        loose: true,
+        modules: false,
+        targets: { node: 4.7 }
       }], 'stage-0'],
-      plugins: ['add-module-exports'],
+      plugins: [
+        'external-helpers',
+        'add-module-exports'
+      ],
       runtimeHelpers: true,
       exclude: 'node_modules/**'
     })
