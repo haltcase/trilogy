@@ -82,7 +82,10 @@ export function runQuery (instance, query, needResponse) {
     instance.verbose(query.toString())
   }
 
-  if (instance.isNative) return query
+  if (instance.isNative) {
+    if (needResponse) return query
+    return query.then(res => res ? res.length : 0)
+  }
 
   let response
 
