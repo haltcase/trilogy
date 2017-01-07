@@ -89,7 +89,7 @@ export function runQuery (instance, query, needResponse) {
   if (needResponse) {
     response = parseResponse(instance.db.exec(query.toString()))
     if (query._sequence && query._sequence[0].method === 'hasTable') {
-      return !!response.length
+      response = !!response.length
     }
   } else {
     instance.db.run(query.toString())
