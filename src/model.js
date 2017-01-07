@@ -21,7 +21,6 @@ export default class Model {
     )
 
     return helpers.runQuery(this.ctx, query)
-      .then(() => this.findOne(object))
   }
 
   find (column, criteria, options = {}) {
@@ -92,6 +91,7 @@ export default class Model {
       .then(existing => {
         if (existing) return existing
         return this.create({ ...criteria, ...creation })
+          .then(() => this.findOne(criteria))
       })
   }
 
