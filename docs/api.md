@@ -97,7 +97,7 @@ on Schema Building for the available attributes when creating column tables.
 
 > **Returns**
 
-[`Model`](/api#model-codeclasscode)
+`Promise<`[`Model`](/api#model-codeclasscode)`>`
 
 > **Usage**
 
@@ -143,7 +143,7 @@ equivalent:
 ```js
 // given this setup:
 const db = new Trilogy('./storage.db')
-const users = db.model('users', { /* some schema */ })
+const users = await db.model('users', { /* some schema */ })
 
 // these are equivalent:
 db.find('users', { name: 'citycide' })
@@ -218,7 +218,7 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 > **Usage**
 
 ```js
-let todos = db.model('todos', {
+let todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -268,7 +268,7 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 > **Usage**
 
 ```js
-let todos = db.model('todos', {
+let todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -309,7 +309,7 @@ precedence.
 > **Usage**
 
 ```js
-let people = db.model('people', {
+let people = await db.model('people', {
   name: { type: String, primary: true },
   age: Number,
   adult: Boolean
@@ -345,7 +345,7 @@ Modify the properties of an existing object.
 > **Usage**
 
 ```js
-let games = db.model('games', {
+let games = await db.model('games', {
   name: { type: String, primary: true },
   genre: String,
   owned: Boolean
@@ -381,7 +381,7 @@ used, with the properties from `data` taking precedence.
 > **Usage**
 
 ```js
-let games = db.model('games', {
+let games = await db.model('games', {
   name: { type: String, primary: true },
   genre: String,
   owned: Boolean
@@ -423,7 +423,7 @@ the value at `column` or, if it does not exist, the supplied `defaultValue`.
 > **Usage**
 
 ```js
-let todos = db.model('todos', {
+let todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -467,7 +467,7 @@ the value at `column` to be `value` where `criteria` is met.
 > **Usage**
 
 ```js
-let todos = db.model('todos', {
+let todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
