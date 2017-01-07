@@ -63,6 +63,32 @@ class Trilogy {
     }
   }
 
+  hasModel (name) {
+    if (!this.definitions.has(name)) {
+      return false
+    }
+
+    let query = this.knex.schema.hasTable(name)
+    return runQuery(this, query, true)
+  }
+
+  dropModel (name) {
+    if (!this.definitions.has(name)) {
+      return false
+    }
+
+    let query = this.knex.schema.dropTableIfExists(name)
+    return runQuery(this, query, true).then(() => {
+      this.definitions.delete(name)
+    })
+  }
+
+  close () {
+    if (this.isNative) {
+      return this.knex.destroy()
+    } else {
+      return this.db.close()
+    }
   }
 
   create (table, object, options) {
