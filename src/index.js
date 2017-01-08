@@ -83,6 +83,10 @@ class Trilogy {
     })
   }
 
+  raw (query, needResponse) {
+    return runQuery(this, query, needResponse)
+  }
+
   close () {
     if (this.isNative) {
       return this.knex.destroy()
