@@ -44,6 +44,7 @@
   "dependencies": {
     "component-type": "^1.2.1",
     "fs-jetpack": "^0.10.5",
+    "generic-pool": "^3.1.6",
     "knex": "^0.12.6",
     "osom": "^2.1.2",
     "sql.js": "^0.4.0"

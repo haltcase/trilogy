@@ -7,27 +7,33 @@ import { join, basename } from 'path'
 const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
 const db = new Trilogy(filePath)
 
-const columns = ['name']
+const schema = { name: String }
 
 const tables = [
-  { name: 'one', columns },
-  { name: 'two', columns },
-  { name: 'three', columns }
+  { name: 'one', schema },
+  { name: 'two', schema },
+  { name: 'three', schema }
 ]
 
 test.before(() => {
   return Promise.all(tables.map(table => {
-    db.createTable(table.name, table.columns)
+    return db.model(table.name, table.schema)
   }))
 })
 
-test.after.always('remove test database file', () => remove(filePath))
+test.after.always('remove test database file', () => {
+  return db.close().then(() => remove(filePath))
+})
 
 test('is true for existing tables', t => {
-  tables.map(async table => t.true(await db.hasTable(table.name)))
+  return Promise.all(
+    tables.map(async ({ name }) => t.true(await db.hasModel(name)))
+  )
 })
 
 test('is false for non-existent tables', async t => {
   let noTables = ['four', 'five', 'six']
-  noTables.map(async table => t.false(await db.hasTable(table)))
+  return Promise.all(
+    noTables.map(async table => t.false(await db.hasModel(table)))
+  )
 })

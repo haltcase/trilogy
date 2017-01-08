@@ -87,21 +87,24 @@ export function runQuery (instance, query, needResponse) {
     return query.then(res => res ? res.length : 0)
   }
 
-  let response
+  return instance.pool.acquire().then(db => {
+    let response
 
-  if (needResponse) {
-    response = parseResponse(instance.db.exec(query.toString()))
-    if (query._sequence && query._sequence[0].method === 'hasTable') {
-      response = !!response.length
+    if (needResponse) {
+      response = parseResponse(db.exec(query.toString()))
+      if (query._sequence && query._sequence[0].method === 'hasTable') {
+        response = !!response.length
+      }
+    } else {
+      db.run(query.toString())
+
+      if (util.isOneOf(['insert', 'update', 'delete'], query._method)) {
+        response = db.getRowsModified()
+      }
     }
-  } else {
-    instance.db.run(query.toString())
 
-    if (util.isOneOf(['insert', 'update', 'delete'], query._method)) {
-      response = instance.db.getRowsModified()
-    }
-  }
-
-  writeDatabase(instance)
-  return Promise.resolve(response)
+    writeDatabase(instance, db)
+    instance.pool.release(db)
+    return response
+  })
 }

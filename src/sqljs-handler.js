@@ -1,34 +1,40 @@
 import jetpack from 'fs-jetpack'
+import pool from 'generic-pool'
 import SQL from 'sql.js'
 
-import constants from './constants'
-
 export function readDatabase (instance) {
+  let client
+
   let atPath = instance.options.connection.filename
   if (jetpack.exists(atPath) === 'file') {
     let file = jetpack.read(atPath, 'buffer')
-    instance.db = new SQL.Database(file)
+    client = new SQL.Database(file)
   } else {
-    instance.db = new SQL.Database()
-    writeDatabase(instance)
+    client = new SQL.Database()
+    writeDatabase(instance, client)
   }
+
+  return client
 }
 
-export function writeDatabase (instance) {
-  if (!instance.db) {
-    throw new Error(constants.ERR_NO_DATABASE)
-  }
+export function writeDatabase (instance, db) {
+  let data = db.export()
+  let buffer = new Buffer(data)
 
-  try {
-    let data = instance.db.export()
-    let buffer = new Buffer(data)
+  jetpack.file(instance.options.connection.filename, {
+    content: buffer, mode: '777'
+  })
+}
 
-    let atPath = instance.options.connection.filename
+export function connect (instance) {
+  return pool.createPool({
+    create () {
+      return Promise.resolve(readDatabase(instance))
+    },
 
-    jetpack.file(atPath, {
-      content: buffer, mode: '777'
-    })
-  } catch (e) {
-    throw new Error(e.message)
-  }
+    destroy (client) {
+      client.close()
+      return Promise.resolve()
+    }
+  }, { min: 1, max: 1 })
 }

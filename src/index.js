@@ -3,7 +3,7 @@ import { resolve } from 'path'
 
 import Model from './model'
 import * as types from './types'
-import { readDatabase } from './sqljs-handler'
+import { connect } from './sqljs-handler'
 import { runQuery } from './helpers'
 import { setup } from './enforcers'
 import { invariant } from './util'
@@ -25,7 +25,7 @@ class Trilogy {
       this.knex = knex({ ...config, connection: this.options.connection })
     } else {
       this.knex = knex(config)
-      readDatabase(this, this.options.connection.filename)
+      this.pool = connect(this)
     }
 
     this.definitions = new Map()
@@ -87,7 +87,7 @@ class Trilogy {
     if (this.isNative) {
       return this.knex.destroy()
     } else {
-      return this.db.close()
+      return this.pool.drain()
     }
   }
 
