@@ -14,15 +14,17 @@ const people = [
 ]
 
 test.before(async () => {
-  await db.createTable('people', [
-    'name',
-    { name: 'age', type: 'integer' }
-  ])
+  await db.model('people', {
+    name: { type: String, primary: true },
+    age: Number
+  })
 
-  people.forEach(async person => await db.insert('people', person))
+  return Promise.all(people.map(person => db.create('people', person)))
 })
 
-test.after.always('remove test database file', () => remove(filePath))
+test.after.always('remove test database file', () => {
+  return db.close().then(() => remove(filePath))
+})
 
 test('returns the total number of rows', async t => {
   let res = await db.count('people')
@@ -30,6 +32,6 @@ test('returns the total number of rows', async t => {
 })
 
 test('returns the number of matching rows', async t => {
-  let res = await db.count('people', ['age', '<', '200'])
+  let res = await db.count('people', ['age', '<', 200])
   t.is(res, 2)
 })

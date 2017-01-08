@@ -23,19 +23,27 @@ test.after.always('remove test database file', () => {
   return db.close().then(() => remove(filePath))
 })
 
-test('retrieves a specific property of the object', async t => {
+test('get() - retrieves a specific property of the object', async t => {
   let res = await db.get('one.second', { first: 'fee' })
   t.is(res, 'blah')
 })
 
-test('is undefined when no value at the path exists', async t => {
+test('get() - is undefined when no value at the path exists', async t => {
   let noRow = await db.get('one.second', { first: 'worst' })
   let noColumn = await db.get('one.third', { first: 'fee' })
   t.is(noRow, undefined)
   t.is(noColumn, undefined)
 })
 
-test('returns the provided default value when target is undefined', async t => {
+test('get() - returns the provided default value when target is undefined', async t => {
   let noRow = await db.get('one.second', { first: 'worst' }, 'nothing')
   t.is(noRow, 'nothing')
+})
+
+test('set() - updates the target value', async t => {
+  let expected = 'some super new value'
+  await db.set('one.second', { first: 'fee' }, expected)
+
+  let actual = await db.get('one.second', { first: 'fee' })
+  t.is(actual, expected)
 })

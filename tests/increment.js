@@ -14,30 +14,40 @@ const people = [
 ]
 
 test.before(async () => {
-  await db.createTable('people', [
-    'name',
-    { name: 'age', type: 'integer' }
-  ])
+  await db.model('people', {
+    name: String,
+    age: Number
+  })
 
-  people.forEach(async person => await db.insert('people', person))
+  return Promise.all(people.map(person => db.create('people', person)))
 })
 
-test.after.always('remove test database file', () => remove(filePath))
+test.after.always('remove test database file', () => {
+  return db.close().then(() => remove(filePath))
+})
 
-test.serial('increments by 1 when no amount is provied', async t => {
-  people.forEach(async ({ name, age }, i) => {
-    people[i].age += 1
-    await db.increment('people.age', { name })
-    let res = await db.getValue('people.age', { name })
-    t.is(res, age + 1)
-  })
+test.serial('increments by 1 when no amount is provided', async t => {
+  let values = await Promise.all(
+    people.map(({ name, age }, i) => {
+      people[i].age += 1
+      return db.incr('people.age', { name })
+        .then(() => db.get('people.age', { name }))
+        .then(val => [age, val])
+    })
+  )
+
+  values.forEach(([age, val]) => t.is(val, age + 1))
 })
 
 test.serial('increments by a specified amount', async t => {
-  people.forEach(async ({ name, age }, i) => {
-    people[i].age += 4
-    await db.increment('people.age', 4, { name })
-    let res = await db.getValue('people.age', { name })
-    t.is(res, age + 4)
-  })
+  let values = await Promise.all(
+    people.map(({ name, age }, i) => {
+      people[i].age += 4
+      return db.incr('people.age', { name }, 4)
+        .then(() => db.get('people.age', { name }))
+        .then(val => [age, val])
+    })
+  )
+
+  values.forEach(([age, val]) => t.is(val, age + 4))
 })

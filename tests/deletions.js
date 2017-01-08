@@ -5,7 +5,9 @@ import { remove } from 'fs-jetpack'
 import { join, basename } from 'path'
 
 const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
+const db = new Trilogy(filePath, {
+  // verbose: console.log
+})
 
 const somePeople = [
   { name: 'Dale', age: 30 },
@@ -20,30 +22,43 @@ const morePeople = [
 ]
 
 test.before(async () => {
-  await db.createTable('people', [
-    'name',
-    { name: 'age', type: 'integer' }
+  await db.model('people', {
+    name: { type: String, primary: true },
+    age: Number
+  })
+
+  await db.model('others', {
+    name: { type: String, primary: true },
+    age: Number
+  })
+
+  return Promise.all([
+    ...somePeople.map(person => db.create('people', person)),
+    ...morePeople.map(person => db.create('others', person))
+  ])
+})
+
+test.after.always('remove test database file', () => {
+  return db.close().then(() => remove(filePath))
+})
+
+test.serial('removes an object from the specified model', async t => {
+  return Promise.all(somePeople.map(({ name }) => {
+    return db.remove('others', { name })
+      .then(() => db.findOne('others', { name }))
+      .then(res => t.falsy(res))
+  }))
+})
+
+test.serial('removes all objects from the specified model', async t => {
+  await db.clear('people')
+
+  let values = await Promise.all([
+    db.count('people'),
+    ...morePeople.map(({ name }) => {
+      return db.findOne('people', { name })
+    })
   ])
 
-  let arr = [...somePeople, ...morePeople]
-  arr.forEach(async person => await db.insert('people', person))
-})
-
-test.after.always('remove test database file', () => remove(filePath))
-
-test.serial('removes a row from the specified table', async t => {
-  somePeople.forEach(async ({ name }) => {
-    await db.del('people', { name })
-    let res = await db.first('people', { name })
-    t.falsy(res)
-  })
-})
-
-test.serial('removes all rows from the specified table', async t => {
-  await db.del('people')
-
-  morePeople.forEach(async ({ name }) => {
-    let res = await db.first('people', { name })
-    t.falsy(res)
-  })
+  values.forEach(value => t.falsy(value))
 })
