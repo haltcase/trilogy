@@ -32,7 +32,7 @@ class Trilogy {
   }
 
   get models () {
-    return this.definitions.keys()
+    return [...this.definitions.keys()]
   }
 
   model (name, schema, options) {
