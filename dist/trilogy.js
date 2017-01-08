@@ -7,6 +7,7 @@ var path = require('path');
 var osom = _interopDefault(require('osom'));
 var type = _interopDefault(require('component-type'));
 var jetpack = _interopDefault(require('fs-jetpack'));
+var pool = _interopDefault(require('generic-pool'));
 var SQL = _interopDefault(require('sql.js'));
 
 var map = function map(object, fn) {
@@ -65,6 +66,9 @@ var isFunction = function isFunction(value) {
 var isString = function isString(value) {
   return isType(value, 'string');
 };
+var isNumber = function isNumber(value) {
+  return isType(value, 'number');
+};
 
 
 function invariant(condition, message) {
@@ -107,10 +111,7 @@ var setup = osom({
     }
   },
   verbose: {
-    type: Any,
-    validate(value) {
-      return isFunction(value);
-    }
+    type: Any
   }
 });
 
@@ -140,14 +141,16 @@ var columnDescriptor = osom({
   unique: Boolean,
   primary: Boolean,
   nullable: Boolean,
-  notNullable: Boolean
+  notNullable: Boolean,
+  index: String
 });
 
 var constants = {
-  ERR_NO_DATABASE: 'could not write - no database initialized.',
+  ERR_NO_DATABASE: 'could not write - no database initialized',
   COLUMN_TYPES: ['increments', 'json', 'string', 'number', 'boolean', 'date'],
   KNEX_NO_ARGS: ['primary', 'unique', 'nullable', 'notNullable']
 };
+module.exports = exports['default'];
 
 function toKnexSchema(model) {
   return function (table) {
@@ -286,38 +289,41 @@ function toReturnType(type$$1, value) {
 }
 
 function readDatabase(instance) {
+  var client = void 0;
+
   var atPath = instance.options.connection.filename;
   if (jetpack.exists(atPath) === 'file') {
     var file = jetpack.read(atPath, 'buffer');
-    instance.db = new SQL.Database(file);
+    client = new SQL.Database(file);
   } else {
-    instance.db = new SQL.Database();
-    writeDatabase(instance);
+    client = new SQL.Database();
+    writeDatabase(instance, client);
   }
+
+  return client;
 }
 
-function writeDatabase(instance) {
-  if (!instance.db) {
-    throw new Error(constants.ERR_NO_DATABASE);
-  }
+function writeDatabase(instance, db) {
+  var data = db.export();
+  var buffer = new Buffer(data);
 
-  try {
-    var data = instance.db.export();
-    var buffer = new Buffer(data);
-
-    var atPath = instance.options.connection.filename;
-
-    jetpack.file(atPath, {
-      content: buffer, mode: '777'
-    });
-  } catch (e) {
-    throw new Error(e.message);
-  }
+  jetpack.file(instance.options.connection.filename, {
+    content: buffer, mode: '777'
+  });
 }
 
-var _slicedToArray$2 = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+function connect(instance) {
+  return pool.createPool({
+    create() {
+      return Promise.resolve(readDatabase(instance));
+    },
 
-function _toConsumableArray$1(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+    destroy(client) {
+      client.close();
+      return Promise.resolve();
+    }
+  }, { min: 1, max: 1 });
+}
 
 function parseResponse(contents) {
   if (!contents || !contents.length) return [];
@@ -352,7 +358,7 @@ function buildOrder(partial, order) {
   if (isArray(order)) {
     var length = order.length;
     if (length === 1 || length === 2) {
-      return partial.orderBy.apply(partial, _toConsumableArray$1(order));
+      return partial.orderBy.apply(partial, order);
     }
   }
 
@@ -361,9 +367,8 @@ function buildOrder(partial, order) {
 
 function buildWhere(partial, where) {
   var _isValidWhere = isValidWhere(where),
-      _isValidWhere2 = _slicedToArray$2(_isValidWhere, 2),
-      isValid = _isValidWhere2[0],
-      arrayLength = _isValidWhere2[1];
+      isValid = _isValidWhere[0],
+      arrayLength = _isValidWhere[1];
 
   if (!isValid) return partial;
 
@@ -376,16 +381,16 @@ function buildWhere(partial, where) {
   }
 
   if (!arrayLength) return partial.where(cast);
-  return partial.where.apply(partial, _toConsumableArray$1(cast));
+  return partial.where.apply(partial, cast);
 }
 
 function isValidWhere(where) {
-  if (isObject(where)) return [true];
-
   if (isArray(where)) {
     var len = where.length;
     return [len === 2 || len === 3, len];
   }
+
+  if (isObject(where)) return [true];
 
   return [false];
 }
@@ -397,302 +402,332 @@ function runQuery(instance, query, needResponse) {
     instance.verbose(query.toString());
   }
 
-  if (instance.isNative) return query;
+  if (instance.isNative) {
+    if (needResponse) return query;
+    return query.then(function (res) {
+      if (isNumber(res)) return res;
+      return res ? res.length : 0;
+    });
+  }
 
-  var response = void 0;
+  return instance.pool.acquire().then(function (db) {
+    var response = void 0;
 
-  if (needResponse) {
-    response = parseResponse(instance.db.exec(query.toString()));
-    if (query._sequence && query._sequence[0].method === 'hasTable') {
-      return !!response.length;
+    if (needResponse) {
+      response = parseResponse(db.exec(query.toString()));
+      if (query._sequence && query._sequence[0].method === 'hasTable') {
+        response = !!response.length;
+      }
+    } else {
+      db.run(query.toString());
+
+      if (isOneOf(['insert', 'update', 'delete'], query._method)) {
+        response = db.getRowsModified();
+      }
     }
-  } else {
-    instance.db.run(query.toString());
 
-    if (isOneOf(['insert', 'update', 'delete'], query._method)) {
-      response = instance.db.getRowsModified();
+    writeDatabase(instance, db);
+    instance.pool.release(db);
+    return response;
+  });
+}
+
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
     }
   }
 
-  writeDatabase(instance);
-  return Promise.resolve(response);
-}
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
 
-var _extends$1 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _slicedToArray$1 = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _createClass$1 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
 
 var Model = function () {
   function Model(ctx, name, schema, options) {
-    _classCallCheck$1(this, Model);
+    classCallCheck(this, Model);
 
     Object.assign(this, {
       ctx, name, schema, options
     });
   }
 
-  _createClass$1(Model, [{
-    key: 'create',
-    value: function create(object, options) {
-      var _this = this;
+  Model.prototype.create = function create(object, options) {
+    var insertion = toDefinition(this, object);
 
-      var insertion = toDefinition(this, object);
+    var query = this.ctx.knex.raw(this.ctx.knex(this.name).insert(insertion).toString().replace(/^insert/i, 'INSERT OR IGNORE'));
 
-      var query = this.ctx.knex.raw(this.ctx.knex(this.name).insert(insertion).toString().replace(/^insert/i, 'INSERT OR IGNORE'));
+    return runQuery(this.ctx, query);
+  };
 
-      return runQuery(this.ctx, query).then(function () {
-        return _this.findOne(object);
-      });
+  Model.prototype.find = function find(column, criteria) {
+    var _this = this;
+
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    if (column && !isString(column)) {
+      options = criteria;
+      criteria = column;
+      column = '';
     }
-  }, {
-    key: 'find',
-    value: function find(column, criteria) {
-      var _this2 = this;
 
-      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    options = findOptions(options);
 
-      if (!isString(column)) {
-        options = criteria;
-        criteria = column;
-        column = '';
+    var order = options.random ? 'random' : options.order;
+    var query = this.ctx.knex(this.name).select();
+    query = buildWhere(query, criteria);
+
+    if (order) query = buildOrder(query, order);
+    if (options.limit) query = query.limit(options.limit);
+    if (options.skip) query = query.offset(options.skip);
+
+    return runQuery(this.ctx, query, true).then(function (response) {
+      if (!isArray(response)) {
+        return response ? [response] : [];
       }
 
-      options = findOptions(options);
-
-      var order = options.random ? 'random' : options.order;
-      var query = this.ctx.knex(this.name).select();
-      query = buildWhere(query, criteria);
-
-      if (order) query = buildOrder(query, order);
-      if (options.limit) query = query.limit(options.limit);
-      if (options.skip) query = query.offset(options.skip);
-
-      return runQuery(this.ctx, query, true).then(function (response) {
-        if (!isArray(response)) {
-          return response ? [response] : [];
-        }
-
-        return response.map(function (object) {
-          if (!column) {
-            return fromDefinition(_this2, object);
-          } else {
-            return fromColumnDefinition(_this2, column, object[column]);
-          }
-        });
-      });
-    }
-  }, {
-    key: 'findOne',
-    value: function findOne(column, criteria) {
-      var _this3 = this;
-
-      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-      if (!isString(column)) {
-        options = criteria;
-        criteria = column;
-        column = '';
-      }
-
-      options = findOptions(options);
-
-      var order = options.random ? 'random' : options.order;
-      var query = this.ctx.knex(this.name).first();
-      query = buildWhere(query, criteria);
-
-      if (order) query = buildOrder(query, order);
-      if (options.skip) query = query.offset(options.skip);
-
-      return runQuery(this.ctx, query, true).then(function (response) {
-        if (!isArray(response)) return;
-
-        var _response = _slicedToArray$1(response, 1),
-            result = _response[0];
-
+      return response.map(function (object) {
         if (!column) {
-          return fromDefinition(_this3, result);
+          return fromDefinition(_this, object);
         } else {
-          // if a column was provided, skip casting
-          // the entire object and just process then
-          // return that particular property
-          return fromColumnDefinition(_this3, column, result[column]);
+          return fromColumnDefinition(_this, column, object[column]);
         }
       });
-    }
-  }, {
-    key: 'findOrCreate',
-    value: function findOrCreate(criteria, creation, options) {
-      var _this4 = this;
+    });
+  };
 
-      return this.findOne(criteria, options).then(function (existing) {
-        if (existing) return existing;
-        return _this4.create(_extends$1({}, criteria, creation));
+  Model.prototype.findOne = function findOne(column, criteria) {
+    var _this2 = this;
+
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    if (column && !isString(column)) {
+      options = criteria;
+      criteria = column;
+      column = '';
+    }
+
+    options = findOptions(options);
+
+    var order = options.random ? 'random' : options.order;
+    var query = this.ctx.knex(this.name).first();
+    query = buildWhere(query, criteria);
+
+    if (order) query = buildOrder(query, order);
+    if (options.skip) query = query.offset(options.skip);
+
+    return runQuery(this.ctx, query, true).then(function (response) {
+      var result = isArray(response) ? response[0] : response;
+
+      if (!column) {
+        return fromDefinition(_this2, result);
+      } else {
+        // if a column was provided, skip casting
+        // the entire object and just process then
+        // return that particular property
+        return fromColumnDefinition(_this2, column, result[column]);
+      }
+    });
+  };
+
+  Model.prototype.findOrCreate = function findOrCreate(criteria, creation, options) {
+    var _this3 = this;
+
+    return this.findOne(criteria, options).then(function (existing) {
+      if (existing) return existing;
+      return _this3.create(_extends({}, criteria, creation)).then(function () {
+        return _this3.findOne(criteria);
       });
-    }
-  }, {
-    key: 'update',
-    value: function update(criteria, data, options) {
-      var query = this.ctx.knex(this.name).update(data);
-      query = buildWhere(query, criteria);
+    });
+  };
 
-      return runQuery(this.ctx, query);
-    }
-  }, {
-    key: 'updateOrCreate',
-    value: function updateOrCreate(criteria, data, options) {
-      var _this5 = this;
+  Model.prototype.update = function update(criteria, data, options) {
+    var query = this.ctx.knex(this.name).update(data);
+    query = buildWhere(query, criteria);
 
-      return this.find(criteria, options).then(function (found) {
-        if (!found || !found.length) {
-          return _this5.create(_extends$1({}, criteria, data), options);
-        } else {
-          return _this5.update(criteria, data, options);
-        }
-      });
-    }
-  }, {
-    key: 'get',
-    value: function get(column, criteria, defaultValue) {
-      return this.findOne(criteria).then(function (data) {
-        if (!data) return defaultValue;
-        if (typeof data[column] === 'undefined') {
-          return defaultValue;
-        }
+    return runQuery(this.ctx, query);
+  };
 
-        return data[column];
-      });
-    }
-  }, {
-    key: 'set',
-    value: function set(column, criteria, value) {
-      if (!this.schema[column]) {
-        throw new Error('no such column in schema');
+  Model.prototype.updateOrCreate = function updateOrCreate(criteria, data) {
+    var _this4 = this;
+
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    return this.find(criteria, options).then(function (found) {
+      if (!found || !found.length) {
+        return _this4.create(_extends({}, criteria, data), options);
+      } else {
+        return _this4.update(criteria, data, options);
+      }
+    });
+  };
+
+  Model.prototype.get = function get$$1(column, criteria, defaultValue) {
+    return this.findOne(criteria).then(function (data) {
+      if (!data) return defaultValue;
+      if (typeof data[column] === 'undefined') {
+        return defaultValue;
       }
 
-      return this.update(criteria, {
-        [column]: value
-      });
+      return data[column];
+    });
+  };
+
+  Model.prototype.set = function set$$1(column, criteria, value) {
+    if (!this.schema[column]) {
+      throw new Error(`no column by the name '${ column }' is defined in '${ this.name }'`);
     }
-  }, {
-    key: 'incr',
-    value: function incr(column, criteria, amount) {
-      amount = Number(amount) || 1;
-      var query = this.ctx.knex(this.name).increment(column, amount);
-      query = buildWhere(query, criteria);
 
-      return runQuery(this.ctx, query);
+    return this.update(criteria, {
+      [column]: value
+    });
+  };
+
+  Model.prototype.incr = function incr(column, criteria, amount) {
+    amount = Number(amount) || 1;
+    var query = this.ctx.knex(this.name).increment(column, amount);
+    query = buildWhere(query, criteria);
+
+    return runQuery(this.ctx, query);
+  };
+
+  Model.prototype.decr = function decr(column, criteria, amount, allowNegative) {
+    amount = Number(amount) || 1;
+    var query = this.ctx.knex(this.name);
+    var raw = allowNegative ? `${ column } - ${ amount }` : `MAX(0, ${ column } - ${ amount })`;
+    query = query.update({ [column]: this.ctx.knex.raw(raw) });
+    query = buildWhere(query, criteria);
+
+    return runQuery(this.ctx, query);
+  };
+
+  Model.prototype.remove = function remove(criteria) {
+    if (!isValidWhere(criteria)) {
+      return Promise.resolve(0);
     }
-  }, {
-    key: 'decr',
-    value: function decr(column, criteria, amount, allowNegative) {
-      amount = Number(amount) || 1;
-      var query = this.ctx.knex(this.name);
-      var raw = allowNegative ? `${ column } - ${ amount }` : `MAX(0, ${ column } - ${ amount })`;
-      query = query.update({ [column]: this.ctx.knex.raw(raw) });
-      query = buildWhere(query, criteria);
 
-      return runQuery(this.ctx, query);
+    if (isObject(criteria) && !Object.keys(criteria).length) {
+      return Promise.resolve(0);
     }
-  }, {
-    key: 'remove',
-    value: function remove(criteria) {
-      var query = this.ctx.knex(this.name).del();
-      query = buildWhere(query, criteria);
 
-      return runQuery(this.ctx, query);
+    var query = this.ctx.knex(this.name).del();
+    query = buildWhere(query, criteria);
+
+    return runQuery(this.ctx, query);
+  };
+
+  Model.prototype.clear = function clear() {
+    var query = this.ctx.knex(this.name).truncate();
+    return runQuery(this.ctx, query);
+  };
+
+  Model.prototype.count = function count(column, criteria) {
+    var _query;
+
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    if (!isString(column)) {
+      options = criteria;
+      criteria = column;
+      column = '*';
     }
-  }, {
-    key: 'count',
-    value: function count(column, criteria) {
-      var _query;
 
-      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    options = aggregateOptions(options);
 
-      if (!isString(column)) {
-        options = criteria;
-        criteria = column;
-        column = '*';
-      }
+    var val = `${ column } as count`;
+    var method = options.distinct ? 'countDistinct' : 'count';
+    var query = this.ctx.knex(this.name)[method](val);
+    query = buildWhere(query, criteria);
 
-      options = aggregateOptions(options);
+    if (options.group) query = (_query = query).groupBy.apply(_query, options.group);
 
-      var val = `${ column } as count`;
-      var method = options.distinct ? 'countDistinct' : 'count';
-      var query = this.ctx.knex(this.name)[method](val);
-      query = buildWhere(query, criteria);
+    return runQuery(this.ctx, query, true).then(function (res) {
+      if (!isArray(res)) return;
+      return res[0].count;
+    });
+  };
 
-      if (options.groupBy) query = (_query = query).groupBy.apply(_query, _toConsumableArray(options.groupBy));
+  Model.prototype.min = function min(column, criteria) {
+    var _query2;
 
-      return runQuery(this.ctx, query, true).then(function (res) {
-        if (!isArray(res)) return;
-        return res[0].count;
-      });
-    }
-  }, {
-    key: 'min',
-    value: function min(column, criteria) {
-      var _query2;
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    options = aggregateOptions(options);
 
-      options = aggregateOptions(options);
+    var val = `${ column } as min`;
+    var query = this.ctx.knex(this.name).min(val);
+    query = buildWhere(query, criteria);
 
-      var val = `${ column } as min`;
-      var query = this.ctx.knex(this.name).min(val);
-      query = buildWhere(query, criteria);
+    if (options.group) query = (_query2 = query).groupBy.apply(_query2, options.group);
 
-      if (options.groupBy) query = (_query2 = query).groupBy.apply(_query2, _toConsumableArray(options.groupBy));
+    return runQuery(this.ctx, query, true).then(function (res) {
+      if (!isArray(res)) return;
+      return res[0].min;
+    });
+  };
 
-      return runQuery(this.ctx, query, true).then(function (res) {
-        if (!isArray(res)) return;
-        return res[0].min;
-      });
-    }
-  }, {
-    key: 'max',
-    value: function max(column, criteria, options) {
-      var _query3;
+  Model.prototype.max = function max(column, criteria, options) {
+    var _query3;
 
-      options = aggregateOptions(options);
+    options = aggregateOptions(options);
 
-      var val = `${ column } as max`;
-      var query = this.ctx.knex(this.name).max(val);
-      query = buildWhere(query, criteria);
+    var val = `${ column } as max`;
+    var query = this.ctx.knex(this.name).max(val);
+    query = buildWhere(query, criteria);
 
-      if (options.groupBy) query = (_query3 = query).groupBy.apply(_query3, _toConsumableArray(options.groupBy));
+    if (options.group) query = (_query3 = query).groupBy.apply(_query3, options.group);
 
-      return runQuery(this.ctx, query, true).then(function (res) {
-        if (!isArray(res)) return;
-        return res[0].max;
-      });
-    }
-  }]);
+    return runQuery(this.ctx, query, true).then(function (res) {
+      if (!isArray(res)) return;
+      return res[0].max;
+    });
+  };
 
   return Model;
 }();
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+module.exports = exports['default'];
 
 var Trilogy = function () {
   function Trilogy(path$$1) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-    _classCallCheck(this, Trilogy);
+    classCallCheck(this, Trilogy);
 
     if (!path$$1) {
-      throw new Error('trilogy constructor must be provided a file path.');
+      throw new Error('trilogy constructor must be provided a file path');
     }
 
     this.options = setup(options);
@@ -706,178 +741,210 @@ var Trilogy = function () {
       this.knex = knex(_extends({}, config, { connection: this.options.connection }));
     } else {
       this.knex = knex(config);
-      readDatabase(this, this.options.connection.filename);
+      this.pool = connect(this);
     }
 
     this.definitions = new Map();
   }
 
-  _createClass(Trilogy, [{
-    key: 'model',
-    value: function model(name, schema, options) {
-      if (this.definitions.has(name)) {
-        return this.definitions.get(name);
-      }
+  Trilogy.prototype.model = function model(name, schema, options) {
+    var _this = this;
 
-      var model = new Model(this, name, schema, options);
-      this.definitions.set(name, model);
+    if (this.definitions.has(name)) {
+      return this.definitions.get(name);
+    }
 
-      var check = this.knex.schema.hasTable(name);
-      var query = this.knex.schema.createTableIfNotExists(name, toKnexSchema(model));
+    var model = new Model(this, name, schema, options);
+    this.definitions.set(name, model);
 
-      if (this.isNative) {
-        check.then(function (tableExists) {
-          if (tableExists) return;
-          query.then(function () {});
+    var check = this.knex.schema.hasTable(name);
+    var query = this.knex.schema.createTableIfNotExists(name, toKnexSchema(model));
+
+    // we still check to see if the table exists to prevent
+    // errors from creating indices that already exist
+
+    if (this.isNative) {
+      return check.then(function (exists) {
+        if (exists) return model;
+        return query.then(function () {
+          return model;
         });
-      } else {
-        var exists = runQuery(this, check, true);
-        if (!exists) runQuery(this, query);
-      }
+      });
+    } else {
+      return runQuery(this, check, true).then(function (exists) {
+        if (exists) return model;
+        return runQuery(_this, query);
+      });
+    }
+  };
 
-      return model;
+  Trilogy.prototype.hasModel = function hasModel(name) {
+    if (!this.definitions.has(name)) {
+      return false;
     }
-  }, {
-    key: 'create',
-    value: function create(table, object, options) {
-      var model = checkModel(this, table);
-      return model.create(object, options);
-    }
-  }, {
-    key: 'find',
-    value: function find(location, criteria, options) {
-      var _location$split = location.split('.', 2),
-          _location$split2 = _slicedToArray(_location$split, 2),
-          table = _location$split2[0],
-          column = _location$split2[1];
 
-      var model = checkModel(this, table);
-      return model.find(column, criteria, options);
-    }
-  }, {
-    key: 'findOne',
-    value: function findOne(location, criteria, options) {
-      var _location$split3 = location.split('.', 2),
-          _location$split4 = _slicedToArray(_location$split3, 2),
-          table = _location$split4[0],
-          column = _location$split4[1];
+    var query = this.knex.schema.hasTable(name);
+    return runQuery(this, query, true);
+  };
 
-      var model = checkModel(this, table);
-      return model.findOne(column, criteria, options);
-    }
-  }, {
-    key: 'findOrCreate',
-    value: function findOrCreate(table, criteria, creation, options) {
-      var model = checkModel(this, table);
-      return model.findOrCreate(criteria, creation, options);
-    }
-  }, {
-    key: 'update',
-    value: function update(table, criteria, data, options) {
-      var model = checkModel(this, table);
-      return model.update(criteria, data, options);
-    }
-  }, {
-    key: 'updateOrCreate',
-    value: function updateOrCreate(table, criteria, data, options) {
-      var model = checkModel(this, table);
-      return model.updateOrCreate(criteria, data, options);
-    }
-  }, {
-    key: 'get',
-    value: function get(location, criteria, defaultValue) {
-      var _location$split5 = location.split('.', 2),
-          _location$split6 = _slicedToArray(_location$split5, 2),
-          table = _location$split6[0],
-          column = _location$split6[1];
+  Trilogy.prototype.dropModel = function dropModel(name) {
+    var _this2 = this;
 
-      var model = checkModel(this, table);
-      return model.get(column, criteria, defaultValue);
+    if (!this.definitions.has(name)) {
+      return false;
     }
-  }, {
-    key: 'set',
-    value: function set(location, criteria, value) {
-      var _location$split7 = location.split('.', 2),
-          _location$split8 = _slicedToArray(_location$split7, 2),
-          table = _location$split8[0],
-          column = _location$split8[1];
 
-      var model = checkModel(this, table);
-      return model.set(column, criteria, value);
-    }
-  }, {
-    key: 'incr',
-    value: function incr(location, criteria, amount) {
-      var _location$split9 = location.split('.', 2),
-          _location$split10 = _slicedToArray(_location$split9, 2),
-          table = _location$split10[0],
-          column = _location$split10[1];
+    var query = this.knex.schema.dropTableIfExists(name);
+    return runQuery(this, query, true).then(function () {
+      _this2.definitions.delete(name);
+    });
+  };
 
-      var model = checkModel(this, table);
-      return model.incr(column, criteria, amount);
-    }
-  }, {
-    key: 'decr',
-    value: function decr(location, criteria, amount, allowNegative) {
-      var _location$split11 = location.split('.', 2),
-          _location$split12 = _slicedToArray(_location$split11, 2),
-          table = _location$split12[0],
-          column = _location$split12[1];
+  Trilogy.prototype.raw = function raw(query, needResponse) {
+    return runQuery(this, query, needResponse);
+  };
 
-      var model = checkModel(this, table);
-      return model.decr(column, criteria, amount, allowNegative);
+  Trilogy.prototype.close = function close() {
+    if (this.isNative) {
+      return this.knex.destroy();
+    } else {
+      return this.pool.drain();
     }
-  }, {
-    key: 'remove',
-    value: function remove(location, criteria) {
-      var model = checkModel(this, location);
-      return model.remove(criteria);
-    }
-  }, {
-    key: 'count',
-    value: function count(location, criteria, options) {
-      var _location$split13 = location.split('.', 2),
-          _location$split14 = _slicedToArray(_location$split13, 2),
-          table = _location$split14[0],
-          column = _location$split14[1];
+  };
 
-      var model = checkModel(this, table);
-      return model.count(column, criteria, options);
-    }
-  }, {
-    key: 'min',
-    value: function min(location, criteria, options) {
-      var _location$split15 = location.split('.', 2),
-          _location$split16 = _slicedToArray(_location$split15, 2),
-          table = _location$split16[0],
-          column = _location$split16[1];
+  Trilogy.prototype.create = function create(table, object, options) {
+    var model = checkModel(this, table);
+    return model.create(object, options);
+  };
 
-      var model = checkModel(this, table);
-      return model.min(column, criteria, options);
-    }
-  }, {
-    key: 'max',
-    value: function max(location, criteria, options) {
-      var _location$split17 = location.split('.', 2),
-          _location$split18 = _slicedToArray(_location$split17, 2),
-          table = _location$split18[0],
-          column = _location$split18[1];
+  Trilogy.prototype.find = function find(location, criteria, options) {
+    var _location$split = location.split('.', 2),
+        table = _location$split[0],
+        column = _location$split[1];
 
-      var model = checkModel(this, table);
-      return model.max(column, criteria, options);
+    var model = checkModel(this, table);
+    return model.find(column, criteria, options);
+  };
+
+  Trilogy.prototype.findOne = function findOne(location, criteria, options) {
+    var _location$split2 = location.split('.', 2),
+        table = _location$split2[0],
+        column = _location$split2[1];
+
+    var model = checkModel(this, table);
+    return model.findOne(column, criteria, options);
+  };
+
+  Trilogy.prototype.findOrCreate = function findOrCreate(table, criteria, creation, options) {
+    var model = checkModel(this, table);
+    return model.findOrCreate(criteria, creation, options);
+  };
+
+  Trilogy.prototype.update = function update(table, criteria, data, options) {
+    var model = checkModel(this, table);
+    return model.update(criteria, data, options);
+  };
+
+  Trilogy.prototype.updateOrCreate = function updateOrCreate(table, criteria, data, options) {
+    var model = checkModel(this, table);
+    return model.updateOrCreate(criteria, data, options);
+  };
+
+  Trilogy.prototype.get = function get$$1(location, criteria, defaultValue) {
+    var _location$split3 = location.split('.', 2),
+        table = _location$split3[0],
+        column = _location$split3[1];
+
+    var model = checkModel(this, table);
+    return model.get(column, criteria, defaultValue);
+  };
+
+  Trilogy.prototype.set = function set$$1(location, criteria, value) {
+    var _location$split4 = location.split('.', 2),
+        table = _location$split4[0],
+        column = _location$split4[1];
+
+    var model = checkModel(this, table);
+    return model.set(column, criteria, value);
+  };
+
+  Trilogy.prototype.incr = function incr(location, criteria, amount) {
+    var _location$split5 = location.split('.', 2),
+        table = _location$split5[0],
+        column = _location$split5[1];
+
+    var model = checkModel(this, table);
+    return model.incr(column, criteria, amount);
+  };
+
+  Trilogy.prototype.decr = function decr(location, criteria, amount, allowNegative) {
+    var _location$split6 = location.split('.', 2),
+        table = _location$split6[0],
+        column = _location$split6[1];
+
+    var model = checkModel(this, table);
+    return model.decr(column, criteria, amount, allowNegative);
+  };
+
+  Trilogy.prototype.remove = function remove(location, criteria) {
+    var model = checkModel(this, location);
+    return model.remove(criteria);
+  };
+
+  Trilogy.prototype.clear = function clear(location) {
+    var model = checkModel(this, location);
+    return model.clear();
+  };
+
+  Trilogy.prototype.count = function count(location, criteria, options) {
+    if (arguments.length === 0) {
+      var query = this.knex('sqlite_master').whereNot('name', 'sqlite_sequence').where({ type: 'table' }).count('* as count');
+
+      return runQuery(this, query, true).then(function (_ref) {
+        var count = _ref[0].count;
+        return count;
+      });
     }
-  }, {
+
+    var _location$split7 = location.split('.', 2),
+        table = _location$split7[0],
+        column = _location$split7[1];
+
+    var model = checkModel(this, table);
+    return column ? model.count(column, criteria, options) : model.count(criteria, options);
+  };
+
+  Trilogy.prototype.min = function min(location, criteria, options) {
+    var _location$split8 = location.split('.', 2),
+        table = _location$split8[0],
+        column = _location$split8[1];
+
+    var model = checkModel(this, table);
+    return model.min(column, criteria, options);
+  };
+
+  Trilogy.prototype.max = function max(location, criteria, options) {
+    var _location$split9 = location.split('.', 2),
+        table = _location$split9[0],
+        column = _location$split9[1];
+
+    var model = checkModel(this, table);
+    return model.max(column, criteria, options);
+  };
+
+  createClass(Trilogy, [{
     key: 'models',
-    get: function get() {
-      return this.definitions.keys();
+    get: function get$$1() {
+      return [].concat(this.definitions.keys());
     }
   }]);
-
   return Trilogy;
 }();
 
 function checkModel(instance, name) {
-  return invariant(instance.definitions.get(name), `no such table '${ name }'`);
+  return invariant(instance.definitions.get(name), `no model defined by the name '${ name }'`);
 }
+
+module.exports = exports['default'];
 
 module.exports = Trilogy;
