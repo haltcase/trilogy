@@ -38,6 +38,7 @@ export let isArray = value => isType(value, 'array')
 export let isObject = value => isType(value, 'object')
 export let isFunction = value => isType(value, 'function')
 export let isString = value => isType(value, 'string')
+export let isNumber = value => isType(value, 'number')
 export let isBoolean = value => isType(value, 'boolean')
 
 export function invariant (condition, message) {

@@ -84,7 +84,10 @@ export function runQuery (instance, query, needResponse) {
 
   if (instance.isNative) {
     if (needResponse) return query
-    return query.then(res => res ? res.length : 0)
+    return query.then(res => {
+      if (util.isNumber(res)) return res
+      return res ? res.length : 0
+    })
   }
 
   return instance.pool.acquire().then(db => {
