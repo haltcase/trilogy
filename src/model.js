@@ -24,7 +24,7 @@ export default class Model {
   }
 
   find (column, criteria, options = {}) {
-    if (!isString(column)) {
+    if (column && !isString(column)) {
       options = criteria
       criteria = column
       column = ''
@@ -57,7 +57,7 @@ export default class Model {
   }
 
   findOne (column, criteria, options = {}) {
-    if (!isString(column)) {
+    if (column && !isString(column)) {
       options = criteria
       criteria = column
       column = ''
