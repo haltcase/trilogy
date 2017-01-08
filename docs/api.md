@@ -589,7 +589,9 @@ model.clear()
 
 Removes all rows from the table.
 
-**Returns** `Promise<number>`: the number of rows affected
+> **Returns**
+
+`Promise<number>`: the number of rows affected
 
 ### count
 ```js
