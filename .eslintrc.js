@@ -9,7 +9,6 @@ module.exports = {
     sourceType: 'module'
   },
   env: {
-    browser: true,
     node: true
   },
   extends: 'standard',
@@ -22,7 +21,7 @@ module.exports = {
     'generator-star-spacing': OFF,
     'no-debugger': process.env.NODE_ENV === 'production' ? ERROR : OFF,
 
-    'babel/generator-star-spacing': [ERROR, { 'before': true, 'after': true }],
+    'babel/generator-star-spacing': [ERROR, { before: true, after: true }],
     'babel/new-cap': WARN,
     'babel/array-bracket-spacing': [ERROR, 'never'],
     'babel/object-curly-spacing': [ERROR, 'always'],
