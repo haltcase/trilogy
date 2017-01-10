@@ -51,7 +51,10 @@ export let columnDescriptor = osom({
     type: Any,
     required: true,
     validate (value) {
-      return util.isOneOf(['increments', 'json', String, Number, Boolean, Date], value)
+      return util.isOneOf([
+        'increments', 'json', 'timestamp',
+        String, Number, Boolean, Date
+      ], value)
     }
   },
   defaultTo: Any,
