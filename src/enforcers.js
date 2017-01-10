@@ -32,6 +32,12 @@ export let setup = osom({
   }
 })
 
+export let modelOptions = osom({
+  timestamps: Boolean,
+  primary: Array,
+  unique: Array
+})
+
 export let findOptions = osom({
   order: Any,
   limit: Number,

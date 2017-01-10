@@ -5,7 +5,7 @@ import Model from './model'
 import * as types from './types'
 import { connect } from './sqljs-handler'
 import { runQuery } from './helpers'
-import { setup } from './enforcers'
+import { setup, modelOptions } from './enforcers'
 import { invariant } from './util'
 
 class Trilogy {
@@ -45,7 +45,9 @@ class Trilogy {
 
     let check = this.knex.schema.hasTable(name)
     let query = this.knex.schema
-      .createTableIfNotExists(name, types.toKnexSchema(model))
+      .createTableIfNotExists(name,
+        types.toKnexSchema(model, modelOptions(options))
+      )
 
     // we still check to see if the table exists to prevent
     // errors from creating indices that already exist

@@ -2,7 +2,7 @@ import { columnDescriptor } from './enforcers'
 import constants from './constants'
 import * as util from './util'
 
-export function toKnexSchema (model) {
+export function toKnexSchema (model, options) {
   return function (table) {
     // every property of `model.schema` is a column
     util.each(model.schema, (descriptor, name) => {
@@ -22,6 +22,14 @@ export function toKnexSchema (model) {
           partial[property](value)
         }
       })
+    })
+
+    util.each(options, (value, key) => {
+      if (key === 'timestamps') {
+        options.timestamps && table.timestamps(true, true)
+      } else {
+        table[key](value)
+      }
     })
   }
 }
