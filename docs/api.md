@@ -99,7 +99,7 @@ on Schema Building for the available attributes when creating column tables.
 
 _Note: specifying a column as either `primary` or `unique` in both the column descriptor and
 the `options.primary` or `options.unique` Arrays will result in an error, as the constraint
-will have already been applied.
+will have already been applied._
 
 > **Returns**
 
