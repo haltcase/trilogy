@@ -259,6 +259,69 @@ An array of all model names defined on the instance.
 
 `Array<string>`
 
+### knex
+
+Exposes Trilogy's knex instance to allow more complex query building.
+You can use this to create queries that aren't necessarily feasible
+with Trilogy's API, like nested where clauses that require functions
+as arguments.
+
+**IMPORTANT**: Do _not_ call `then` or otherwise execute the query.
+Pass the knex query object as-is to [`raw()`](/api#raw) for execution.
+
+All of the following methods will cause execution when chained to a
+knex query, so avoid using these when building raw queries you intend
+to run with Trilogy:
+
+Promises: `then`, `catch`, `tap`, `map`, `reduce`, `bind`, `return`
+Callbacks: `asCallback`
+Streams: `stream`, `pipe`
+
+The following methods shouldn't cause problems, but they aren't
+guaranteed to work, especially when using `sql.js`:
+
+Events: `on` [`'query'`, `'query-error'`, `'query-response'`]
+
+And finally the following methods will work just fine, but you should
+not chain them on a query object before passing it to Trilogy. Running
+them separately is fine:
+
+Other: `toString`, `toSQL`
+
+For more advanced usage, see [knex's own documentation](http://knexjs.org/).
+
+> **Usage**
+
+```js
+import Trilogy from 'trilogy'
+
+const db = new Trilogy('./file.db')
+
+let query = db.knex('users').select('*')
+console.log(query.toString())
+
+db.raw(query, true).then(users => {})
+```
+
+More complex queries are possible this way:
+
+```js
+let query = db.knex('users')
+  .innerJoin('accounts', function () {
+    this.on('accounts.id', '=', 'users.account_id')
+      .orOn('accounts.owner_id', '=', 'users.id')
+  })
+
+db.raw(query, true).then(result => {})
+```
+
+_Don't_ do the following, as it will cause query execution.
+
+```js
+db.knex('users').select('*')
+  .then(() => {})
+```
+
 # Model (`Class`)
 
 Model instances are created using [`model()`](/api#model).
