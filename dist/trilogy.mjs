@@ -111,6 +111,12 @@ var setup = osom({
   }
 });
 
+var modelOptions = osom({
+  timestamps: Boolean,
+  primary: Array,
+  unique: Array
+});
+
 var findOptions = osom({
   order: Any,
   limit: Number,
@@ -130,7 +136,7 @@ var columnDescriptor = osom({
     type: Any,
     required: true,
     validate(value) {
-      return isOneOf(['increments', 'json', String, Number, Boolean, Date], value);
+      return isOneOf(['increments', 'json', 'timestamp', String, Number, Boolean, Date], value);
     }
   },
   defaultTo: Any,
@@ -143,12 +149,12 @@ var columnDescriptor = osom({
 
 var constants = {
   ERR_NO_DATABASE: 'could not write - no database initialized',
-  COLUMN_TYPES: ['increments', 'json', 'string', 'number', 'boolean', 'date'],
+  COLUMN_TYPES: ['increments', 'json', 'timestamp', 'string', 'number', 'boolean', 'date'],
   KNEX_NO_ARGS: ['primary', 'unique', 'nullable', 'notNullable']
 };
 module.exports = exports['default'];
 
-function toKnexSchema(model) {
+function toKnexSchema(model, options) {
   return function (table) {
     // every property of `model.schema` is a column
     each(model.schema, function (descriptor, name) {
@@ -168,6 +174,14 @@ function toKnexSchema(model) {
           partial[property](value);
         }
       });
+    });
+
+    each(options, function (value, key) {
+      if (key === 'timestamps') {
+        options.timestamps && table.timestamps(true, true);
+      } else {
+        table[key](value);
+      }
     });
   };
 }
@@ -726,15 +740,15 @@ var Trilogy = function () {
       throw new Error('trilogy constructor must be provided a file path');
     }
 
-    this.options = setup(options);
-    this.options.connection.filename = resolve(this.options.dir, path$$1);
-    this.isNative = this.options.client === 'sqlite3';
-    this.verbose = options.verbose;
+    var obj = this.options = setup(options);
+    obj.connection.filename = resolve(obj.dir, path$$1);
+    this.isNative = obj.client === 'sqlite3';
+    this.verbose = obj.verbose;
 
     var config = { client: 'sqlite3', useNullAsDefault: true };
 
     if (this.isNative) {
-      this.knex = knex(_extends({}, config, { connection: this.options.connection }));
+      this.knex = knex(_extends({}, config, { connection: obj.connection }));
     } else {
       this.knex = knex(config);
       this.pool = connect(this);
@@ -754,7 +768,7 @@ var Trilogy = function () {
     this.definitions.set(name, model);
 
     var check = this.knex.schema.hasTable(name);
-    var query = this.knex.schema.createTableIfNotExists(name, toKnexSchema(model));
+    var query = this.knex.schema.createTableIfNotExists(name, toKnexSchema(model, modelOptions(options)));
 
     // we still check to see if the table exists to prevent
     // errors from creating indices that already exist
