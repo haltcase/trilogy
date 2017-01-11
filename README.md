@@ -37,10 +37,10 @@
   [`sql.js`][sqljs] - meaning you can easily embed a SQLite database without a
   compilation step like `gyp`, which can get a little tricky when dealing with
   multiple platforms or architectures.
-  
+
   You can even swap the backend after you've started, with no changes to the rest
   of your code! :tada:
-  
+
 - Trilogy :heart: [Electron][electron] & [NW.js][nwjs]
 
   If you've run into issues using `sqlite3` in Electron or NW.js, like many
@@ -56,12 +56,14 @@
    ```console
    npm i trilogy
    ```
-   
+
 2. Install a backend
 
    ```console
    npm i sqlite3
    ```
+
+   _or_
 
    ```console
    npm i sql.js
@@ -93,7 +95,7 @@ const db = new Trilogy('./file.db', {
     released: Date,
     awards: 'json'                           // special type
   })
-  
+
   await games.create({
     name: 'Overwatch',
     genre: 'FPS',
@@ -104,9 +106,9 @@ const db = new Trilogy('./file.db', {
       'Best ESports Game'
     ]
   })
-  
+
   let overwatch = games.findOne({ name: 'Overwatch' })
-  
+
   console.log(overwatch.awards[1])
   // -> 'Best Multiplayer Game'
 })()

@@ -7,48 +7,128 @@
   <a href="https://standardjs.com"><img src="https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square" alt="JavaScript Standard Style"></a>
 </p>
 
-> ***trilogy*** is SQLite - but 100% pure JavaScript. Its core is built on two modules: [SQL.js][sqljs] for accessing and writing to database files and [knex][knex] for building its queries.
+> ***trilogy*** is a Promise-based layer over SQLite, supporting models defined in native JavaScript.
 
-## Why?
+- [features](#features)
+- [installation](#installation)
+- [usage](#usage)
+- [contributing](#contributing)
+- [license](#license)
 
-- No need for `node-gyp` or `node-pre-gyp`
+---
 
-  You can stop building and rebuilding `sqlite3` for every platform - we already have a JS-only implementation in `SQL.js`. Forget about gyp or pre-gyp compilation issues. This is especially helpful when developing multi-platform applications in [Electron][electron] or [NW.js][nwjs].
+## features
 
-- No long, unwieldy SQLite query strings
+- Model your tables with native JavaScript
 
-  `knex` can do the job easier and in a more JS-friendly syntax. We just need to bridge the gaps between JavaScript & SQLite and `knex` and `SQL.js`.
+  Set up database tables with types like `String`, `Date`, and `'json'` - and
+  Trilogy will handle all the type-casting involved so that you always receive
+  what you expect to receive.
 
-- Simple database embedding
+- Uses [knex][knex] to build queries
 
-  Combine SQLite's relational power with the simplicity of something like the `nedb` embedded database. That's what you get when you use trilogy. Since trilogy doesn't require any kind of build-step ala `sqlite3`, your build steps can be simpler.
+  Trilogy uses knex internally to build its queries - but it's also exposed so
+  you can use it to build your own ultra-complex queries. No need to mess with
+  ridiculous multi-line strings.
 
-- Powerful polymorphic API
+- Swappable SQLite backends
 
-  trilogy's API can let you do your thing in different ways. You can overload most of the functions to use them in varying ways by providing different arguments or leaving them out entirely. This is built using [arify][arify].
+  Trilogy supports both the native [`sqlite3`][sqlite3] module as well as
+  [`sql.js`][sqljs] - meaning you can easily embed a SQLite database without a
+  compilation step like `gyp`, which can get a little tricky when dealing with
+  multiple platforms or architectures.
 
-## Installation
+  You can even swap the backend after you've started, with no changes to the rest
+  of your code! :tada:
 
-`npm i trilogy`
+- Trilogy :heart: [Electron][electron] & [NW.js][nwjs]
 
-## Usage
+  If you've run into issues using `sqlite3` in Electron or NW.js, like many
+  have before you, you can easily use Trilogy with the `sql.js` backend, which
+  doesn't need to be compiled at all! Plus, you still get all the greatness of
+  a simple API and all the raw power of knex's query building - neatly wrapped
+  in a neat little package. :gift:
 
-See the [documentation here][docs] for the full API - including usage syntax and examples.
+## installation
 
-## Contributing
+1. Install Trilogy
 
-I am open to input and discussion about the project. Feel free to open an issue or submit a pull request. For large changes, please open an issue to discuss the revisions first.
+   ```console
+   npm i trilogy
+   ```
 
-## License
+2. Install a backend
+
+   ```console
+   npm i sqlite3
+   ```
+
+   _or_
+
+   ```console
+   npm i sql.js
+   ```
+
+## usage
+
+See the [documentation here][docs] for the full API - including usage syntax
+and examples.
+
+Here's a quick overview. It uses `async` & `await` but is easily usable with
+vanilla Promises.
+
+```js
+import Trilogy from 'trilogy'
+
+// defaults to using the `sqlite3` backend
+const db = new Trilogy('./file.db')
+
+// choose `sql.js` to avoid native compilation :)
+const db = new Trilogy('./file.db', {
+  client: 'sql.js'
+})
+
+;(async function () {
+  let games = await db.model('games', {
+    name: { type: String, primary: true },   // primary key
+    genre: String,                           // type shorthand
+    released: Date,
+    awards: 'json'                           // special type
+  })
+
+  await games.create({
+    name: 'Overwatch',
+    genre: 'FPS',
+    released: new Date('May 23, 2016'),
+    awards: [
+      'Game of the Year',
+      'Best Multiplayer Game',
+      'Best ESports Game'
+    ]
+  })
+
+  let overwatch = games.findOne({ name: 'Overwatch' })
+
+  console.log(overwatch.awards[1])
+  // -> 'Best Multiplayer Game'
+})()
+```
+
+## contributing
+
+Contributions are welcome! Feel free to open an issue or submit a
+pull request. For large changes, please open an issue to discuss
+the revisions first.
+
+## license
 
 MIT © Bo Lingen / citycide
 
 See [LICENSE](LICENSE)
 
+[sqlite3]: https://github.com/mapbox/sqlite3
 [sqljs]: https://github.com/kripken/sql.js
 [knex]: https://github.com/tgriesser/knex
 [electron]: https://github.com/electron/electron
 [nwjs]: https://github.com/nwjs/nw.js
-[arify]: https://github.com/citycide/arify
 [docs]: https://citycide.github.io/trilogy/#/api
-[mdnslice]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice
