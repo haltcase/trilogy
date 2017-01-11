@@ -9,6 +9,14 @@
 
 > ***trilogy*** is a Promise-based layer over SQLite, supporting models defined in native JavaScript.
 
+- [features](#features)
+- [installation](#installation)
+- [usage](#usage)
+- [contributing](#contributing)
+- [license](#license)
+
+---
+
 ## features
 
 - Model your tables with native JavaScript
@@ -41,7 +49,7 @@
   a simple API and all the raw power of knex's query building - neatly wrapped
   in a neat little package. :gift:
 
-## Installation
+## installation
 
 1. Install Trilogy
 
@@ -59,7 +67,7 @@
    npm i sql.js
    ```
 
-## Usage
+## usage
 
 See the [documentation here][docs] for the full API - including usage syntax
 and examples.
@@ -104,13 +112,13 @@ const db = new Trilogy('./file.db', {
 })()
 ```
 
-## Contributing
+## contributing
 
 Contributions are welcome! Feel free to open an issue or submit a
 pull request. For large changes, please open an issue to discuss
 the revisions first.
 
-## License
+## license
 
 MIT © Bo Lingen / citycide
 
