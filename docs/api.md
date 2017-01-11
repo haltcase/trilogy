@@ -44,11 +44,11 @@ const db = new Trilogy('./storage.db')
 const db = new Trilogy('./storage.db', {
   // use `sql.js` to avoid build issues like gyp
   client: 'sql.js',
-  
+
   // directory with which to resolve `path`
   // it defaults to `process.cwd()`
   dir: path.resolve('./here'),
-  
+
   // pass a function that receives all queries run
   verbose: console.log.bind(console)
 })
@@ -103,7 +103,7 @@ will have already been applied._
 
 > **Returns**
 
-`Promise<`[`Model`](/api#model-codeclasscode)`>`
+`Promise<`[`Model`](/api#model-class)`>`
 
 > **Usage**
 
@@ -242,7 +242,7 @@ db.find('title', ['release', '>', 2001])
       return doSomething(title)
     })
   })
-  
+
 // sometime later ... program ending ...
 db.close().then(() => {
   // database connection ended
@@ -585,7 +585,7 @@ let rowsUpdated = await games.updateOrCreate(
 
 console.log(rowsUpdated)
 // -> 1
-  
+
 console.log(await games.findOne({ name: 'Ms. PacMan' }))
 // -> { name: 'Ms. PacMan', owned: false, genre: 'arcade' }
 ```
