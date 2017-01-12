@@ -1,6 +1,6 @@
 import { columnDescriptor } from './enforcers'
-import constants from './constants'
 import * as util from './util'
+import { KNEX_NO_ARGS, COLUMN_TYPES } from './constants'
 
 export function toKnexSchema (model, options) {
   return function (table) {
@@ -16,7 +16,7 @@ export function toKnexSchema (model, options) {
       util.each(columnProperties, (value, property) => {
         if (util.isOneOf(['name', 'type'], property)) return
 
-        if (util.isOneOf(constants.KNEX_NO_ARGS, property)) {
+        if (util.isOneOf(KNEX_NO_ARGS, property)) {
           columnProperties[property] && partial[property]()
         } else {
           partial[property](value)
@@ -90,7 +90,7 @@ function getDataType (property) {
     type = type.toLowerCase()
   }
 
-  if (!util.isOneOf(constants.COLUMN_TYPES, type)) {
+  if (!util.isOneOf(COLUMN_TYPES, type)) {
     type = 'string'
   }
 

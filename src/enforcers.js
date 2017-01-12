@@ -1,11 +1,18 @@
 import osom from 'osom'
-import * as util from './util'
+import { COLUMN_TYPES } from './constants'
+
+import {
+  isArray,
+  isFunction,
+  isObject,
+  isOneOf
+} from './util'
 
 function Any (value) { return value }
 
 function toArray (value) {
   if (typeof value === 'undefined') return
-  return util.isArray(value) ? value : [value]
+  return isArray(value) ? value : [value]
 }
 
 export let setup = osom({
@@ -24,7 +31,7 @@ export let setup = osom({
     type: Object,
     default: {},
     validate (value) {
-      return util.isObject(value)
+      return isObject(value)
     }
   },
   verbose: {
@@ -57,10 +64,8 @@ export let columnDescriptor = osom({
     type: Any,
     required: true,
     validate (value) {
-      return util.isOneOf([
-        'increments', 'json', 'timestamp',
-        String, Number, Boolean, Date
-      ], value)
+      let type = isFunction(value) ? value.name : value
+      return isOneOf(COLUMN_TYPES, type)
     }
   },
   defaultTo: Any,
