@@ -64,8 +64,8 @@ export let columnDescriptor = osom({
     type: Any,
     required: true,
     validate (value) {
-      let type = isFunction(value) ? value.name : value
-      return isOneOf(COLUMN_TYPES, type)
+      let type = isFunction(value) ? value.name : String(value)
+      return isOneOf(COLUMN_TYPES, type.toLowerCase())
     }
   },
   defaultTo: Any,
