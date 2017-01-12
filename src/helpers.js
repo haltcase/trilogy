@@ -66,17 +66,6 @@ export function isValidWhere (where) {
   return [false]
 }
 
-export function getConflictString (conflict) {
-  switch (conflict.toLowerCase()) {
-    case 'fail': return ' or fail '
-    case 'abort': return ' or abort '
-    case 'ignore': return ' or ignore '
-    case 'replace': return ' or replace '
-    case 'rollback': return ' or rollback '
-    default: return ' '
-  }
-}
-
 export function runQuery (instance, query, needResponse) {
   if (util.isFunction(instance.verbose)) {
     instance.verbose(query.toString())
