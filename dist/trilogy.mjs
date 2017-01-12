@@ -1,7 +1,7 @@
 import knex from 'knex';
 import { resolve } from 'path';
-import osom from 'osom';
 import type from 'component-type';
+import osom from 'osom';
 import jetpack from 'fs-jetpack';
 import pool from 'generic-pool';
 import SQL from 'sql.js';
@@ -78,6 +78,10 @@ function invariant(condition, message) {
   }
 }
 
+var COLUMN_TYPES = ['increments', 'json', 'string', 'number', 'boolean', 'date'];
+
+var KNEX_NO_ARGS = ['primary', 'unique', 'nullable', 'notNullable'];
+
 function Any(value) {
   return value;
 }
@@ -136,7 +140,8 @@ var columnDescriptor = osom({
     type: Any,
     required: true,
     validate(value) {
-      return isOneOf(['increments', 'json', 'timestamp', String, Number, Boolean, Date], value);
+      var type$$1 = isFunction(value) ? value.name : String(value);
+      return isOneOf(COLUMN_TYPES, type$$1.toLowerCase());
     }
   },
   defaultTo: Any,
@@ -146,13 +151,6 @@ var columnDescriptor = osom({
   notNullable: Boolean,
   index: String
 });
-
-var constants = {
-  ERR_NO_DATABASE: 'could not write - no database initialized',
-  COLUMN_TYPES: ['increments', 'json', 'timestamp', 'string', 'number', 'boolean', 'date'],
-  KNEX_NO_ARGS: ['primary', 'unique', 'nullable', 'notNullable']
-};
-module.exports = exports['default'];
 
 function toKnexSchema(model, options) {
   return function (table) {
@@ -168,7 +166,7 @@ function toKnexSchema(model, options) {
       each(columnProperties, function (value, property) {
         if (isOneOf(['name', 'type'], property)) return;
 
-        if (isOneOf(constants.KNEX_NO_ARGS, property)) {
+        if (isOneOf(KNEX_NO_ARGS, property)) {
           columnProperties[property] && partial[property]();
         } else {
           partial[property](value);
@@ -240,7 +238,7 @@ function getDataType(property) {
     type$$1 = type$$1.toLowerCase();
   }
 
-  if (!isOneOf(constants.COLUMN_TYPES, type$$1)) {
+  if (!isOneOf(COLUMN_TYPES, type$$1)) {
     type$$1 = 'string';
   }
 
@@ -404,8 +402,6 @@ function isValidWhere(where) {
 
   return [false];
 }
-
-
 
 function runQuery(instance, query, needResponse) {
   if (isFunction(instance.verbose)) {
