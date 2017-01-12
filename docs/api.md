@@ -38,9 +38,11 @@ import Trilogy from 'trilogy'
 
 // defaults to using `sqlite3`
 const db = new Trilogy('./storage.db')
+```
 
-// with options:
+With an options object:
 
+```js
 const db = new Trilogy('./storage.db', {
   // use `sql.js` to avoid build issues like gyp
   client: 'sql.js',
@@ -273,20 +275,20 @@ All of the following methods will cause execution when chained to a
 knex query, so avoid using these when building raw queries you intend
 to run with Trilogy:
 
-Promises: `then`, `catch`, `tap`, `map`, `reduce`, `bind`, `return`
-Callbacks: `asCallback`
-Streams: `stream`, `pipe`
+- Promises: `then`, `catch`, `tap`, `map`, `reduce`, `bind`, `return`
+- Callbacks: `asCallback`
+- Streams: `stream`, `pipe`
 
 The following methods shouldn't cause problems, but they aren't
 guaranteed to work, especially when using `sql.js`:
 
-Events: `on` [`'query'`, `'query-error'`, `'query-response'`]
+- Events: `on` [`'query'`, `'query-error'`, `'query-response'`]
 
 And finally the following methods will work just fine, but you should
 not chain them on a query object before passing it to Trilogy. Running
 them separately is fine:
 
-Other: `toString`, `toSQL`
+- Other: `toString`, `toSQL`
 
 For more advanced usage, see [knex's own documentation](http://knexjs.org/).
 
@@ -1013,8 +1015,7 @@ same shorthand as `id`, only this time it's a `Number`. This is stored as an `in
 | type           | description                                                           |
 | -------------- | ----------------------------------------------------------------------|
 | `'json'`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
-| `'increments'` | set as an autoincrementing `integer` & primary key                    |
-| `'timestamp'`  | stored as `datetime`                                                  |
+| `'increments'` | set as an auto-incrementing `integer` & primary key                   |
 | `String`       | stored as `text`                                                      |
 | `Number`       | stored as `integer`                                                   |
 | `Boolean`      | stored as `integer`                                                   |
