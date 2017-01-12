@@ -1,5 +1,5 @@
-import { columnDescriptor } from './enforcers'
 import * as util from './util'
+import { columnDescriptor } from './enforcers'
 import { KNEX_NO_ARGS, COLUMN_TYPES } from './constants'
 
 export function toKnexSchema (model, options) {
