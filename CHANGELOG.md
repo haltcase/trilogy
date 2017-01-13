@@ -1,3 +1,22 @@
+<a name="1.0.0-rc.1"></a>
+# [1.0.0-rc.1](https://github.com/citycide/trilogy/compare/v0.11.1...v1.0.0-rc.1) (2017-01-13)
+
+:raised_hands: Welcome to the very first official release candidate of Trilogy! :raised_hands:
+
+The next version will be v1.0.0 unless there are any significant issues discovered.
+
+There have not been significant changes since v0.11.1.
+
+### Bug Fixes
+
+* **enforcers:** broken descriptor validation ([459a485](https://github.com/citycide/trilogy/commit/459a485))
+
+### Features
+
+* **types:** add `Array` and `Object` as valid types ([421d079](https://github.com/citycide/trilogy/commit/421d079))
+
+
+
 <a name="0.11.1"></a>
 ## [0.11.1](https://github.com/citycide/trilogy/compare/v0.10.0...v0.11.1) (2017-01-10)
 
