@@ -1,7 +1,7 @@
 import babel from 'rollup-plugin-babel'
 
 const pkg = require('./package.json')
-const external = Object.keys(pkg.dependencies)
+const external = Object.keys(pkg.dependencies).concat(['path', 'sql.js'])
 
 export default {
   entry: 'src/index.js',
@@ -9,17 +9,24 @@ export default {
   plugins: [
     babel({
       babelrc: false,
-      presets: [['es2015', { modules: false }], 'stage-0'],
-      plugins: ['transform-runtime'],
+      presets: [['env', {
+        loose: true,
+        modules: false,
+        targets: { node: 4.7 }
+      }], 'stage-0'],
+      plugins: [
+        'external-helpers',
+        'add-module-exports'
+      ],
       runtimeHelpers: true,
       exclude: 'node_modules/**'
     })
   ],
   targets: [{
-    dest: pkg['main'],
+    dest: pkg.main,
     format: 'cjs'
   }, {
-    dest: pkg['jsnext:main'],
+    dest: pkg.module,
     format: 'es'
   }]
 }

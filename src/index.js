@@ -1,564 +1,204 @@
-import Promise from 'bluebird'
-import jetpack from 'fs-jetpack'
-import arify from 'arify'
 import knex from 'knex'
-import SQL from 'sql.js'
+import { resolve } from 'path'
 
-import { resolve, isAbsolute } from 'path'
-
-import constants from './constants'
-import * as helpers from './helpers'
-import { map, isBoolean, isFunction, isObject, isString } from './util'
+import Model from './model'
+import { toKnexSchema } from './types'
+import { connect } from './sqljs-handler'
+import { runQuery } from './helpers'
+import { invariant } from './util'
+import { setup, modelOptions } from './enforcers'
 
 class Trilogy {
-  constructor (path, opts = {}) {
+  constructor (path, options = {}) {
     if (!path) {
-      throw new Error('Trilogy constructor must be provided a file path.')
+      throw new Error('trilogy constructor must be provided a file path')
     }
 
-    if (!isAbsolute(path)) {
-      let { dir = process.cwd() } = opts
-      path = resolve(dir, path)
-    }
+    let obj = this.options = setup(options)
+    obj.connection.filename = resolve(obj.dir, path)
+    this.isNative = obj.client === 'sqlite3'
+    this.verbose = obj.verbose
 
-    Object.assign(this, {
-      path,
-      db: null,
-      verbose: isFunction(opts.verbose)
-        ? opts.verbose
-        : () => {},
-      errorListener: isFunction(opts.errorListener)
-        ? opts.errorListener
-        : null
-    })
+    let config = { client: 'sqlite3', useNullAsDefault: true }
 
-    this.coercion = opts.coercion != null
-      ? !!opts.coercion
-      : helpers.coercion.active
-
-    this._init()
-  }
-
-  /**
-   * Initialize the instance and create or access the database file
-   * @private
-   */
-  _init () {
-    if (jetpack.exists(this.path) === 'file') {
-      let file = jetpack.read(this.path, 'buffer')
-      this.db = new SQL.Database(file)
+    if (this.isNative) {
+      this.knex = knex({ ...config, connection: obj.connection })
     } else {
-      this.db = new SQL.Database()
-      this._write()
+      this.knex = knex(config)
+      this.pool = connect(this)
     }
 
-    let kn = knex({ client: 'sqlite3', useNullAsDefault: true })
-
-    Object.defineProperties(this, {
-      knex: { get () { return kn } },
-      sb: { get () { return kn.schema } }
-    })
+    this.definitions = new Map()
   }
 
-  /**
-   * Export the data in memory to the database file
-   * @private
-   */
-  _write () {
-    if (!this.db) {
-      this._errorHandler(constants.ERR_NO_DATABASE)
+  get models () {
+    return [...this.definitions.keys()]
+  }
+
+  model (name, schema, options) {
+    if (this.definitions.has(name)) {
+      return this.definitions.get(name)
     }
 
-    try {
-      let data = this.db.export()
-      let buffer = new Buffer(data)
+    let model = new Model(this, name, schema, options)
+    this.definitions.set(name, model)
 
-      jetpack.file(this.path, {
-        content: buffer, mode: '777'
+    let check = this.knex.schema.hasTable(name)
+    let query = this.knex.schema
+      .createTableIfNotExists(name,
+        toKnexSchema(model, modelOptions(options))
+      )
+
+    // we still check to see if the table exists to prevent
+    // errors from creating indices that already exist
+
+    if (this.isNative) {
+      return check.then(exists => {
+        if (exists) return model
+        return query.then(() => model)
       })
-    } catch (e) {
-      this._errorHandler(e)
-    }
-  }
-
-  /**
-   * Execute a query on the database, ignoring its results.
-   * @private
-   */
-  async run (query) {
-    if (!this.db) {
-      return this._errorHandler(constants.ERR_NO_DATABASE)
-    }
-
-    if (!isString(query)) {
-      query = query.toString()
-    }
-
-    this.verbose(query)
-
-    try {
-      this.db.run(query)
-      this._write()
-    } catch (e) {
-      throw e
-    }
-  }
-
-  /**
-   * Execute a query on the database and return its results.
-   * @private
-   */
-  async exec (query) {
-    if (!this.db) {
-      return this._errorHandler(constants.ERR_NO_DATABASE)
-    }
-
-    if (!isString(query)) {
-      query = query.toString()
-    }
-
-    this.verbose(query)
-
-    try {
-      return this.db.exec(query)
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async createTable (name, columns, options = {}) {
-    let query
-    if (isFunction(columns)) {
-      query = this.sb.createTableIfNotExists(name, columns)
     } else {
-      query = this.sb.createTableIfNotExists(name, table => {
-        if (Array.isArray(columns)) {
-          return helpers.processArraySchema(table, columns)
-        } else if (isObject(columns)) {
-          return helpers.processObjectSchema(table, columns)
-        }
-
-        if (options.compositeKey) {
-          table.primary(options.compositeKey)
-        }
+      return runQuery(this, check, true).then(exists => {
+        if (exists) return model
+        return runQuery(this, query)
       })
     }
-
-    try {
-      return this.run(query)
-    } catch (e) {
-      return this._errorHandler(e)
-    }
   }
 
-  async hasTable (name) {
-    try {
-      let res = await this.count('sqlite_master', 'name', { name })
-      return res > 0
-    } catch (e) {
-      return this._errorHandler(e)
+  hasModel (name) {
+    if (!this.definitions.has(name)) {
+      return false
     }
+
+    let query = this.knex.schema.hasTable(name)
+    return runQuery(this, query, true)
   }
 
-  async dropTable (name) {
-    try {
-      await this.run(this.sb.dropTable(name))
-    } catch (e) {
-      return this._errorHandler(e)
-    }
-  }
-
-  async insert (name, values, options = {}) {
-    if (!name || !isString(name)) {
-      return this._errorHandler('#insert', `'tableName' must be a string`)
+  dropModel (name) {
+    if (!this.definitions.has(name)) {
+      return false
     }
 
-    let obj = map(values, v => {
-      if (isBoolean(v)) {
-        // without some kind of boolean coercion, the query will fail
-        // native sqlite leans toward 0s and 1s for booleans
-        // with coercion active we convert booleans to strings
-        return this.coercion ? `${v}` : v | 0
-      } else {
-        return v
-      }
+    let query = this.knex.schema.dropTableIfExists(name)
+    return runQuery(this, query, true).then(() => {
+      this.definitions.delete(name)
     })
+  }
 
-    let query = this.knex.table(name).insert(obj)
+  raw (query, needResponse) {
+    return runQuery(this, query, needResponse)
+  }
 
-    // Knex doesn't have support for conflict clauses yet :(
-    if (options.conflict) {
-      let str = helpers.getConflictString(options.conflict)
-      query = query.toString().replace('insert into', `insert${str}into`)
-    }
-
-    try {
-      await this.run(query)
-      return this.db.getRowsModified()
-    } catch (e) {
-      return this._errorHandler(e)
+  close () {
+    if (this.isNative) {
+      return this.knex.destroy()
+    } else {
+      return this.pool.drain()
     }
   }
 
-  async select (...params) {
-    return (arify(v => {
-      v.str('table')
-       .obj('options', { random: false })
-       .add('columns', {
-         test: value => isString(value) || Array.isArray(value),
-         description: 'a string or an Array of strings',
-         defaultValue: constants.DEFAULT_COLUMNS
-       })
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', '?columns', '?where', '?options')
-    }, async args => {
-      let columns = helpers.sanitizeColumns(args.columns)
-
-      let partial = this.knex.column(columns).table(args.table)
-      let query = helpers.sanitizeWhere(args.where, partial)
-
-      if (args.options.random) {
-        query = query.orderByRaw('RANDOM()')
-      } else if (args.options.order) {
-        query = helpers.sanitizeOrder(args.options.order, partial)
-      }
-
-      try {
-        let result = await this.exec(query)
-        return helpers.parseResponse(result)
-      } catch (e) {
-        if (e.message.endsWith('of undefined')) {
-          // the value probably just doesn't exist
-          // resolve to undefined rather than reject
-          return
-        }
-        return this._errorHandler(e)
-      }
-    }))(...params)
+  create (table, object, options) {
+    let model = checkModel(this, table)
+    return model.create(object, options)
   }
 
-  async first (...params) {
-    let inner = async args => {
-      let columns = helpers.sanitizeColumns(args.columns)
+  find (location, criteria, options) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.find(column, criteria, options)
+  }
 
-      let partial = this.knex.table(args.table).first(columns)
-      let query = helpers.sanitizeWhere(args.where, partial)
+  findOne (location, criteria, options) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.findOne(column, criteria, options)
+  }
 
-      if (args.options.random) {
-        query = query.orderByRaw('RANDOM()')
-      }
+  findOrCreate (table, criteria, creation, options) {
+    let model = checkModel(this, table)
+    return model.findOrCreate(criteria, creation, options)
+  }
 
-      try {
-        let result = await this.exec(query)
-        return helpers.parseResponse(result)[0]
-      } catch (e) {
-        if (e.message.endsWith('of undefined')) {
-          // the value probably just doesn't exist
-          // resolve to undefined rather than reject
-          return
-        }
+  update (table, criteria, data, options) {
+    let model = checkModel(this, table)
+    return model.update(criteria, data, options)
+  }
 
-        return this._errorHandler(e)
-      }
+  updateOrCreate (table, criteria, data, options) {
+    let model = checkModel(this, table)
+    return model.updateOrCreate(criteria, data, options)
+  }
+
+  get (location, criteria, defaultValue) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.get(column, criteria, defaultValue)
+  }
+
+  set (location, criteria, value) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.set(column, criteria, value)
+  }
+
+  incr (location, criteria, amount) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.incr(column, criteria, amount)
+  }
+
+  decr (location, criteria, amount, allowNegative) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.decr(column, criteria, amount, allowNegative)
+  }
+
+  remove (location, criteria) {
+    let model = checkModel(this, location)
+    return model.remove(criteria)
+  }
+
+  clear (location) {
+    let model = checkModel(this, location)
+    return model.clear()
+  }
+
+  count (location, criteria, options) {
+    if (arguments.length === 0) {
+      let query = this.knex('sqlite_master')
+        .whereNot('name', 'sqlite_sequence')
+        .where({ type: 'table' })
+        .count('* as count')
+
+      return runQuery(this, query, true)
+        .then(([{ count }]) => count)
     }
 
-    return (arify(v => {
-      v.str('table')
-       .obj('options', { random: false })
-       .add('columns', {
-         test: value => Array.isArray(value) || isString(value),
-         description: 'a string or an Array of strings',
-         defaultValue: constants.DEFAULT_COLUMNS
-       })
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', '?columns', '?where', '?options')
-    }, inner))(...params)
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return column
+      ? model.count(column, criteria, options)
+      : model.count(criteria, options)
   }
 
-  async getValue (...params) {
-    let inner = async args => {
-      let [tbl, col] = helpers.parseTablePath(args.table, args.column)
-
-      if (!col) {
-        return this._errorHandler(constants.ERR_COL_MISSING)
-      }
-
-      let partial = this.knex.table(tbl).first(col)
-      let query = helpers.sanitizeWhere(args.where, partial)
-
-      try {
-        let result = await this.exec(query)
-        return helpers.parseResponse(result)[0][col]
-      } catch (e) {
-        if (e.message.endsWith('of undefined')) {
-          // the value probably just doesn't exist
-          // resolve to undefined rather than reject
-          return
-        }
-        return this._errorHandler(e)
-      }
-    }
-
-    return (arify(v => {
-      v.str('table')
-       .str('column')
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', '?column', 'where')
-    }, inner))(...params)
+  min (location, criteria, options) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.min(column, criteria, options)
   }
 
-  async update (...params) {
-    let inner = async args => {
-      let partial = this.knex.table(args.table)
-
-      let col = map(args.values, v => {
-        // without some kind of boolean coercion, the query will fail
-        // native sqlite leans toward 0s and 1s for booleans
-        // with coercion active we convert booleans to strings
-        if (isBoolean(v)) {
-          return this.coercion ? `${v}` : v | 0
-        } else {
-          return v
-        }
-      })
-
-      let update = isObject(col)
-        ? partial.update(col)
-        : partial.update(...col)
-
-      let query = helpers.sanitizeWhere(args.where, update)
-
-      // Knex doesn't have support for conflict clauses yet :(
-      if (args.options.conflict) {
-        let str = helpers.getConflictString(args.options.conflict)
-        query = query.toString().replace('update', `update${str}`)
-      }
-
-      try {
-        await this.run(query)
-        return this.db.getRowsModified()
-      } catch (e) {
-        return this._errorHandler(e)
-      }
-    }
-
-    return (arify(v => {
-      v.str('table')
-       .obj('options', {})
-       .add('values', {
-         test: value => {
-           return (
-             isObject(value) || (Array.isArray(value) && value.length === 2)
-           )
-         },
-         description: 'either an Object or an Array with a length of 2'
-       })
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', 'values', '?where', '?options')
-    }, inner))(...params)
-  }
-
-  async increment (...params) {
-    let inner = async args => {
-      let [tbl, col] = helpers.parseTablePath(args.table, args.column)
-
-      if (!col) {
-        return this._errorHandler(constants.ERR_COL_MISSING)
-      }
-
-      let partial = this.knex.table(tbl).increment(col, args.amount)
-      let query = helpers.sanitizeWhere(args.where, partial)
-
-      try {
-        await this.run(query)
-      } catch (e) {
-        return this._errorHandler(e)
-      }
-    }
-
-    return (arify(v => {
-      v.str('table')
-       .str('column')
-       .num('amount', 1)
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', '?column', '?amount', '?where')
-    }, inner))(...params)
-  }
-
-  async decrement (...params) {
-    let inner = async args => {
-      let [tbl, col] = helpers.parseTablePath(args.table, args.column)
-
-      if (!col) {
-        return this._errorHandler(constants.ERR_COL_MISSING)
-      }
-
-      let partial = this.knex.table(tbl)
-      let rawStr = args.allowNegative
-        ? `${col} - ${args.amount}`
-        : `MAX(0, ${col} - ${args.amount})`
-      let updated = partial.update({ [col]: this.knex.raw(rawStr) })
-      let query = helpers.sanitizeWhere(args.where, updated)
-
-      try {
-        return this.run(query)
-      } catch (e) {
-        return this._errorHandler(e)
-      }
-    }
-
-    return (arify(v => {
-      v.str('table')
-       .str('column')
-       .num('amount', 1)
-       .bln('allowNegative', false)
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', '?column', '?amount', '?where', '?allowNegative')
-    }, inner))(...params)
-  }
-
-  async del (...params) {
-    let inner = async args => {
-      let partial = this.knex.table(args.table).del()
-      let query = helpers.sanitizeWhere(args.where, partial)
-
-      try {
-        await this.run(query)
-        return this.db.getRowsModified()
-      } catch (e) {
-        return this._errorHandler(e)
-      }
-    }
-
-    return (arify(v => {
-      v.str('table')
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('table', '?where')
-    }, inner))(...params)
-  }
-
-  async count (...params) {
-    let inner = args => {
-      let partial
-      if (args.options.distinct) {
-        partial = this.knex.table(args.table).countDistinct(`${args.column} as count`)
-      } else {
-        partial = this.knex.table(args.table).count(`${args.column} as count`)
-      }
-
-      let query = helpers.sanitizeWhere(args.where, partial).toString()
-
-      try {
-        let statement = this.db.prepare(query)
-        let res = statement.getAsObject({})
-
-        if (isObject(res) && res.count) {
-          return res.count
-        } else {
-          return 0
-        }
-      } catch (e) {
-        return this._errorHandler(e)
-      }
-    }
-
-    return (arify(v => {
-      v.str('table', 'sqlite_master')
-       .str('column', '*')
-       .obj('options', { distinct: false })
-       .add('where', {
-         test: value => helpers.isValidWhere(value),
-         description: 'an Object or an Array of length 2 or 3',
-         defaultValue: constants.DEFAULT_WHERE
-       })
-       .form('?table', '?column', '?where', '?options')
-    }, inner))(...params)
-  }
-
-  async raw (query, ret = false) {
-    try {
-      let done = ret ? this.exec(query) : this.run(query)
-      return ret ? done : undefined
-    } catch (e) {
-      return this._errorHandler(e)
-    }
-  }
-
-  get schemaBuilder () {
-    return this.sb
-  }
-
-  get queryBuilder () {
-    return this.knex
-  }
-
-  static get coercion () {
-    return helpers.coercion.active
-  }
-
-  static set coercion (value) {
-    helpers.coercion.active = !!value
-    return !!value
-  }
-
-  /**
-   * Normalize errors to `Error` objects. If `err` is a string,
-   * it is used as the method path, with `msg` as the message.
-   * If an `errorListener` function was provided in the constructor,
-   * it will be called with the resulting error.
-   *
-   * @param {(string|Error)} err
-   * @param {string} [msg]
-   * @returns {Promise<Error>} a rejected promise with the `Error` object
-   * @private
-   */
-  _errorHandler (err, msg = constants.ERR_UNKNOWN) {
-    let e = new Error()
-
-    if (err instanceof Error) {
-      e = err
-    } else if (isString(err)) {
-      e.message = (arguments.length === 1)
-        ? `${err}`
-        : `${err} :: ${msg}`
-    }
-
-    e.name = 'TrilogyError'
-
-    if (this.errorListener) {
-      this.errorListener(e)
-    }
-
-    return Promise.reject(e)
+  max (location, criteria, options) {
+    let [table, column] = location.split('.', 2)
+    let model = checkModel(this, table)
+    return model.max(column, criteria, options)
   }
 }
 
-module.exports = Trilogy
+function checkModel (instance, name) {
+  return invariant(
+    instance.definitions.get(name),
+    `no model defined by the name '${name}'`
+  )
+}
+
+export default Trilogy

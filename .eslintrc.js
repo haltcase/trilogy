@@ -9,28 +9,22 @@ module.exports = {
     sourceType: 'module'
   },
   env: {
-    browser: true,
     node: true
   },
   extends: 'standard',
   plugins: [
-    'prefer-let',
-    'babel'
+    'prefer-let'
   ],
   rules: {
     quotes: [ERROR, 'single', { avoidEscape: true, allowTemplateLiterals: true }],
-    'generator-star-spacing': OFF,
+    'generator-star-spacing': [ERROR, { before: true, after: true }],
+    'array-bracket-spacing': [ERROR, 'never'],
+    'object-shorthand': [ERROR, 'always'],
+    'arrow-parens': [ERROR, 'as-needed'],
+    'comma-dangle': ERROR,
     'no-debugger': process.env.NODE_ENV === 'production' ? ERROR : OFF,
-
-    'babel/generator-star-spacing': [ERROR, { 'before': true, 'after': true }],
-    'babel/new-cap': WARN,
-    'babel/array-bracket-spacing': [ERROR, 'never'],
-    'babel/object-curly-spacing': [ERROR, 'always'],
-    'babel/object-shorthand': [ERROR, 'always'],
-    'babel/arrow-parens': [ERROR, 'as-needed'],
-    'babel/no-await-in-loop': WARN,
-    'babel/flow-object-type': WARN,
-    'babel/func-params-comma-dangle': WARN,
+    'object-curly-spacing': [ERROR, 'always'],
+    'no-await-in-loop': WARN,
 
     'prefer-let/prefer-let': WARN
   },

@@ -7,25 +7,15 @@ import { join, basename } from 'path'
 const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
 const db = new Trilogy(filePath)
 
-test.after.always('remove test database file', () => remove(filePath))
-
-test('.schemaBuilder exposes the knex schema builder', t => {
-  t.is(typeof db.schemaBuilder.createTable, 'function')
-
-  let expected = `create table "test" ("hello" varchar(255), "world" varchar(255))`
-  let res = db.schemaBuilder.createTable('test', table => {
-    table.string('hello')
-    table.string('world')
-  }).toString()
-
-  t.is(res, expected)
+test.after.always('remove test database file', () => {
+  return db.close().then(() => remove(filePath))
 })
 
-test('.queryBuilder exposes the knex query builder', t => {
-  t.is(typeof db.queryBuilder.select, 'function')
+test('.knex exposes the knex query builder', t => {
+  t.is(typeof db.knex.select, 'function')
 
   let expected = `select "foo" where "age" > 21 and "name" = 'Jerry'`
-  let res = db.queryBuilder
+  let res = db.knex
     .select('foo')
     .where('age', '>', 21)
     .andWhere({ name: 'Jerry' })

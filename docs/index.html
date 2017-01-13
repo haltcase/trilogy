@@ -15,6 +15,15 @@
       border-spacing: .5rem;
     }
 
+    .cover-main img[alt="trilogy logo"] {
+      margin-top: -3%;
+      width: 420px;
+    }
+
+    .cover-main p > a {
+      margin-top: 5%;
+    }
+
     .sidebar .active a {
       color: #0074D9;
     }
@@ -28,7 +37,7 @@
     }
 
     .markdown-section code,
-    .markdown-section pre>code {
+    .markdown-section pre > code {
       font-family: "Operator Mono", "Fira Code", "Ubuntu Mono",
                    "Droid Sans Mono", "Liberation Mono", "Source Code Pro",
                    Menlo, Consolas, Inconsolata, Courier, monospace;
@@ -42,14 +51,17 @@
   <nav>
     <a href="#/">Home</a>
     <a href="#/api">Documentation</a>
+    <a href="#/backends">SQLite3 vs SQL.js</a>
   </nav>
   <div id="app"></div>
 </body>
 <script
   src="//unpkg.com/docsify/lib/docsify.js"
   data-repo="citycide/trilogy"
+  data-coverpage="cover.md"
   data-max-level="3"
   data-sidebar-toggle
   data-router
+  data-auto2top
 ></script>
 </html>
