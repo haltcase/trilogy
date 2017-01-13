@@ -100,6 +100,8 @@ function getDataType (property) {
 function toKnexMethod (type) {
   switch (type) {
     case 'string':
+    case 'array':
+    case 'object':
     case 'json':
       return 'text'
     case 'number':
@@ -117,6 +119,8 @@ function toInputType (type, value) {
   switch (type) {
     case 'string':
       return String(value)
+    case 'array':
+    case 'object':
     case 'json':
       return JSON.stringify(value)
     case 'number':
@@ -134,6 +138,8 @@ function toReturnType (type, value) {
   switch (type) {
     case 'string':
       return String(value)
+    case 'array':
+    case 'object':
     case 'json':
       return JSON.parse(value)
     case 'number':

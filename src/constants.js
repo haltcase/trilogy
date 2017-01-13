@@ -1,5 +1,7 @@
 export const COLUMN_TYPES = [
   'increments',
+  'array',
+  'object',
   'json',
   'string',
   'number',
