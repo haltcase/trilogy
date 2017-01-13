@@ -977,9 +977,10 @@ Let's break down each descriptor.
 ```
 
 The `id` property is defined with `'increments'` as its type. This is a
-special type that's really a shortcut for the super long SQL `integer not null primary key autoincrement`. It declares `id` as a field that will
-automatically set itself to the last inserted row's id + 1, and is the
-primary key of the table - the one that prevents duplicates.
+special type that's really a shortcut for the super long SQL
+`integer not null primary key autoincrement`. It declares `id` as a field
+that will automatically set itself to the last inserted row's id + 1, and
+is the primary key of the table - the one that prevents duplicates.
 
 You can define other types, and other attributes, by providing an object
 instead of just the type. This is done with the next descriptor, `make`:

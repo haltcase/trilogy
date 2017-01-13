@@ -21,9 +21,9 @@
 
 - Model your tables with native JavaScript
 
-  Set up database tables with types like `String`, `Date`, and `'json'` - and
-  Trilogy will handle all the type-casting involved so that you always receive
-  what you expect to receive.
+  Set up database tables with types like `String`, `Date`, and `'increments'` -
+  and Trilogy will handle all the type-casting involved so that you always
+  receive what you expect to receive.
 
 - Uses [knex][knex] to build queries
 
