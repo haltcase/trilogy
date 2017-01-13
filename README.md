@@ -107,7 +107,7 @@ const db = new Trilogy('./file.db', {
     ]
   })
 
-  let overwatch = games.findOne({ name: 'Overwatch' })
+  let overwatch = await games.findOne({ name: 'Overwatch' })
 
   console.log(overwatch.awards[1])
   // -> 'Best Multiplayer Game'
