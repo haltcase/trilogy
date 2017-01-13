@@ -1014,12 +1014,14 @@ same shorthand as `id`, only this time it's a `Number`. This is stored as an `in
 
 | type           | description                                                           |
 | -------------- | ----------------------------------------------------------------------|
-| `'json'`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
-| `'increments'` | set as an auto-incrementing `integer` & primary key                   |
 | `String`       | stored as `text`                                                      |
 | `Number`       | stored as `integer`                                                   |
 | `Boolean`      | stored as `integer`                                                   |
 | `Date`         | stored as `datetime`                                                  |
+| `Array`        | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
+| `Object`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
+| `'json'`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
+| `'increments'` | set as an auto-incrementing `integer` & primary key                   |
 
 Unsupported / unknown types are cast using `String` and stored as `text`.
 
