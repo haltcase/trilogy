@@ -93,7 +93,8 @@ const db = new Trilogy('./file.db', {
     name: { type: String, primary: true },   // primary key
     genre: String,                           // type shorthand
     released: Date,
-    awards: 'json'                           // special type
+    awards: Array,
+    id: 'increments'                         // special type
   })
 
   await games.create({
