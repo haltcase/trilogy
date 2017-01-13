@@ -82,7 +82,7 @@ function invariant(condition, message) {
   }
 }
 
-var COLUMN_TYPES = ['increments', 'json', 'string', 'number', 'boolean', 'date'];
+var COLUMN_TYPES = ['increments', 'array', 'object', 'json', 'string', 'number', 'boolean', 'date'];
 
 var KNEX_NO_ARGS = ['primary', 'unique', 'nullable', 'notNullable'];
 
@@ -252,6 +252,8 @@ function getDataType(property) {
 function toKnexMethod(type$$1) {
   switch (type$$1) {
     case 'string':
+    case 'array':
+    case 'object':
     case 'json':
       return 'text';
     case 'number':
@@ -269,6 +271,8 @@ function toInputType(type$$1, value) {
   switch (type$$1) {
     case 'string':
       return String(value);
+    case 'array':
+    case 'object':
     case 'json':
       return JSON.stringify(value);
     case 'number':
@@ -286,6 +290,8 @@ function toReturnType(type$$1, value) {
   switch (type$$1) {
     case 'string':
       return String(value);
+    case 'array':
+    case 'object':
     case 'json':
       return JSON.parse(value);
     case 'number':
