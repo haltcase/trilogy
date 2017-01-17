@@ -7,7 +7,8 @@
   <a href="https://standardjs.com"><img src="https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square" alt="JavaScript Standard Style"></a>
 </p>
 
-> ***trilogy*** is a Promise-based layer over SQLite, supporting models defined in native JavaScript.
+> ***trilogy*** is a Promise-based layer over SQLite, featuring type-casting
+  schema models and allowing both native & pure JavaScript backends.
 
 - [features](#features)
 - [installation](#installation)
