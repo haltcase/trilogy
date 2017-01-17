@@ -1,3 +1,13 @@
+<a name="1.0.0-rc.2"></a>
+# [1.0.0-rc.2](https://github.com/citycide/trilogy/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2017-01-17)
+
+
+### Bug Fixes
+
+* only require `sql.js` if not using `sqlite3` ([123149d](https://github.com/citycide/trilogy/commit/123149d)), closes [#18](https://github.com/citycide/trilogy/issues/18)
+
+
+
 <a name="1.0.0-rc.1"></a>
 # [1.0.0-rc.1](https://github.com/citycide/trilogy/compare/v0.11.1...v1.0.0-rc.1) (2017-01-13)
 
