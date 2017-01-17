@@ -1,9 +1,11 @@
 import jetpack from 'fs-jetpack'
 import pool from 'generic-pool'
-import SQL from 'sql.js'
 
 export function readDatabase (instance) {
   let client
+
+  // eslint-disable-next-line prefer-let/prefer-let
+  const SQL = require('sql.js')
 
   let atPath = instance.options.connection.filename
   if (jetpack.exists(atPath) === 'file') {
