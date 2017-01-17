@@ -8,7 +8,6 @@ var type = _interopDefault(require('component-type'));
 var osom = _interopDefault(require('osom'));
 var jetpack = _interopDefault(require('fs-jetpack'));
 var pool = _interopDefault(require('generic-pool'));
-var SQL = _interopDefault(require('sql.js'));
 
 var map = function map(object, fn) {
   return each(object, fn, true);
@@ -308,6 +307,9 @@ function toReturnType(type$$1, value) {
 
 function readDatabase(instance) {
   var client = void 0;
+
+  // eslint-disable-next-line prefer-let/prefer-let
+  var SQL = require('sql.js');
 
   var atPath = instance.options.connection.filename;
   if (jetpack.exists(atPath) === 'file') {

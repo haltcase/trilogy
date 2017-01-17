@@ -4,7 +4,6 @@ import type from 'component-type';
 import osom from 'osom';
 import jetpack from 'fs-jetpack';
 import pool from 'generic-pool';
-import SQL from 'sql.js';
 
 var map = function map(object, fn) {
   return each(object, fn, true);
@@ -304,6 +303,9 @@ function toReturnType(type$$1, value) {
 
 function readDatabase(instance) {
   var client = void 0;
+
+  // eslint-disable-next-line prefer-let/prefer-let
+  var SQL = require('sql.js');
 
   var atPath = instance.options.connection.filename;
   if (jetpack.exists(atPath) === 'file') {
