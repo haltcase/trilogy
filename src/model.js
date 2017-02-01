@@ -20,7 +20,12 @@ export default class Model {
         .replace(/^insert/i, 'INSERT OR IGNORE')
     )
 
-    return helpers.runQuery(this.ctx, query)
+    return helpers.runQuery({
+      query,
+      instance: this.ctx,
+      name: this.name,
+      needResponse: true
+    })
   }
 
   find (column, criteria, options = {}) {
@@ -40,7 +45,7 @@ export default class Model {
     if (options.limit) query = query.limit(options.limit)
     if (options.skip) query = query.offset(options.skip)
 
-    return helpers.runQuery(this.ctx, query, true)
+    return helpers.runQuery({ instance: this.ctx, query, needResponse: true })
       .then(response => {
         if (!isArray(response)) {
           return response ? [response] : []
@@ -72,18 +77,19 @@ export default class Model {
     if (order) query = helpers.buildOrder(query, order)
     if (options.skip) query = query.offset(options.skip)
 
-    return helpers.runQuery(this.ctx, query, true).then(response => {
-      let result = isArray(response) ? response[0] : response
+    return helpers.runQuery({ instance: this.ctx, query, needResponse: true })
+      .then(response => {
+        let result = isArray(response) ? response[0] : response
 
-      if (!column) {
-        return types.fromDefinition(this, result)
-      } else {
-        // if a column was provided, skip casting
-        // the entire object and just process then
-        // return that particular property
-        return types.fromColumnDefinition(this, column, result[column])
-      }
-    })
+        if (!column) {
+          return types.fromDefinition(this, result)
+        } else {
+          // if a column was provided, skip casting
+          // the entire object and just process then
+          // return that particular property
+          return types.fromColumnDefinition(this, column, result[column])
+        }
+      })
   }
 
   findOrCreate (criteria, creation, options) {
@@ -99,7 +105,7 @@ export default class Model {
     let query = this.ctx.knex(this.name).update(data)
     query = helpers.buildWhere(query, criteria)
 
-    return helpers.runQuery(this.ctx, query)
+    return helpers.runQuery({ instance: this.ctx, query })
   }
 
   updateOrCreate (criteria, data, options = {}) {
@@ -141,7 +147,7 @@ export default class Model {
     let query = this.ctx.knex(this.name).increment(column, amount)
     query = helpers.buildWhere(query, criteria)
 
-    return helpers.runQuery(this.ctx, query)
+    return helpers.runQuery({ instance: this.ctx, query })
   }
 
   decr (column, criteria, amount, allowNegative) {
@@ -153,7 +159,7 @@ export default class Model {
     query = query.update({ [column]: this.ctx.knex.raw(raw) })
     query = helpers.buildWhere(query, criteria)
 
-    return helpers.runQuery(this.ctx, query)
+    return helpers.runQuery({ instance: this.ctx, query })
   }
 
   remove (criteria) {
@@ -168,12 +174,12 @@ export default class Model {
     let query = this.ctx.knex(this.name).del()
     query = helpers.buildWhere(query, criteria)
 
-    return helpers.runQuery(this.ctx, query)
+    return helpers.runQuery({ instance: this.ctx, query })
   }
 
   clear () {
     let query = this.ctx.knex(this.name).truncate()
-    return helpers.runQuery(this.ctx, query)
+    return helpers.runQuery({ instance: this.ctx, query })
   }
 
   count (column, criteria, options = {}) {
@@ -192,10 +198,11 @@ export default class Model {
 
     if (options.group) query = query.groupBy(...options.group)
 
-    return helpers.runQuery(this.ctx, query, true).then(res => {
-      if (!isArray(res)) return
-      return res[0].count
-    })
+    return helpers.runQuery({ instance: this.ctx, query, needResponse: true })
+      .then(res => {
+        if (!isArray(res)) return
+        return res[0].count
+      })
   }
 
   min (column, criteria, options = {}) {
@@ -207,10 +214,11 @@ export default class Model {
 
     if (options.group) query = query.groupBy(...options.group)
 
-    return helpers.runQuery(this.ctx, query, true).then(res => {
-      if (!isArray(res)) return
-      return res[0].min
-    })
+    return helpers.runQuery({ instance: this.ctx, query, needResponse: true })
+      .then(res => {
+        if (!isArray(res)) return
+        return res[0].min
+      })
   }
 
   max (column, criteria, options) {
@@ -222,9 +230,10 @@ export default class Model {
 
     if (options.group) query = query.groupBy(...options.group)
 
-    return helpers.runQuery(this.ctx, query, true).then(res => {
-      if (!isArray(res)) return
-      return res[0].max
-    })
+    return helpers.runQuery({ instance: this.ctx, query, needResponse: true })
+      .then(res => {
+        if (!isArray(res)) return
+        return res[0].max
+      })
   }
 }

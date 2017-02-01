@@ -58,10 +58,11 @@ class Trilogy {
         return query.then(() => model)
       })
     } else {
-      return runQuery(this, check, true).then(exists => {
-        if (exists) return model
-        return runQuery(this, query)
-      })
+      return runQuery({ instance: this, check, needResponse: true })
+        .then(exists => {
+          if (exists) return model
+          return runQuery({ instance: this, query })
+        })
     }
   }
 
@@ -71,7 +72,7 @@ class Trilogy {
     }
 
     let query = this.knex.schema.hasTable(name)
-    return runQuery(this, query, true)
+    return runQuery({ instance: this, query, needResponse: true })
   }
 
   dropModel (name) {
@@ -80,13 +81,13 @@ class Trilogy {
     }
 
     let query = this.knex.schema.dropTableIfExists(name)
-    return runQuery(this, query, true).then(() => {
+    return runQuery({ instance: this, query, needResponse: true }).then(() => {
       this.definitions.delete(name)
     })
   }
 
   raw (query, needResponse) {
-    return runQuery(this, query, needResponse)
+    return runQuery({ instance: this, query, needResponse })
   }
 
   close () {
@@ -170,7 +171,7 @@ class Trilogy {
         .where({ type: 'table' })
         .count('* as count')
 
-      return runQuery(this, query, true)
+      return runQuery({ instance: this, query, needResponse: true })
         .then(([{ count }]) => count)
     }
 
