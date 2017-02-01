@@ -66,17 +66,25 @@ export function isValidWhere (where) {
   return [false]
 }
 
-export function runQuery (instance, query, needResponse) {
+export function runQuery ({ instance, name, query, needResponse }) {
   if (util.isFunction(instance.verbose)) {
     instance.verbose(query.toString())
   }
 
   if (instance.isNative) {
-    if (needResponse) return query
-    return query.then(res => {
-      if (util.isNumber(res)) return res
-      return res ? res.length : 0
-    })
+    if (name && /^insert/i.test(query.toString())) {
+      return query.then(function (res) {
+        return findLastObject(instance, name)
+          .then(obj => obj || {})
+          .catch(err => console.error(err))
+      })
+    } else {
+      if (needResponse) return query
+      return query.then(res => {
+        if (util.isNumber(res)) return res
+        return res ? res.length : 0
+      })
+    }
   }
 
   return instance.pool.acquire().then(db => {
@@ -98,5 +106,32 @@ export function runQuery (instance, query, needResponse) {
     writeDatabase(instance, db)
     instance.pool.release(db)
     return response
+  })
+}
+
+export function findLastObject (instance, table) {
+  return new Promise((resolve, reject) => {
+    let queryInfo = `PRAGMA table_info("${table}")`
+    let queryId = `SELECT seq FROM sqlite_sequence WHERE name="${table}"`
+
+    instance.knex.raw(queryInfo).then(info => {
+      // find the name of PK
+      let key
+      info.some(each => {
+        if (each.pk && each.notnull && each.type === 'integer') {
+          key = each.name
+          return true
+        }
+      })
+
+      !key && resolve(null)
+      instance.knex.raw(queryId)
+        .then(res => {
+          let obj = {}
+          obj[key] = res[0].seq
+          resolve(instance.findOne(table, obj))
+        })
+        .catch(err => reject(err))
+    }).catch(err => reject(err))
   })
 }
