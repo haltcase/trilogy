@@ -104,16 +104,7 @@ export function runQuery (instance, query, needResponse) {
 }
 
 export function findLastObject (model, object) {
-  let key = ''
-  let hasIncrements = false
-  util.each(model.schema, (props, name) => {
-    if (props === 'increments' || props.type === 'increments') {
-      key = name
-      hasIncrements = true
-    } else if (props.primary) {
-      key = name
-    }
-  })
+  let { key, hasIncrements } = findKey(model.schema)
 
   if (!key && !hasIncrements) return
 
@@ -123,6 +114,24 @@ export function findLastObject (model, object) {
 
   return runQuery(model.ctx, query, true)
     .then(res => hasIncrements ? model.findOne({ [key]: res.seq }) : res)
+}
+
+function findKey (schema) {
+  let key = ''
+  let hasIncrements = false
+  for (let name in schema) {
+    if (!schema.hasOwnProperty(name)) continue
+    let props = schema[name]
+    if (props === 'increments' || props.type === 'increments') {
+      key = name
+      hasIncrements = true
+      break
+    } else if (props.primary || props.unique) {
+      key = name
+    }
+  }
+
+  return { key, hasIncrements }
 }
 
 function getQueryAction (str) {
