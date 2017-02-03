@@ -366,7 +366,7 @@ insert will be ignored when violating this constraint.
 
 > **Returns**
 
-`Promise<Number>`: the number of objects created
+`Promise<Object>`: the created object
 
 > **Usage**
 
@@ -375,6 +375,11 @@ players.create({
   id: 197397332,
   username: 'xX420_sniperXx',
   friends: ['xX420_kniferXx']
+}).then(object => {
+  console.log(object)
+  // { id: 197397332,
+  //   username: 'xX420_sniperXx',
+  //   friends: ['xX420_kniferXx'] }
 })
 ```
 

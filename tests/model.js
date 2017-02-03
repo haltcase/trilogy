@@ -28,7 +28,7 @@ test('defines a model with a uniquely constrained property', async t => {
 
   let object = { name: 'coke', flavor: 'awesome' }
   await db.create('sodas', object)
+  await db.create('sodas', object)
 
-  let duplicate = await db.create('sodas', object)
-  t.is(duplicate, 0)
+  t.is(await db.count('sodas', { name: 'coke' }), 1)
 })
