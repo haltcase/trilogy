@@ -67,8 +67,10 @@ export function isValidWhere (where) {
 }
 
 export function runQuery (instance, query, needResponse) {
+  let asString = query.toString()
+  let action = getQueryAction(asString)
   if (util.isFunction(instance.verbose)) {
-    instance.verbose(query.toString())
+    instance.verbose(asString)
   }
 
   if (instance.isNative) {
@@ -83,14 +85,14 @@ export function runQuery (instance, query, needResponse) {
     let response
 
     if (needResponse) {
-      response = parseResponse(db.exec(query.toString()))
+      response = parseResponse(db.exec(asString))
       if (query._sequence && query._sequence[0].method === 'hasTable') {
         response = !!response.length
       }
     } else {
-      db.run(query.toString())
+      db.run(asString)
 
-      if (util.isOneOf(['insert', 'update', 'delete'], query._method)) {
+      if (util.isOneOf(['insert', 'update', 'delete'], action)) {
         response = db.getRowsModified()
       }
     }
@@ -99,4 +101,30 @@ export function runQuery (instance, query, needResponse) {
     instance.pool.release(db)
     return response
   })
+}
+
+export function findLastObject (model, object) {
+  let key = ''
+  let hasIncrements = false
+  util.each(model.schema, (props, name) => {
+    if (props === 'increments' || props.type === 'increments') {
+      key = name
+      hasIncrements = true
+    } else if (props.primary) {
+      key = name
+    }
+  })
+
+  if (!key && !hasIncrements) return
+
+  let query = hasIncrements
+    ? model.ctx.knex('sqlite_sequence').first('seq').where({ name: model.name })
+    : model.ctx.knex(model.name).first().where({ [key]: object[key] })
+
+  return runQuery(model.ctx, query, true)
+    .then(res => hasIncrements ? model.findOne({ [key]: res.seq }) : res)
+}
+
+function getQueryAction (str) {
+  return str.split(' ', 1)[0].toLowerCase()
 }
