@@ -113,7 +113,7 @@ export function findLastObject (model, object) {
     : model.ctx.knex(model.name).first().where({ [key]: object[key] })
 
   return runQuery(model.ctx, query, true)
-    .then(res => hasIncrements ? model.findOne({ [key]: res.seq }) : res)
+    .then(res => hasIncrements ? model.findOne({ [key]: res[0].seq }) : res)
 }
 
 function findKey (schema) {
