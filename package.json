@@ -84,9 +84,7 @@
   "ava": {
     "files": [
       "tests/**/*.js"
-    ],
-    "verbose": true,
-    "babel": "inherit"
+    ]
   },
   "babel": {
     "presets": [

@@ -18,7 +18,7 @@ export default {
         'external-helpers',
         'add-module-exports'
       ],
-      runtimeHelpers: true,
+      runtimeHelpers: false,
       exclude: 'node_modules/**'
     })
   ],
