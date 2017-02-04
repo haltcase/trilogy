@@ -60,7 +60,7 @@ class Trilogy {
     } else {
       return runQuery(this, check, true).then(exists => {
         if (exists) return model
-        return runQuery(this, query)
+        return runQuery(this, query).then(() => model)
       })
     }
   }
