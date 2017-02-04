@@ -112,8 +112,10 @@ export function findLastObject (model, object) {
     ? model.ctx.knex('sqlite_sequence').first('seq').where({ name: model.name })
     : model.ctx.knex(model.name).first().where({ [key]: object[key] })
 
-  return runQuery(model.ctx, query, true)
-    .then(res => hasIncrements ? model.findOne({ [key]: res[0].seq }) : res)
+  return runQuery(model.ctx, query, true).then(res => {
+    res = model.ctx.isNative ? res : res[0]
+    return hasIncrements ? model.findOne({ [key]: res.seq }) : res
+  })
 }
 
 function findKey (schema) {
