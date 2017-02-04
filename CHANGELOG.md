@@ -1,3 +1,36 @@
+<a name="1.0.0-rc.3"></a>
+# [1.0.0-rc.3](https://github.com/citycide/trilogy/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2017-02-04)
+
+This release contains a breaking change regarding the return value of `create()`.
+You can follow the discussion leading up to this change in
+[#21](https://github.com/citycide/trilogy/issues/21),
+[#22](https://github.com/citycide/trilogy/pull/22),
+& [#24](https://github.com/citycide/trilogy/pull/24).
+
+Many thanks to [**@jonataswalker**](https://github.com/jonataswalker) who put in a lot of effort for this one.
+
+### Bug Fixes
+
+* **create:** last object when auto-increment key ([6c8acc1](https://github.com/citycide/trilogy/commit/6c8acc1))
+* **create:** native vs `sql.js` last object handling ([06cfca0](https://github.com/citycide/trilogy/commit/06cfca0))
+* **model:** `sql.js` not returning model on creations ([06df94f](https://github.com/citycide/trilogy/commit/06df94f))
+* **tests.model:** `create()` expected return value ([baa6ad3](https://github.com/citycide/trilogy/commit/baa6ad3))
+
+### Features
+
+* **create:** return the created object ([e551bbd](https://github.com/citycide/trilogy/commit/e551bbd))
+
+### Performance Improvements
+
+* optimize `findLastObject` helper ([e90cdff](https://github.com/citycide/trilogy/commit/e90cdff))
+
+
+### BREAKING CHANGES
+
+* create: The return value of `create()` is no longer the number of created objects. Instead, `create()` returns the created object.
+
+
+
 <a name="1.0.0-rc.2"></a>
 # [1.0.0-rc.2](https://github.com/citycide/trilogy/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2017-01-17)
 
