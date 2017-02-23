@@ -62,7 +62,7 @@
     "commitizen": "^2.9.0",
     "cpy-cli": "^1.0.1",
     "cz-conventional-changelog": "^1.2.0",
-    "docsify-cli": "^2.0.0",
+    "docsify-cli": "^3.0.1",
     "eslint": "^3.12.2",
     "eslint-config-standard": "^6.2.1",
     "eslint-plugin-prefer-let": "^0.1.0",
