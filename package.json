@@ -44,7 +44,7 @@
   "homepage": "https://citycide.github.io/trilogy",
   "dependencies": {
     "component-type": "^1.2.1",
-    "fs-jetpack": "^0.11.0",
+    "fs-jetpack": "^0.12.0",
     "generic-pool": "^3.1.6",
     "knex": "^0.12.6",
     "osom": "^2.1.3"
@@ -62,7 +62,7 @@
     "commitizen": "^2.9.0",
     "cpy-cli": "^1.0.1",
     "cz-conventional-changelog": "^2.0.0",
-    "docsify-cli": "^2.0.0",
+    "docsify-cli": "^3.0.1",
     "eslint": "^3.12.2",
     "eslint-config-standard": "^6.2.1",
     "eslint-plugin-prefer-let": "^0.1.0",
