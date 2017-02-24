@@ -1,5 +1,6 @@
 import knex from 'knex'
-import { resolve } from 'path'
+import { dir } from 'fs-jetpack'
+import { dirname, resolve } from 'path'
 
 import Model from './model'
 import { toKnexSchema } from './types'
@@ -16,6 +17,10 @@ class Trilogy {
 
     let obj = this.options = setup(options)
     obj.connection.filename = resolve(obj.dir, path)
+
+    // ensure the directory exists
+    dir(dirname(obj.connection.filename))
+
     this.isNative = obj.client === 'sqlite3'
     this.verbose = obj.verbose
 
