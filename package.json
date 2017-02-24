@@ -35,11 +35,7 @@
     "url": "https://github.com/citycide/trilogy/issues"
   },
   "files": [
-    "src",
-    "dist",
-    "LICENSE",
-    "README.md",
-    "CHANGELOG.md"
+    "dist"
   ],
   "homepage": "https://citycide.github.io/trilogy",
   "dependencies": {
