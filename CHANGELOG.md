@@ -1,3 +1,16 @@
+<a name="1.0.0-rc.4"></a>
+# [1.0.0-rc.4](https://github.com/citycide/trilogy/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2017-02-24)
+
+This is probably the last release candidate before 1.0.0!
+
+### Bug Fixes
+
+* **native:** ensure directory exists ([f142cf4](https://github.com/citycide/trilogy/commit/f142cf4))
+* **package:** update fs-jetpack to version 0.11.0 ([481a8d6](https://github.com/citycide/trilogy/commit/481a8d6))
+* **package:** update fs-jetpack to version 0.12.0 ([3157627](https://github.com/citycide/trilogy/commit/3157627))
+
+
+
 <a name="1.0.0-rc.3"></a>
 # [1.0.0-rc.3](https://github.com/citycide/trilogy/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2017-02-04)
 
