@@ -10,13 +10,21 @@ const db = new Trilogy(filePath)
 test.before(async () => {
   await db.model('one', {
     first: String,
-    second: String
+    second: String,
+    third: Boolean,
+    array: Array
   })
 
-  await db.create('one', {
-    first: 'fee',
-    second: 'blah'
-  })
+  await Promise.all([
+    db.create('one', {
+      first: 'fee',
+      second: 'blah'
+    }),
+    db.create('one', {
+      third: false,
+      array: [1, 2, 3]
+    })
+  ])
 })
 
 test.after.always('remove test database file', () => {
@@ -27,4 +35,10 @@ test('changes the value of an existing key', async t => {
   await db.update('one', { first: 'fee' }, { second: 'blurg' })
   let res = await db.get('one.second', { first: 'fee' })
   t.is(res, 'blurg')
+})
+
+test('handles model type definitons correctly', async t => {
+  await db.update('one', { third: false }, { array: [4, 5, 6] })
+  let res = await db.get('one.array', { third: false })
+  t.deepEqual(res, [4, 5, 6])
 })

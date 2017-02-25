@@ -36,6 +36,10 @@ export function toKnexSchema (model, options) {
 
 // for insertions / updates
 export function toDefinition (model, object) {
+  if (util.isArray(object)) {
+    return toColumnDefinition(model, object[0], object[2])
+  }
+
   return util.map(object, (value, column) => {
     return toColumnDefinition(model, column, value)
   })

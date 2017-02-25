@@ -97,8 +97,10 @@ export default class Model {
   }
 
   update (criteria, data, options) {
-    let query = this.ctx.knex(this.name).update(data)
-    query = helpers.buildWhere(query, criteria)
+    let typedData = types.toDefinition(this, data)
+    let typedCriteria = types.toDefinition(this, criteria)
+    let query = this.ctx.knex(this.name).update(typedData)
+    query = helpers.buildWhere(query, typedCriteria)
 
     return helpers.runQuery(this.ctx, query)
   }
