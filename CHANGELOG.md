@@ -1,3 +1,18 @@
+<a name="1.0.0-rc.5"></a>
+# [1.0.0-rc.5](https://github.com/citycide/trilogy/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2017-02-26)
+
+This is probably the last release candidate before 1.0.0!
+
+...
+
+I feel like I've said that before.
+
+### Bug Fixes
+
+* **update:** handle type definitions on update ([eeda08c](https://github.com/citycide/trilogy/commit/eeda08c)), closes [#31](https://github.com/citycide/trilogy/issues/31)
+
+
+
 <a name="1.0.0-rc.4"></a>
 # [1.0.0-rc.4](https://github.com/citycide/trilogy/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2017-02-24)
 
