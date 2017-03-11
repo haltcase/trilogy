@@ -70,7 +70,7 @@
     "rollup-watch": "^3.2.2",
     "sql.js": "^0.4.0",
     "sqlite3": "^3.1.8",
-    "standard-changelog": "0.0.1"
+    "standard-changelog": "1.0.0"
   },
   "config": {
     "commitizen": {
