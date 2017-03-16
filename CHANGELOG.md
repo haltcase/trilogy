@@ -1,3 +1,18 @@
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/citycide/trilogy/compare/v1.0.0-rc.5...v1.0.0) (2017-03-16)
+
+We've officially arrived at **1.0.0**!
+
+But don't let that stop you from submitting issues if you come across problems,
+or pull requests if there's something that can be improved or added.
+
+Thanks for the help getting here!
+
+### Bug Fixes
+
+* **incr|decr:** do nothing with amounts of 0 ([94dd9e0](https://github.com/citycide/trilogy/commit/94dd9e0))
+
+
 <a name="1.0.0-rc.5"></a>
 # [1.0.0-rc.5](https://github.com/citycide/trilogy/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2017-02-26)
 
