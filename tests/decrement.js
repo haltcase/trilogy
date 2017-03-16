@@ -64,3 +64,9 @@ test.serial('allows negative values when allowNegative is truthy', async t => {
   let res = await db.get('people.age', { name: 'Lelu' })
   t.is(res, -1)
 })
+
+test.serial('does nothing when passed a zero value', async t => {
+  await db.decr('people.age', { name: 'Lelu' }, 0, true)
+  let res = await db.get('people.age', { name: 'Lelu' })
+  t.is(res, -1)
+})

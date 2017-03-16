@@ -51,3 +51,15 @@ test.serial('increments by a specified amount', async t => {
 
   values.forEach(([age, val]) => t.is(val, age + 4))
 })
+
+test.serial('does nothing when passed a zero value', async t => {
+  await db.set('people.age', { name: 'Lelu' }, 10)
+  let original = await db.get('people.age', { name: 'Lelu' })
+  t.is(original, 10)
+
+  let affected = await db.incr('people.age', { name: 'Lelu' }, 0)
+  t.is(affected, 0)
+
+  let final = await db.get('people.age', { name: 'Lelu' })
+  t.is(final, 10)
+})

@@ -140,7 +140,10 @@ export default class Model {
   }
 
   incr (column, criteria, amount) {
-    amount = Number(amount) || 1
+    let cast = Number(amount)
+    if (Number.isNaN(cast)) amount = 1
+    if (amount === 0) return Promise.resolve(0)
+
     let query = this.ctx.knex(this.name).increment(column, amount)
     query = helpers.buildWhere(query, criteria)
 
@@ -148,7 +151,10 @@ export default class Model {
   }
 
   decr (column, criteria, amount, allowNegative) {
-    amount = Number(amount) || 1
+    let cast = Number(amount)
+    if (Number.isNaN(cast)) amount = 1
+    if (amount === 0) return Promise.resolve(0)
+
     let query = this.ctx.knex(this.name)
     let raw = allowNegative
       ? `${column} - ${amount}`
