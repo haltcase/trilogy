@@ -1,6 +1,6 @@
 {
   "name": "trilogy",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0",
   "description": "No-hassle SQLite with a document store style API.",
   "main": "dist/trilogy.js",
   "module": "dist/trilogy.mjs",
