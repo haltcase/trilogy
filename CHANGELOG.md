@@ -1,3 +1,18 @@
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/citycide/trilogy/compare/v1.0.0...v1.1.0) (2017-03-23)
+
+
+### Bug Fixes
+
+* **findOne:** error when no result and column provided ([7394150](https://github.com/citycide/trilogy/commit/7394150))
+
+
+### Features
+
+* drop fs-jetpack dependency ([4a82ab6](https://github.com/citycide/trilogy/commit/4a82ab6))
+
+
+
 <a name="1.0.0"></a>
 # [1.0.0](https://github.com/citycide/trilogy/compare/v1.0.0-rc.5...v1.0.0) (2017-03-16)
 
