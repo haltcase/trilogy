@@ -40,6 +40,7 @@ export let isFunction = value => isType(value, 'function')
 export let isString = value => isType(value, 'string')
 export let isNumber = value => isType(value, 'number')
 export let isBoolean = value => isType(value, 'boolean')
+export let isNil = value => value == null
 
 export function invariant (condition, message) {
   if (!condition) {

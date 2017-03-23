@@ -1,7 +1,7 @@
 import * as types from './types'
 import * as helpers from './helpers'
 import * as enforcers from './enforcers'
-import { isArray, isString, isObject } from './util'
+import { isArray, isString, isObject, isNil } from './util'
 
 export default class Model {
   constructor (ctx, name, schema, options) {
@@ -76,6 +76,7 @@ export default class Model {
 
     return helpers.runQuery(this.ctx, query, true).then(response => {
       let result = isArray(response) ? response[0] : response
+      if (isNil(result)) return result
 
       if (!column) {
         return types.fromDefinition(this, result)
