@@ -1,3 +1,5 @@
+import { dirname } from 'path'
+import { mkdirSync, statSync } from 'fs'
 import type from 'component-type'
 
 export let map = (object, fn) => each(object, fn, true)
@@ -50,5 +52,31 @@ export function invariant (condition, message) {
     throw error
   } else {
     return condition
+  }
+}
+
+export function makeDirPath (path, options) {
+  options = Object.assign({
+    mode: parseInt('0777', 8)
+  }, options)
+
+  try {
+    mkdirSync(path, options.mode)
+    return true
+  } catch (err) {
+    if (err.code === 'EEXIST') {
+      return statSync(path).isDirectory()
+    }
+
+    if (err.code === 'ENOENT') {
+      let target = dirname(path)
+      return (
+        target !== path &&
+        makeDirPath(target, options) &&
+        mkdirSync(path, options.mode)
+      )
+    }
+
+    return false
   }
 }

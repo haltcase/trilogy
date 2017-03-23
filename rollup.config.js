@@ -1,7 +1,8 @@
 import babel from 'rollup-plugin-babel'
 
 const pkg = require('./package.json')
-const external = Object.keys(pkg.dependencies).concat(['path', 'sql.js'])
+const external = Object.keys(pkg.dependencies)
+  .concat(['fs', 'path', 'sql.js'])
 
 export default {
   entry: 'src/index.js',

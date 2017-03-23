@@ -1,7 +1,7 @@
 import Trilogy from '../dist/trilogy'
 
 import test from 'ava'
-import { remove } from 'fs-jetpack'
+import rimraf from 'rimraf'
 import { join, basename } from 'path'
 
 const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
@@ -25,7 +25,7 @@ test.before(() => {
 })
 
 test.after.always('remove test database file', () => {
-  return db.close().then(() => remove(filePath))
+  return db.close().then(() => rimraf.sync(filePath))
 })
 
 test('inserts objects into the database', async t => {

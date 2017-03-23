@@ -1,7 +1,7 @@
 import Trilogy from '../dist/trilogy'
 
 import test from 'ava'
-import { remove } from 'fs-jetpack'
+import rimraf from 'rimraf'
 import { join, basename } from 'path'
 
 const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
@@ -13,14 +13,20 @@ test.before(async () => {
     second: String
   })
 
-  await db.create('one', {
-    first: 'fee',
-    second: 'blah'
-  })
+  await Promise.all([
+    db.create('one', {
+      first: 'fee',
+      second: 'blah'
+    }),
+    db.create('one', {
+      first: 'shoot',
+      second: 'buckets'
+    })
+  ])
 })
 
 test.after.always('remove test database file', () => {
-  return db.close().then(() => remove(filePath))
+  return db.close().then(() => rimraf.sync(filePath))
 })
 
 test('get() - retrieves a specific property of the object', async t => {
@@ -42,8 +48,8 @@ test('get() - returns the provided default value when target is undefined', asyn
 
 test('set() - updates the target value', async t => {
   let expected = 'some super new value'
-  await db.set('one.second', { first: 'fee' }, expected)
+  await db.set('one.second', { first: 'shoot' }, expected)
 
-  let actual = await db.get('one.second', { first: 'fee' })
+  let actual = await db.get('one.second', { first: 'shoot' })
   t.is(actual, expected)
 })
