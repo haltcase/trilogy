@@ -29,7 +29,7 @@ export function readDatabase (instance) {
 
 export function writeDatabase (instance, db) {
   let data = db.export()
-  let buffer = new Buffer(data)
+  let buffer = Buffer.from(data)
   let { filename } = instance.options.connection
 
   makeDirPath(dirname(filename))

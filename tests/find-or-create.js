@@ -35,4 +35,3 @@ test('creates missing objects or returns an existing one', async t => {
 
   t.is(fresh.last_played, existing.last_played)
 })
-
