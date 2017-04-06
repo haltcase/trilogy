@@ -19,9 +19,9 @@ export function readDatabase (instance) {
     if (e.code === 'ENOENT') {
       client = new SQL.Database()
       writeDatabase(instance, client)
+    } else {
+      throw e
     }
-
-    throw e
   }
 
   return client
