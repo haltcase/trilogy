@@ -39,7 +39,11 @@ test('inserts objects into the database', async t => {
     inserts.map(({ table, object }) => db.create(table, object))
   )
 
-  inserts.forEach(async ({ table, object }) => {
-    t.deepEqual(await db.find(table, object), [object])
+  let selects = await Promise.all(
+    inserts.map(({ table, object }) => db.find(table, object))
+  )
+
+  inserts.forEach(({ table, object }, i) => {
+    t.deepEqual(selects[i], [object])
   })
 })
