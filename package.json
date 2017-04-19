@@ -62,7 +62,7 @@
     "eslint-config-standard": "^10.2.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-node": "^4.2.2",
-    "eslint-plugin-prefer-let": "^0.1.0",
+    "eslint-plugin-prefer-let": "^1.0.0",
     "eslint-plugin-promise": "^3.4.0",
     "eslint-plugin-standard": "^3.0.1",
     "rimraf": "^2.5.4",
