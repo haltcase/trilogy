@@ -6,8 +6,8 @@
   "module": "dist/trilogy.mjs",
   "scripts": {
     "prebuild": "npm run lint",
-    "build": "rimraf dist/** && rollup -c && cpy README.md docs",
-    "watch": "rimraf dist/** && rollup -c -w",
+    "build": "rimraf dist/** && rollup -c && cpy README.md docs && cpy trilogy.d.ts dist",
+    "watch": "rimraf dist/** && rollup -c -w && cpy trilogy.d.ts dist",
     "pretest": "npm run build",
     "test": "ava",
     "lint": "eslint src tests",
