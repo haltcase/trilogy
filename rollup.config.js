@@ -13,7 +13,7 @@ export default {
       presets: [['env', {
         loose: true,
         modules: false,
-        targets: { node: 4.7 }
+        targets: { node: "4.7.0" }
       }], 'stage-0'],
       plugins: [
         'external-helpers',
