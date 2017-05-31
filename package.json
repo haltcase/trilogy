@@ -90,7 +90,7 @@
         "env",
         {
           "targets": {
-            "node": 4.7
+            "node": "4.7.0"
           },
           "loose": true
         }
