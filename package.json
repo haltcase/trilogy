@@ -69,7 +69,7 @@
     "rimraf": "^2.5.4",
     "rollup": "0.41.6",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-watch": "^3.2.2",
+    "rollup-watch": "^4.0.0",
     "sql.js": "^0.4.0",
     "sqlite3": "^3.1.8",
     "standard-changelog": "1.0.1"
