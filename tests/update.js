@@ -58,8 +58,6 @@ test('allows for using multiple where clauses', async t => {
 
   await Promise.all(list.map(p => people.create(p)))
 
-  db.verbose = q => console.log(q)
-
   let affected = await people.update([
     ['age', '>', 45],
     { gender: 'female' }
