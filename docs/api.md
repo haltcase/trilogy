@@ -396,8 +396,10 @@ array will contain only the `column` property of the found objects.
   - _optional_ `{string} column`: if provided, only this column's value will be selected
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{Object} options`:
 
 | property | type                        | default | description                                                                         |
@@ -447,8 +449,10 @@ provided, the value at `object[column]`.
   - _optional_ `{string} column`: if provided, only this column's value will be selected
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{Object} options`:
 
 | property | type                        | default | description                                                                         |
@@ -530,8 +534,10 @@ Modify the properties of an existing object.
 
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - `{Object} data`: the updates to be made
   - _optional_ `{Object} options`
     - _currently unused_
@@ -610,8 +616,10 @@ the value at `column` or, if it does not exist, the supplied `defaultValue`.
   - `{string} column`: the property to retrieve
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{mixed} defaultValue`: returned if the result doesn't exist
 
 > **Returns**
@@ -654,8 +662,10 @@ the value at `column` to be `value` where `criteria` is met.
   - `{string} column`: the column to update
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - `{mixed} value`: the new value
 
 > **Returns**
@@ -699,8 +709,10 @@ to `1` if not provided.
     - _default_ = `1`
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
 
 > **Returns**
 
@@ -732,8 +744,10 @@ pass `true` as the final argument.
     - _default_ = `1`
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{boolean} allowNegative`: unless set to `true`, the value will not be allowed to go below a value of `0`.
     - _default_ = `false`
 
@@ -767,8 +781,10 @@ unintentionally deleting everything in the table. Use
 
   - `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
 
 > **Returns**
 
@@ -803,8 +819,10 @@ Count the number of rows, matching `criteria` if specified.
   - _optional_ `{string} column`: column to select on
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{Object} options`:
 
 |  property   | type       | default | description                      |
@@ -859,8 +877,10 @@ in `column` that match `criteria`.
   - _optional_ `{string} column`: column to compare
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{Object} options`:
 
 | property | type     | default | description                      |
@@ -899,8 +919,10 @@ in `column` that match `criteria`.
   - _optional_ `{string} column`: column to compare
   - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
     - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is either a key / value pair (equal to) or a length of 3,
-      ie. `['age', '<', 65]` (allows other comparisons)
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
   - _optional_ `{Object} options`:
 
 | property | type     | default | description                      |
