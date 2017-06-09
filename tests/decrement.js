@@ -70,3 +70,30 @@ test.serial('does nothing when passed a zero value', async t => {
   let res = await db.get('people.age', { name: 'Lelu' })
   t.is(res, -1)
 })
+
+test('allows for multiple where clauses', async t => {
+  let people = await db.model('decrement_people', {
+    age: Number,
+    name: String
+  })
+
+  let list = [
+    { age: 31, name: 'Joe' },
+    { age: 41, name: 'Bob' },
+    { age: 51, name: 'Jill' },
+    { age: 49, name: 'Jane' }
+  ]
+
+  await Promise.all(list.map(p => people.create(p)))
+
+  await people.decr('age', [
+    ['age', '>', 45],
+    { name: 'Jill' }
+  ])
+
+  let results = await Promise.all(
+    list.map(({ name }) => people.get('age', { name }))
+  )
+
+  t.deepEqual(results, [31, 41, 50, 49])
+})

@@ -1,4 +1,5 @@
 import * as util from './util'
+import { isWhereArrayLike } from './helpers'
 import { columnDescriptor } from './enforcers'
 import { KNEX_NO_ARGS, COLUMN_TYPES } from './constants'
 
@@ -36,8 +37,14 @@ export function toKnexSchema (model, options) {
 
 // for insertions / updates
 export function toDefinition (model, object) {
-  if (util.isArray(object)) {
+  if (isWhereArrayLike(object)) {
     return toColumnDefinition(model, object[0], object[2])
+  }
+
+  if (util.isArray(object)) {
+    return util.map(object, clause => {
+      return toDefinition(model, clause)
+    })
   }
 
   return util.map(object, (value, column) => {

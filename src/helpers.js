@@ -39,9 +39,20 @@ export function buildOrder (partial, order) {
   return partial
 }
 
-export function buildWhere (partial, where) {
-  let [isValid, arrayLength] = isValidWhere(where)
+export function buildWhere (partial, where, skipDeepValidation) {
+  let [
+    isValid,
+    arrayLength,
+    multipleClauses
+  ] = isValidWhere(where, skipDeepValidation)
+
   if (!isValid) return partial
+
+  if (multipleClauses) {
+    return where.reduce((accumulator, clause) => {
+      return buildWhere(accumulator, clause, true)
+    }, partial)
+  }
 
   let cast = where
   if (!arrayLength) {
@@ -55,10 +66,26 @@ export function buildWhere (partial, where) {
   return partial.where(...cast)
 }
 
-export function isValidWhere (where) {
+export function isWhereArrayLike (where) {
+  if (!where) return false
+
+  let { length } = where
+  return (
+    util.isArray(where) &&
+    (length === 2 || length === 3) &&
+    typeof where[0] === 'string'
+  )
+}
+
+export function isValidWhere (where, skipDeepValidation) {
+  if (isWhereArrayLike(where)) return [true, where.length]
+
   if (util.isArray(where)) {
-    let len = where.length
-    return [len === 2 || len === 3, len]
+    if (!skipDeepValidation) {
+      return [where.every(isValidWhere), null, true]
+    } else {
+      return [true, null, true]
+    }
   }
 
   if (util.isObject(where)) return [true]

@@ -42,3 +42,38 @@ test('handles model type definitons correctly', async t => {
   let res = await db.get('one.array', { third: false })
   t.deepEqual(res, [4, 5, 6])
 })
+
+test('allows for using multiple where clauses', async t => {
+  let people = await db.model('update_people', {
+    age: Number,
+    gender: String
+  })
+
+  let list = [
+    { age: 31, gender: 'male' },
+    { age: 41, gender: 'male' },
+    { age: 51, gender: 'female' },
+    { age: 49, gender: 'female' }
+  ]
+
+  await Promise.all(list.map(p => people.create(p)))
+
+  db.verbose = q => console.log(q)
+
+  let affected = await people.update([
+    ['age', '>', 45],
+    { gender: 'female' }
+  ], { gender: 'male' })
+
+  let results = await people.find([
+    ['age', '>', 45],
+    { gender: 'male' }
+  ])
+
+  t.is(affected, 2)
+  t.is(results.length, 2)
+  t.deepEqual(results, [
+    { age: 51, gender: 'male' },
+    { age: 49, gender: 'male' }
+  ])
+})

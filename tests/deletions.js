@@ -5,9 +5,7 @@ import rimraf from 'rimraf'
 import { join, basename } from 'path'
 
 const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath, {
-  // verbose: console.log
-})
+const db = new Trilogy(filePath)
 
 const somePeople = [
   { name: 'Dale', age: 30 },
@@ -61,4 +59,35 @@ test.serial('removes all objects from the specified model', async t => {
   ])
 
   values.forEach(value => t.falsy(value))
+})
+
+test('allows for multiple where clauses', async t => {
+  let people = await db.model('deletions_people', {
+    age: Number,
+    favoriteColor: String
+  })
+
+  let list = [
+    { age: 20, favoriteColor: 'blue' },
+    { age: 25, favoriteColor: 'red' },
+    { age: 30, favoriteColor: 'red' },
+    { age: 40, favoriteColor: 'gray' }
+  ]
+
+  await Promise.all(list.map(p => people.create(p)))
+
+  let removed = await people.remove([
+    ['age', '<', 45],
+    { favoriteColor: 'red' }
+  ])
+
+  t.is(removed, 2)
+
+  let remaining = await people.find()
+
+  t.is(remaining.length, 2)
+  t.deepEqual(remaining, [
+    { age: 20, favoriteColor: 'blue' },
+    { age: 40, favoriteColor: 'gray' }
+  ])
 })

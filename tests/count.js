@@ -35,3 +35,12 @@ test('returns the number of matching rows', async t => {
   let res = await db.count('people', ['age', '<', 200])
   t.is(res, 2)
 })
+
+test('allows for multiple where clauses', async t => {
+  let res = await db.count('people', [
+    ['age', '<', 200],
+    ['age', '>', 20]
+  ])
+
+  t.is(res, 1)
+})
