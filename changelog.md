@@ -1,3 +1,15 @@
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/citycide/trilogy/compare/v1.1.0...v1.2.0) (2017-06-09)
+
+
+### Features
+
+* add initial Flow definitions ([b9937b4](https://github.com/citycide/trilogy/commit/b9937b4))
+* add initial TypeScript definitions ([3d9a2a5](https://github.com/citycide/trilogy/commit/3d9a2a5))
+* support multiple where clauses ([ff481bb](https://github.com/citycide/trilogy/commit/ff481bb)), closes [#54](https://github.com/citycide/trilogy/issues/54)
+
+
+
 <a name="1.1.0"></a>
 # [1.1.0](https://github.com/citycide/trilogy/compare/v1.0.0...v1.1.0) (2017-03-23)
 
