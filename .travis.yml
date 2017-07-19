@@ -9,9 +9,5 @@ node_js:
 before_install:
   - if [[ `npm -v` == 2* ]]; then npm i -g npm@latest; fi
 
-install:
-  - npm prune
-  - npm install
-
 notifications:
   email: false
