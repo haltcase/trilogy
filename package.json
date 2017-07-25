@@ -11,7 +11,7 @@
     "types": "cpy \"types/**/*\" dist",
     "pretest": "npm run build",
     "test": "ava",
-    "lint": "eslint src tests",
+    "lint": "standard \"src/**/*.js\" \"tests/**/*.js\" | snazzy",
     "docs": "cpy readme.md docs && docsify serve docs",
     "changelog": "standard-changelog -i changelog.md -o changelog.md",
     "prepublish": "npm test",
