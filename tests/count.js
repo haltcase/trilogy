@@ -1,11 +1,7 @@
+import test from 'ava'
 import Trilogy from '../dist/trilogy'
 
-import test from 'ava'
-import rimraf from 'rimraf'
-import { join, basename } from 'path'
-
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
+const db = new Trilogy(':memory:')
 
 const people = [
   { name: 'Dale', age: 30 },
@@ -22,9 +18,7 @@ test.before(async () => {
   return Promise.all(people.map(person => db.create('people', person)))
 })
 
-test.after.always('remove test database file', () => {
-  return db.close().then(() => rimraf.sync(filePath))
-})
+test.after.always(() => db.close())
 
 test('returns the total number of rows', async t => {
   let res = await db.count('people')

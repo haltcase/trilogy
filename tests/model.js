@@ -1,15 +1,9 @@
+import test from 'ava'
 import Trilogy from '../dist/trilogy'
 
-import test from 'ava'
-import rimraf from 'rimraf'
-import { join, basename } from 'path'
+const db = new Trilogy(':memory:')
 
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
-
-test.after.always('remove test database file', () => {
-  return db.close().then(() => rimraf.sync(filePath))
-})
+test.after.always(() => db.close())
 
 test('creates a new model definition', async t => {
   await db.model('teams', {

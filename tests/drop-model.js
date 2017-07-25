@@ -1,11 +1,7 @@
+import test from 'ava'
 import Trilogy from '../dist/trilogy'
 
-import test from 'ava'
-import rimraf from 'rimraf'
-import { join, basename } from 'path'
-
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
+const db = new Trilogy(':memory:')
 
 const schema = { name: String }
 
@@ -21,9 +17,7 @@ test.before(() => {
   }))
 })
 
-test.after.always('remove test database file', () => {
-  return db.close().then(() => rimraf.sync(filePath))
-})
+test.after.always(() => db.close())
 
 test('removes tables from the database', async t => {
   let removals = await Promise.all(

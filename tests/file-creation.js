@@ -36,3 +36,12 @@ test('sql.js client creates a new file immediately', t => {
   dbJS = new Trilogy(js, { client: 'sql.js' })
   t.true(existsSync(js))
 })
+
+test('in-memory database does not create a file', t => {
+  let fakePath = join(process.cwd(), ':memory:')
+  t.false(existsSync(fakePath))
+
+  // eslint-disable-next-line no-new
+  new Trilogy(':memory:')
+  t.false(existsSync(fakePath))
+})

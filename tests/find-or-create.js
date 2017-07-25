@@ -1,11 +1,7 @@
+import test from 'ava'
 import Trilogy from '../dist/trilogy'
 
-import test from 'ava'
-import rimraf from 'rimraf'
-import { join, basename } from 'path'
-
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
+const db = new Trilogy(':memory:')
 
 const makeInput = date => ({ name: 'Overwatch', last_played: date, genre: 'FPS' })
 
@@ -17,9 +13,7 @@ test.before(async () => {
   })
 })
 
-test.after.always('remove test database file', () => {
-  return db.close().then(() => rimraf.sync(filePath))
-})
+test.after.always(() => db.close())
 
 test('creates missing objects or returns an existing one', async t => {
   t.is(await db.count('games', { genre: 'FPS' }), 0)

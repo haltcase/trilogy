@@ -1,11 +1,7 @@
+import test from 'ava'
 import Trilogy from '../dist/trilogy'
 
-import test from 'ava'
-import rimraf from 'rimraf'
-import { join, basename } from 'path'
-
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
+const db = new Trilogy(':memory:')
 
 test.before(async () => {
   await db.model('one', {
@@ -27,9 +23,7 @@ test.before(async () => {
   ])
 })
 
-test.after.always('remove test database file', () => {
-  return db.close().then(() => rimraf.sync(filePath))
-})
+test.after.always(() => db.close())
 
 test('changes the value of an existing key', async t => {
   await db.update('one', { first: 'fee' }, { second: 'blurg' })
