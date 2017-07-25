@@ -11,6 +11,10 @@ export function readDatabase (instance) {
   let client
   let { filename } = instance.options.connection
 
+  if (filename === ':memory:') {
+    return new SQL.Database()
+  }
+
   try {
     makeDirPath(dirname(filename))
     let file = readFileSync(filename)
@@ -28,9 +32,11 @@ export function readDatabase (instance) {
 }
 
 export function writeDatabase (instance, db) {
+  let { filename } = instance.options.connection
+  if (filename === ':memory:') return
+
   let data = db.export()
   let buffer = Buffer.from(data)
-  let { filename } = instance.options.connection
 
   makeDirPath(dirname(filename))
   writeFileSync(filename, buffer, { mode: parseInt('0777', 8) })

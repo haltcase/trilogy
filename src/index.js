@@ -16,10 +16,15 @@ class Trilogy {
     }
 
     let obj = this.options = setup(options)
-    obj.connection.filename = resolve(obj.dir, path)
 
-    // ensure the directory exists
-    makeDirPath(dirname(obj.connection.filename))
+    if (path === ':memory:') {
+      obj.connection.filename = path
+    } else {
+      obj.connection.filename = resolve(obj.dir, path)
+
+      // ensure the directory exists
+      makeDirPath(dirname(obj.connection.filename))
+    }
 
     this.isNative = obj.client === 'sqlite3'
     this.verbose = obj.verbose
@@ -27,7 +32,10 @@ class Trilogy {
     let config = { client: 'sqlite3', useNullAsDefault: true }
 
     if (this.isNative) {
-      touchFile(obj.connection.filename)
+      if (path !== ':memory:') {
+        touchFile(obj.connection.filename)
+      }
+
       this.knex = knex({ ...config, connection: obj.connection })
     } else {
       this.knex = knex(config)
