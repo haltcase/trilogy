@@ -14,8 +14,7 @@
     "lint": "standard \"src/**/*.js\" \"tests/**/*.js\" | snazzy",
     "docs": "cpy readme.md docs && docsify serve docs",
     "changelog": "standard-changelog -i changelog.md -o changelog.md",
-    "prepublish": "npm test",
-    "commit": "git-cz"
+    "prepublish": "npm test"
   },
   "repository": "https://github.com/citycide/trilogy",
   "keywords": [
@@ -54,9 +53,7 @@
     "babel-preset-stage-0": "^6.24.1",
     "babel-register": "^6.24.1",
     "babel-runtime": "^6.23.0",
-    "commitizen": "^2.9.6",
     "cpy-cli": "^1.0.1",
-    "cz-conventional-changelog": "^2.0.0",
     "docsify-cli": "^4.1.8",
     "rimraf": "^2.6.1",
     "rollup": "^0.45.2",
@@ -67,11 +64,6 @@
     "sqlite3": "^3.1.8",
     "standard": "^10.0.2",
     "standard-changelog": "1.0.2"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
   },
   "ava": {
     "files": [
