@@ -1,12 +1,13 @@
 import knex from 'knex'
 import { dirname, resolve } from 'path'
+import { openSync, closeSync } from 'fs'
 
 import Model from './model'
 import { toKnexSchema } from './types'
-import { connect } from './sqljs-handler'
 import { runQuery } from './helpers'
 import { invariant, makeDirPath } from './util'
 import { setup, modelOptions } from './enforcers'
+import { connect, readDatabase } from './sqljs-handler'
 
 class Trilogy {
   constructor (path, options = {}) {
@@ -26,10 +27,12 @@ class Trilogy {
     let config = { client: 'sqlite3', useNullAsDefault: true }
 
     if (this.isNative) {
+      touchFile(obj.connection.filename)
       this.knex = knex({ ...config, connection: obj.connection })
     } else {
       this.knex = knex(config)
       this.pool = connect(this)
+      readDatabase(this)
     }
 
     this.definitions = new Map()
@@ -196,6 +199,12 @@ class Trilogy {
     let model = checkModel(this, table)
     return model.max(column, criteria, options)
   }
+}
+
+function touchFile (atPath) {
+  try {
+    closeSync(openSync(atPath, 'wx'))
+  } catch (e) {}
 }
 
 function checkModel (instance, name) {

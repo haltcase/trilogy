@@ -5,23 +5,34 @@ import rimraf from 'rimraf'
 import { existsSync } from 'fs'
 import { join, basename } from 'path'
 
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
+const getPath = name =>
+  join(__dirname, `${basename(`${__filename}-${name}`, '.js')}.db`)
 
-let db
+const [js, native] = [getPath('sqljs'), getPath('native')]
 
-test.after.always('remove test database file', () => {
-  return db.close().then(() => rimraf.sync(filePath))
+let dbJS
+let dbNative
+
+test.after.always('remove test database file', async () => {
+  await Promise.all([dbJS.close(), dbNative.close()])
+  rimraf.sync(js)
+  rimraf.sync(native)
 })
 
 test('throws if no file path is provided', t => {
   t.throws(() => new Trilogy(), Error)
 })
 
-test('successfully creates a new file', async t => {
-  t.false(existsSync(filePath))
+test('native client creates a new file immediately', t => {
+  t.false(existsSync(native))
 
-  db = new Trilogy(filePath)
-  await db.model('test', { name: String })
+  dbNative = new Trilogy(native)
+  t.true(existsSync(native))
+})
 
-  t.true(existsSync(filePath))
+test('sql.js client creates a new file immediately', t => {
+  t.false(existsSync(js))
+
+  dbJS = new Trilogy(js, { client: 'sql.js' })
+  t.true(existsSync(js))
 })
