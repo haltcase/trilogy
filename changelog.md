@@ -1,3 +1,13 @@
+<a name="1.2.1"></a>
+## [1.2.1](https://github.com/citycide/trilogy/compare/v1.2.0...v1.2.1) (2017-07-25)
+
+
+### Bug Fixes
+
+* immediately create db file for both clients ([7423312](https://github.com/citycide/trilogy/commit/7423312))
+* fix `.mjs` module by removing `module.exports` usage ([e1d57c3](https://github.com/citycide/trilogy/commit/e1d57c3))
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/citycide/trilogy/compare/v1.1.0...v1.2.0) (2017-06-09)
 
