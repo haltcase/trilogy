@@ -11,9 +11,9 @@ export default class Model {
   }
 
   create (object, options) {
-    let insertion = types.toDefinition(this, object)
+    const insertion = types.toDefinition(this, object)
 
-    let query = this.ctx.knex.raw(
+    const query = this.ctx.knex.raw(
       this.ctx.knex(this.name)
         .insert(insertion)
         .toString()
@@ -34,7 +34,7 @@ export default class Model {
 
     options = enforcers.findOptions(options)
 
-    let order = options.random ? 'random' : options.order
+    const order = options.random ? 'random' : options.order
     let query = this.ctx.knex(this.name).select()
     query = helpers.buildWhere(query, criteria)
 
@@ -67,7 +67,7 @@ export default class Model {
 
     options = enforcers.findOptions(options)
 
-    let order = options.random ? 'random' : options.order
+    const order = options.random ? 'random' : options.order
     let query = this.ctx.knex(this.name).first()
     query = helpers.buildWhere(query, criteria)
 
@@ -75,7 +75,7 @@ export default class Model {
     if (options.skip) query = query.offset(options.skip)
 
     return helpers.runQuery(this.ctx, query, true).then(response => {
-      let result = isArray(response) ? response[0] : response
+      const result = isArray(response) ? response[0] : response
       if (isNil(result)) return result
 
       if (!column) {
@@ -98,8 +98,8 @@ export default class Model {
   }
 
   update (criteria, data, options) {
-    let typedData = types.toDefinition(this, data)
-    let typedCriteria = types.toDefinition(this, criteria)
+    const typedData = types.toDefinition(this, data)
+    const typedCriteria = types.toDefinition(this, criteria)
     let query = this.ctx.knex(this.name).update(typedData)
     query = helpers.buildWhere(query, typedCriteria)
 
@@ -141,7 +141,7 @@ export default class Model {
   }
 
   incr (column, criteria, amount) {
-    let cast = Number(amount)
+    const cast = Number(amount)
     if (Number.isNaN(cast)) amount = 1
     if (amount === 0) return Promise.resolve(0)
 
@@ -152,12 +152,12 @@ export default class Model {
   }
 
   decr (column, criteria, amount, allowNegative) {
-    let cast = Number(amount)
+    const cast = Number(amount)
     if (Number.isNaN(cast)) amount = 1
     if (amount === 0) return Promise.resolve(0)
 
     let query = this.ctx.knex(this.name)
-    let raw = allowNegative
+    const raw = allowNegative
       ? `${column} - ${amount}`
       : `MAX(0, ${column} - ${amount})`
     query = query.update({ [column]: this.ctx.knex.raw(raw) })
@@ -182,7 +182,7 @@ export default class Model {
   }
 
   clear () {
-    let query = this.ctx.knex(this.name).truncate()
+    const query = this.ctx.knex(this.name).truncate()
     return helpers.runQuery(this.ctx, query)
   }
 
@@ -195,8 +195,8 @@ export default class Model {
 
     options = enforcers.aggregateOptions(options)
 
-    let val = `${column} as count`
-    let method = options.distinct ? 'countDistinct' : 'count'
+    const val = `${column} as count`
+    const method = options.distinct ? 'countDistinct' : 'count'
     let query = this.ctx.knex(this.name)[method](val)
     query = helpers.buildWhere(query, criteria)
 
@@ -211,7 +211,7 @@ export default class Model {
   min (column, criteria, options = {}) {
     options = enforcers.aggregateOptions(options)
 
-    let val = `${column} as min`
+    const val = `${column} as min`
     let query = this.ctx.knex(this.name).min(val)
     query = helpers.buildWhere(query, criteria)
 
@@ -226,7 +226,7 @@ export default class Model {
   max (column, criteria, options) {
     options = enforcers.aggregateOptions(options)
 
-    let val = `${column} as max`
+    const val = `${column} as max`
     let query = this.ctx.knex(this.name).max(val)
     query = helpers.buildWhere(query, criteria)
 

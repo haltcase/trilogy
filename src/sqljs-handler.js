@@ -5,15 +5,14 @@ import { readFileSync, writeFileSync } from 'fs'
 import { makeDirPath } from './util'
 
 export function readDatabase (instance) {
-  // eslint-disable-next-line prefer-let/prefer-let
   const SQL = require('sql.js')
-
-  let client
-  let { filename } = instance.options.connection
+  const { filename } = instance.options.connection
 
   if (filename === ':memory:') {
     return new SQL.Database()
   }
+
+  let client
 
   try {
     makeDirPath(dirname(filename))
@@ -32,11 +31,11 @@ export function readDatabase (instance) {
 }
 
 export function writeDatabase (instance, db) {
-  let { filename } = instance.options.connection
+  const { filename } = instance.options.connection
   if (filename === ':memory:') return
 
-  let data = db.export()
-  let buffer = Buffer.from(data)
+  const data = db.export()
+  const buffer = Buffer.from(data)
 
   makeDirPath(dirname(filename))
   writeFileSync(filename, buffer, { mode: parseInt('0777', 8) })

@@ -5,11 +5,11 @@ import { writeDatabase } from './sqljs-handler'
 export function parseResponse (contents) {
   if (!contents || !contents.length) return []
 
-  let { columns, values } = contents[0]
-  let results = []
+  const { columns, values } = contents[0]
+  const results = []
 
   for (let i = 0; i < values.length; i++) {
-    let line = {}
+    const line = {}
 
     for (let j = 0; j < columns.length; j++) {
       line[columns[j]] = values[i][j]
@@ -30,7 +30,7 @@ export function buildOrder (partial, order) {
   }
 
   if (util.isArray(order)) {
-    let length = order.length
+    const { length } = order
     if (length === 1 || length === 2) {
       return partial.orderBy(...order)
     }
@@ -40,7 +40,7 @@ export function buildOrder (partial, order) {
 }
 
 export function buildWhere (partial, where, skipDeepValidation) {
-  let [
+  const [
     isValid,
     arrayLength,
     multipleClauses
@@ -58,7 +58,7 @@ export function buildWhere (partial, where, skipDeepValidation) {
   if (!arrayLength) {
     cast = util.map(where, castValue)
   } else {
-    let i = arrayLength - 1
+    const i = arrayLength - 1
     cast[i] = castValue(where[i])
   }
 
@@ -69,7 +69,7 @@ export function buildWhere (partial, where, skipDeepValidation) {
 export function isWhereArrayLike (where) {
   if (!where) return false
 
-  let { length } = where
+  const { length } = where
   return (
     util.isArray(where) &&
     (length === 2 || length === 3) &&
@@ -94,8 +94,8 @@ export function isValidWhere (where, skipDeepValidation) {
 }
 
 export function runQuery (instance, query, needResponse) {
-  let asString = query.toString()
-  let action = getQueryAction(asString)
+  const asString = query.toString()
+  const action = getQueryAction(asString)
   if (util.isFunction(instance.verbose)) {
     instance.verbose(asString)
   }
@@ -131,11 +131,11 @@ export function runQuery (instance, query, needResponse) {
 }
 
 export function findLastObject (model, object) {
-  let { key, hasIncrements } = findKey(model.schema)
+  const { key, hasIncrements } = findKey(model.schema)
 
   if (!key && !hasIncrements) return
 
-  let query = hasIncrements
+  const query = hasIncrements
     ? model.ctx.knex('sqlite_sequence').first('seq').where({ name: model.name })
     : model.ctx.knex(model.name).first().where({ [key]: object[key] })
 
@@ -148,7 +148,7 @@ export function findLastObject (model, object) {
 function findKey (schema) {
   let key = ''
   let hasIncrements = false
-  for (let name in schema) {
+  for (const name in schema) {
     if (!schema.hasOwnProperty(name)) continue
     let props = schema[name]
     if (props === 'increments' || props.type === 'increments') {

@@ -15,7 +15,7 @@ class Trilogy {
       throw new Error('trilogy constructor must be provided a file path')
     }
 
-    let obj = this.options = setup(options)
+    const obj = this.options = setup(options)
 
     if (path === ':memory:') {
       obj.connection.filename = path
@@ -29,7 +29,7 @@ class Trilogy {
     this.isNative = obj.client === 'sqlite3'
     this.verbose = obj.verbose
 
-    let config = { client: 'sqlite3', useNullAsDefault: true }
+    const config = { client: 'sqlite3', useNullAsDefault: true }
 
     if (this.isNative) {
       if (path !== ':memory:') {
@@ -55,11 +55,11 @@ class Trilogy {
       return this.definitions.get(name)
     }
 
-    let model = new Model(this, name, schema, options)
+    const model = new Model(this, name, schema, options)
     this.definitions.set(name, model)
 
-    let check = this.knex.schema.hasTable(name)
-    let query = this.knex.schema
+    const check = this.knex.schema.hasTable(name)
+    const query = this.knex.schema
       .createTableIfNotExists(name,
         toKnexSchema(model, modelOptions(options))
       )
@@ -94,7 +94,7 @@ class Trilogy {
       return false
     }
 
-    let query = this.knex.schema.dropTableIfExists(name)
+    const query = this.knex.schema.dropTableIfExists(name)
     return runQuery(this, query, true).then(() => {
       this.definitions.delete(name)
     })
@@ -113,74 +113,74 @@ class Trilogy {
   }
 
   create (table, object, options) {
-    let model = checkModel(this, table)
+    const model = checkModel(this, table)
     return model.create(object, options)
   }
 
   find (location, criteria, options) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.find(column, criteria, options)
   }
 
   findOne (location, criteria, options) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.findOne(column, criteria, options)
   }
 
   findOrCreate (table, criteria, creation, options) {
-    let model = checkModel(this, table)
+    const model = checkModel(this, table)
     return model.findOrCreate(criteria, creation, options)
   }
 
   update (table, criteria, data, options) {
-    let model = checkModel(this, table)
+    const model = checkModel(this, table)
     return model.update(criteria, data, options)
   }
 
   updateOrCreate (table, criteria, data, options) {
-    let model = checkModel(this, table)
+    const model = checkModel(this, table)
     return model.updateOrCreate(criteria, data, options)
   }
 
   get (location, criteria, defaultValue) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.get(column, criteria, defaultValue)
   }
 
   set (location, criteria, value) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.set(column, criteria, value)
   }
 
   incr (location, criteria, amount) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.incr(column, criteria, amount)
   }
 
   decr (location, criteria, amount, allowNegative) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.decr(column, criteria, amount, allowNegative)
   }
 
   remove (location, criteria) {
-    let model = checkModel(this, location)
+    const model = checkModel(this, location)
     return model.remove(criteria)
   }
 
   clear (location) {
-    let model = checkModel(this, location)
+    const model = checkModel(this, location)
     return model.clear()
   }
 
   count (location, criteria, options) {
     if (arguments.length === 0) {
-      let query = this.knex('sqlite_master')
+      const query = this.knex('sqlite_master')
         .whereNot('name', 'sqlite_sequence')
         .where({ type: 'table' })
         .count('* as count')
@@ -189,22 +189,22 @@ class Trilogy {
         .then(([{ count }]) => count)
     }
 
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return column
       ? model.count(column, criteria, options)
       : model.count(criteria, options)
   }
 
   min (location, criteria, options) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.min(column, criteria, options)
   }
 
   max (location, criteria, options) {
-    let [table, column] = location.split('.', 2)
-    let model = checkModel(this, table)
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
     return model.max(column, criteria, options)
   }
 }

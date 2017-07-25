@@ -8,12 +8,12 @@ export function toKnexSchema (model, options) {
     // every property of `model.schema` is a column
     util.each(model.schema, (descriptor, name) => {
       // each column's value is either its type or a descriptor
-      let type = getDataType(descriptor)
-      let partial = table[toKnexMethod(type)](name)
+      const type = getDataType(descriptor)
+      const partial = table[toKnexMethod(type)](name)
 
       if (util.isFunction(descriptor) || !util.isObject(descriptor)) return
 
-      let columnProperties = columnDescriptor(descriptor)
+      const columnProperties = columnDescriptor(descriptor)
       util.each(columnProperties, (value, property) => {
         if (util.isOneOf(['name', 'type'], property)) return
 
@@ -61,18 +61,18 @@ export function fromDefinition (model, object) {
 
 // for insertions / updates
 export function toColumnDefinition (model, column, value) {
-  let type = getDataType(model.schema[column])
+  const type = getDataType(model.schema[column])
   return toInputType(type, value)
 }
 
 // for selects
 export function fromColumnDefinition (model, column, value) {
-  let type = getDataType(model.schema[column])
+  const type = getDataType(model.schema[column])
   return toReturnType(type, value)
 }
 
 export function castValue (value) {
-  let type = util.isType(value)
+  const type = util.isType(value)
   if (type === 'number' || type === 'string') {
     return value
   }

@@ -39,19 +39,19 @@ export let setup = osom({
   }
 })
 
-export let modelOptions = osom({
+export const modelOptions = osom({
   timestamps: Boolean,
   primary: Array,
   unique: Array
 })
 
-export let findOptions = osom({
+export const findOptions = osom({
   order: Any,
   limit: Number,
   skip: Number
 })
 
-export let aggregateOptions = osom({
+export const aggregateOptions = osom({
   order: Any,
   groupBy: {
     type: Any,
@@ -59,12 +59,12 @@ export let aggregateOptions = osom({
   }
 })
 
-export let columnDescriptor = osom({
+export const columnDescriptor = osom({
   type: {
     type: Any,
     required: true,
     validate (value) {
-      let type = isFunction(value) ? value.name : String(value)
+      const type = isFunction(value) ? value.name : String(value)
       return isOneOf(COLUMN_TYPES, type.toLowerCase())
     }
   },
