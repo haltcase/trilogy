@@ -2,29 +2,41 @@ import { dirname } from 'path'
 import { mkdirSync, statSync } from 'fs'
 import type from 'component-type'
 
-export const map = (object, fn) => each(object, fn, true)
+export function each (collection, fn) {
+  const kind = type(collection)
 
-export function each (object, fn, map) {
-  if (isObject(object)) {
-    if (map) {
-      const res = {}
+  if (kind === 'object') {
+    const keys = Object.keys(collection)
 
-      Object.keys(object).forEach(key => {
-        res[key] = fn.call(object, object[key], key, object)
-      })
-
-      return res
-    } else {
-      Object.keys(object).forEach(key => {
-        fn.call(object, object[key], key, object)
-      })
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]
+      const value = collection[key]
+      if (fn(value, key, collection) === false) break
     }
-  } else if (isArray(object)) {
-    const method = map ? 'map' : 'forEach'
-    return object[method](fn)
-  } else {
-    return object
+
+    return
   }
+
+  if (kind === 'array') {
+    for (let i = 0; i < collection.length; i++) {
+      const value = collection[i]
+      if (fn(value, i, collection) === false) break
+    }
+  }
+}
+
+export function map (collection, fn) {
+  const kind = type(collection)
+  if (kind !== 'object' && kind !== 'array') {
+    return collection
+  }
+
+  const result = kind === 'array' ? [] : {}
+  each(collection, (value, key, collection) => {
+    result[key] = fn(value, key, collection)
+  })
+
+  return result
 }
 
 export function isOneOf (array, value) {
