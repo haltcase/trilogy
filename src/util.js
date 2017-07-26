@@ -31,7 +31,7 @@ export function isOneOf (array, value) {
   return array.some(v => v === value)
 }
 
-export let isType = (value, kind) => {
+export const isType = (value, kind) => {
   if (!kind) return type(value)
   return type(value) === kind.toLowerCase()
 }

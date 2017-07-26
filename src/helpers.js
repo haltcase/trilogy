@@ -150,7 +150,7 @@ function findKey (schema) {
   let hasIncrements = false
   for (const name in schema) {
     if (!schema.hasOwnProperty(name)) continue
-    let props = schema[name]
+    const props = schema[name]
     if (props === 'increments' || props.type === 'increments') {
       key = name
       hasIncrements = true

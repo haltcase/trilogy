@@ -15,7 +15,7 @@ function toArray (value) {
   return isArray(value) ? value : [value]
 }
 
-export let setup = osom({
+export const setup = osom({
   client: {
     type: String,
     default: 'sqlite3',

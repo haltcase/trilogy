@@ -85,7 +85,7 @@ class Trilogy {
       return false
     }
 
-    let query = this.knex.schema.hasTable(name)
+    const query = this.knex.schema.hasTable(name)
     return runQuery(this, query, true)
   }
 

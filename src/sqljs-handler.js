@@ -16,7 +16,7 @@ export function readDatabase (instance) {
 
   try {
     makeDirPath(dirname(filename))
-    let file = readFileSync(filename)
+    const file = readFileSync(filename)
     client = new SQL.Database(file)
   } catch (e) {
     if (e.code === 'ENOENT') {
