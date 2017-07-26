@@ -47,3 +47,5 @@ COPY THE ERROR MESSAGE, INCLUDING STACK TRACE HERE
 ## actual
 
 > What happened that's considered unexpected?
+
+[mcve]: https://stackoverflow.com/help/mcve
