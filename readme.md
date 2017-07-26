@@ -53,7 +53,7 @@
 
 ## installation
 
-1. Install Trilogy
+1. Install trilogy
 
    ```console
    npm i trilogy
@@ -125,15 +125,21 @@ const db = new Trilogy(':memory:', {
 
 ## contributing
 
-Contributions are welcome! Feel free to open an issue or submit a
-pull request. For large changes, please open an issue to discuss
-the revisions first.
+This project is open to contributions of all kinds! Don't worry
+if you're not 100% up to speed on the process - there's a short
+outline in the [Contributor Guide](.github/contributing.md).
+
+You'll also find a reference for the set of labels used to
+categorize issues, with descriptions of each.
+([Contributor Guide - issue labels](.github/contributing.md#labels))
+
+Also, please read and follow the project's [Code of Conduct](.github/code_of_conduct.md)
 
 ## license
 
 MIT © Bo Lingen / citycide
 
-See [LICENSE](LICENSE)
+See [license](license)
 
 [sqlite3]: https://github.com/mapbox/sqlite3
 [sqljs]: https://github.com/kripken/sql.js
