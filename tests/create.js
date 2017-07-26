@@ -23,7 +23,7 @@ test.before(() => {
 test.after.always(() => db.close())
 
 test('inserts objects into the database', async t => {
-  let inserts = [
+  const inserts = [
     { table: 'one', object: { first: 'hello', second: 1 } },
     { table: 'two', object: { first: 'hello', second: 2 } },
     { table: 'three', object: { first: 'hello', second: 3 } }
@@ -33,7 +33,7 @@ test('inserts objects into the database', async t => {
     inserts.map(({ table, object }) => db.create(table, object))
   )
 
-  let selects = await Promise.all(
+  const selects = await Promise.all(
     inserts.map(({ table, object }) => db.find(table, object))
   )
 

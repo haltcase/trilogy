@@ -26,7 +26,7 @@ test('is true for existing tables', t => {
 })
 
 test('is false for non-existent tables', async t => {
-  let noTables = ['four', 'five', 'six']
+  const noTables = ['four', 'five', 'six']
   return Promise.all(
     noTables.map(async table => t.false(await db.hasModel(table)))
   )

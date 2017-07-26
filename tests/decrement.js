@@ -21,7 +21,7 @@ test.before(async () => {
 test.after.always(() => db.close())
 
 test.serial('decrements by 1 when no amount is provided', async t => {
-  let values = await Promise.all(
+  const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age -= 1
       return db.decr('people.age', { name })
@@ -34,7 +34,7 @@ test.serial('decrements by 1 when no amount is provided', async t => {
 })
 
 test.serial('decrements by a specified amount', async t => {
-  let values = await Promise.all(
+  const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age -= 4
       return db.decr('people.age', { name }, 4)
@@ -49,29 +49,29 @@ test.serial('decrements by a specified amount', async t => {
 test.serial('does not allow negative values when allowNegative is falsy', async t => {
   await db.create('people', { name: 'Benjamin Button', age: 100 })
   await db.decr('people.age', { name: 'Benjamin Button' }, 200)
-  let res = await db.get('people.age', { name: 'Benjamin Button' })
+  const res = await db.get('people.age', { name: 'Benjamin Button' })
   t.is(res, 0)
 })
 
 test.serial('allows negative values when allowNegative is truthy', async t => {
   await db.decr('people.age', { name: 'Lelu' }, 2, true)
-  let res = await db.get('people.age', { name: 'Lelu' })
+  const res = await db.get('people.age', { name: 'Lelu' })
   t.is(res, -1)
 })
 
 test.serial('does nothing when passed a zero value', async t => {
   await db.decr('people.age', { name: 'Lelu' }, 0, true)
-  let res = await db.get('people.age', { name: 'Lelu' })
+  const res = await db.get('people.age', { name: 'Lelu' })
   t.is(res, -1)
 })
 
 test('allows for multiple where clauses', async t => {
-  let people = await db.model('decrement_people', {
+  const people = await db.model('decrement_people', {
     age: Number,
     name: String
   })
 
-  let list = [
+  const list = [
     { age: 31, name: 'Joe' },
     { age: 41, name: 'Bob' },
     { age: 51, name: 'Jill' },
@@ -85,7 +85,7 @@ test('allows for multiple where clauses', async t => {
     { name: 'Jill' }
   ])
 
-  let results = await Promise.all(
+  const results = await Promise.all(
     list.map(({ name }) => people.get('age', { name }))
   )
 

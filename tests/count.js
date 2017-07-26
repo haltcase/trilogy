@@ -21,17 +21,17 @@ test.before(async () => {
 test.after.always(() => db.close())
 
 test('returns the total number of rows', async t => {
-  let res = await db.count('people')
+  const res = await db.count('people')
   t.is(res, 3)
 })
 
 test('returns the number of matching rows', async t => {
-  let res = await db.count('people', ['age', '<', 200])
+  const res = await db.count('people', ['age', '<', 200])
   t.is(res, 2)
 })
 
 test('allows for multiple where clauses', async t => {
-  let res = await db.count('people', [
+  const res = await db.count('people', [
     ['age', '<', 200],
     ['age', '>', 20]
   ])

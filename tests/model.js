@@ -20,7 +20,7 @@ test('defines a model with a uniquely constrained property', async t => {
     flavor: String
   })
 
-  let object = { name: 'coke', flavor: 'awesome' }
+  const object = { name: 'coke', flavor: 'awesome' }
   await db.create('sodas', object)
   await db.create('sodas', object)
 

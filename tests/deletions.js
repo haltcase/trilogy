@@ -45,7 +45,7 @@ test.serial('removes an object from the specified model', async t => {
 test.serial('removes all objects from the specified model', async t => {
   await db.clear('people')
 
-  let values = await Promise.all([
+  const values = await Promise.all([
     db.count('people'),
     ...morePeople.map(({ name }) => {
       return db.findOne('people', { name })
@@ -56,12 +56,12 @@ test.serial('removes all objects from the specified model', async t => {
 })
 
 test('allows for multiple where clauses', async t => {
-  let people = await db.model('deletions_people', {
+  const people = await db.model('deletions_people', {
     age: Number,
     favoriteColor: String
   })
 
-  let list = [
+  const list = [
     { age: 20, favoriteColor: 'blue' },
     { age: 25, favoriteColor: 'red' },
     { age: 30, favoriteColor: 'red' },
@@ -70,14 +70,14 @@ test('allows for multiple where clauses', async t => {
 
   await Promise.all(list.map(p => people.create(p)))
 
-  let removed = await people.remove([
+  const removed = await people.remove([
     ['age', '<', 45],
     { favoriteColor: 'red' }
   ])
 
   t.is(removed, 2)
 
-  let remaining = await people.find()
+  const remaining = await people.find()
 
   t.is(remaining.length, 2)
   t.deepEqual(remaining, [

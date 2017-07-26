@@ -90,7 +90,7 @@ const db = new Trilogy('./file.db', {
 })
 
 ;(async function () {
-  let games = await db.model('games', {
+  const games = await db.model('games', {
     name: { type: String, primary: true },   // primary key
     genre: String,                           // type shorthand
     released: Date,
@@ -109,7 +109,7 @@ const db = new Trilogy('./file.db', {
     ]
   })
 
-  let overwatch = await games.findOne({ name: 'Overwatch' })
+  const overwatch = await games.findOne({ name: 'Overwatch' })
 
   console.log(overwatch.awards[1])
   // -> 'Best Multiplayer Game'

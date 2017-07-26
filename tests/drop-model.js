@@ -20,7 +20,7 @@ test.before(() => {
 test.after.always(() => db.close())
 
 test('removes tables from the database', async t => {
-  let removals = await Promise.all(
+  const removals = await Promise.all(
     tables.map(({ name }) => {
       return db.dropModel(name).then(() => db.hasModel(name))
     })

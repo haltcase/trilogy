@@ -8,8 +8,8 @@ test.after.always(() => db.close())
 test('.knex exposes the knex query builder', t => {
   t.is(typeof db.knex.select, 'function')
 
-  let expected = `select "foo" where "age" > 21 and "name" = 'Jerry'`
-  let res = db.knex
+  const expected = `select "foo" where "age" > 21 and "name" = 'Jerry'`
+  const res = db.knex
     .select('foo')
     .where('age', '>', 21)
     .andWhere({ name: 'Jerry' })

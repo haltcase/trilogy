@@ -11,7 +11,7 @@ test.before(async () => {
     second: String
   })
 
-  await Promise.all(
+  return Promise.all(
     arr.map(v => db.create('select', { first: v, second: 'blah' }))
   )
 })
@@ -19,19 +19,19 @@ test.before(async () => {
 test.after.always(() => db.close())
 
 test('retrieves rows as arrays of objects', async t => {
-  let res = await db.find('select')
+  const res = await db.find('select')
 
   t.true(Array.isArray(res))
   res.forEach((obj, i) => t.is(obj.first, arr[i]))
 })
 
 test('allows for multiple where clauses', async t => {
-  let people = await db.model('find_people', {
+  const people = await db.model('find_people', {
     age: Number,
     gender: String
   })
 
-  let list = [
+  const list = [
     { age: 31, gender: 'male' },
     { age: 41, gender: 'male' },
     { age: 51, gender: 'female' },
@@ -40,7 +40,7 @@ test('allows for multiple where clauses', async t => {
 
   await Promise.all(list.map(p => people.create(p)))
 
-  let found = await people.find([
+  const found = await people.find([
     ['age', '>', 50],
     { gender: 'female' }
   ])
