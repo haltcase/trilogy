@@ -15,6 +15,10 @@ difference should be invisible to you, so usage from Trilogy's
 standpoint stays the same no matter which one you choose. You
 should also be able to change it at any time without any hitches.
 
+If `path` is exactly `':memory:'`, no file will be created and
+an in-memory store will be used. This doesn't persist any of the
+data.
+
 See ["Choosing a Backend"](/backends) for more on how these two
 modules may differ.
 

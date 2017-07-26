@@ -8,7 +8,8 @@
 </p>
 
 > ***trilogy*** is a Promise-based layer over SQLite, featuring type-casting
-  schema models and allowing both native & pure JavaScript backends.
+  schema models and allowing both native & pure JavaScript backends ( and
+  in-memory databases ).
 
 - [features](#features)
 - [installation](#installation)
@@ -23,18 +24,18 @@
 - Model your tables with native JavaScript
 
   Set up database tables with types like `String`, `Date`, and `'increments'` -
-  and Trilogy will handle all the type-casting involved so that you always
+  and trilogy will handle all the type-casting involved so that you always
   receive what you expect to receive.
 
 - Uses [knex][knex] to build queries
 
-  Trilogy uses knex internally to build its queries - but it's also exposed so
+  trilogy uses knex internally to build its queries - but it's also exposed so
   you can use it to build your own ultra-complex queries. No need to mess with
   ridiculous multi-line strings.
 
-- Swappable SQLite backends
+- Swappable SQLite backends ( _plus in-memory storage_ )
 
-  Trilogy supports both the native [`sqlite3`][sqlite3] module as well as
+  trilogy supports both the native [`sqlite3`][sqlite3] module as well as
   [`sql.js`][sqljs] - meaning you can easily embed a SQLite database without a
   compilation step like `gyp`, which can get a little tricky when dealing with
   multiple platforms or architectures.
@@ -42,12 +43,12 @@
   You can even swap the backend after you've started, with no changes to the rest
   of your code! :tada:
 
-- Trilogy :heart: [Electron][electron] & [NW.js][nwjs]
+- trilogy :heart: [Electron][electron] & [NW.js][nwjs]
 
   If you've run into issues using `sqlite3` in Electron or NW.js, like many
-  have before you, you can easily use Trilogy with the `sql.js` backend, which
+  have before you, you can easily use trilogy with the `sql.js` backend, which
   doesn't need to be compiled at all! Plus, you still get all the greatness of
-  a simple API and all the raw power of knex's query building - neatly wrapped
+  a simple API and all the raw power of knex's query building - wrapped
   in a neat little package. :gift:
 
 ## installation
@@ -89,8 +90,14 @@ const db = new Trilogy('./file.db', {
   client: 'sql.js'
 })
 
+// set the filename to ':memory:' for fast, in-memory storage
+const db = new Trilogy(':memory:', {
+  // it works for both clients above!
+  client: 'sql.js'
+})
+
 ;(async function () {
-  let games = await db.model('games', {
+  const games = await db.model('games', {
     name: { type: String, primary: true },   // primary key
     genre: String,                           // type shorthand
     released: Date,
@@ -109,7 +116,7 @@ const db = new Trilogy('./file.db', {
     ]
   })
 
-  let overwatch = await games.findOne({ name: 'Overwatch' })
+  const overwatch = await games.findOne({ name: 'Overwatch' })
 
   console.log(overwatch.awards[1])
   // -> 'Best Multiplayer Game'
