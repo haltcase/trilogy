@@ -6,14 +6,13 @@
   "module": "dist/trilogy.mjs",
   "scripts": {
     "prebuild": "npm run lint && rimraf \"dist/**\"",
-    "build": "rollup -c && npm run docs && npm run types",
+    "build": "rollup -c && npm run types",
     "watch": "npm run types && rimraf \"dist/**\" && rollup -c -w",
     "types": "cpy \"types/**/*\" dist",
     "pretest": "npm run build",
     "test": "ava",
     "lint": "standard \"src/**/*.js\" \"tests/**/*.js\" | snazzy",
-    "docs": "cpy readme.md docs --rename README.md",
-    "docsify": "npm run docs && docsify serve docs",
+    "docs": "docsify serve docs",
     "changelog": "standard-changelog -i changelog.md -o changelog.md",
     "prepublish": "npm test"
   },

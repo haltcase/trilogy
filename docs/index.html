@@ -55,13 +55,47 @@
   </nav>
   <div id="app"></div>
 </body>
-<script
-  src="//unpkg.com/docsify/lib/docsify.js"
-  data-repo="citycide/trilogy"
-  data-coverpage="cover.md"
-  data-max-level="3"
-  data-sidebar-toggle
-  data-router
-  data-auto2top
-></script>
+
+<script>
+  const baseURL = 'https://raw.githubusercontent.com/citycide/trilogy/master'
+  window.$docsify = {
+    alias: {
+      '.*?/readme': `${baseURL}/readme`,
+      '.*?/changelog': `${baseURL}/changelog`,
+      '.*?/license': `${baseURL}/license`,
+      '.*?/\.github/contributing': `${baseURL}/.github/contributing`,
+      '.*?/\.github/code_of_conduct': `${baseURL}/.github/code_of_conduct`
+    },
+    auto2top: true,
+    coverpage: 'cover.md',
+    homepage: `${baseURL}/readme.md`,
+    loadSidebar: true,
+    mergeNavbar: true,
+    maxLevel: 4,
+    name: 'trilogy',
+    repo: 'https://github.com/citycide/trilogy',
+    subMaxLevel: 3,
+    search: {
+      noData: {
+        '/': 'no results'
+      },
+      paths: 'auto',
+      placeholder: {
+        '/': 'search...'
+      }
+    },
+    formatUpdated: '{MM}/{DD} {HH}:{mm}',
+    plugins: [
+      (hook, vm) => {
+        hook.beforeEach(html => {
+          const url = `https://github.com/citycide/trilogy/blob/master/docs/${vm.route.file}`
+          const edit = `[:pencil2: edit this page](${url})\n`
+          return `${html}\n----\nLast updated {docsify-updated} ${edit}`
+        })
+      }
+    ]
+  }
+</script>
+<script src="//unpkg.com/docsify/lib/docsify.js"></script>
+<script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
 </html>
