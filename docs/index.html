@@ -63,8 +63,8 @@
       '.*?/readme': `${baseURL}/readme`,
       '.*?/changelog': `${baseURL}/changelog`,
       '.*?/license': `${baseURL}/license`,
-      '.*?/\.github/contributing': `${baseURL}/.github/contributing`,
-      '.*?/\.github/code_of_conduct': `${baseURL}/.github/code_of_conduct`
+      '.*?/(?:\.github/)?contributing': `${baseURL}/.github/contributing`,
+      '.*?/(?:\.github/)?code_of_conduct': `${baseURL}/.github/code_of_conduct`
     },
     auto2top: true,
     coverpage: 'cover.md',
@@ -88,9 +88,20 @@
     plugins: [
       (hook, vm) => {
         hook.beforeEach(html => {
-          const url = `https://github.com/citycide/trilogy/blob/master/docs/${vm.route.file}`
-          const edit = `[:pencil2: edit this page](${url})\n`
-          return `${html}\n----\nLast updated {docsify-updated} ${edit}`
+          const { file } = vm.route
+          const base = 'https://github.com/citycide/trilogy/blob/master'
+
+          let tail
+          if (file.indexOf('githubusercontent') > 0) {
+            const i = file.indexOf('master')
+            tail = file.slice(i + 6)
+          } else {
+            tail = `/docs/${file}`
+          }
+
+          const url = base + tail
+          const edit = `[:pencil2:](${url}) [edit this page](${url})\n`
+          return `${html}\n----\n${edit}`
         })
       }
     ]
