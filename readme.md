@@ -5,6 +5,7 @@
   <a href="https://www.npmjs.com/package/trilogy"><img src="https://img.shields.io/npm/l/trilogy.svg?style=flat-square" alt="License"></a>
   <a href="https://travis-ci.org/citycide/trilogy"><img src="https://img.shields.io/travis/citycide/trilogy.svg?style=flat-square" alt="Travis CI"></a>
   <a href="https://standardjs.com"><img src="https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square" alt="JavaScript Standard Style"></a>
+  <a href="https://gitter.im/citycide/trilogy"><img src="https://img.shields.io/gitter/room/citycide/trilogy.svg?style=flat-square" alt="Gitter"></a>
 </p>
 
 > ***trilogy*** is a Promise-based layer over SQLite, featuring type-casting
