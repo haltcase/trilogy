@@ -12,7 +12,7 @@ export default class Model {
   }
 
   create (object, options) {
-    const insertion = types.toDefinition(this, object)
+    const insertion = types.toDefinition(this, object, options)
 
     const query = this.ctx.knex.raw(
       this.ctx.knex(this.name)
@@ -51,9 +51,14 @@ export default class Model {
 
         return response.map(object => {
           if (!column) {
-            return types.fromDefinition(this, object)
+            return types.fromDefinition(this, object, options)
           } else {
-            return types.fromColumnDefinition(this, column, object[column])
+            return types.fromColumnDefinition(
+              this,
+              column,
+              object[column],
+              options
+            )
           }
         })
       })
@@ -80,12 +85,12 @@ export default class Model {
       if (isNil(result)) return result
 
       if (!column) {
-        return types.fromDefinition(this, result)
+        return types.fromDefinition(this, result, options)
       } else {
         // if a column was provided, skip casting
         // the entire object and just process then
         // return that particular property
-        return types.fromColumnDefinition(this, column, result[column])
+        return types.fromColumnDefinition(this, column, result[column], options)
       }
     })
   }
@@ -99,8 +104,8 @@ export default class Model {
   }
 
   update (criteria, data, options) {
-    const typedData = types.toDefinition(this, data)
-    const typedCriteria = types.toDefinition(this, criteria)
+    const typedData = types.toDefinition(this, data, options)
+    const typedCriteria = types.toDefinition(this, criteria, options)
     let query = this.ctx.knex(this.name).update(typedData)
     query = helpers.buildWhere(query, typedCriteria)
 

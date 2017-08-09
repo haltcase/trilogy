@@ -15,3 +15,10 @@ export const KNEX_NO_ARGS = [
   'nullable',
   'notNullable'
 ]
+
+export const IGNORABLE_PROPS = [
+  'name',
+  'type',
+  'getter',
+  'setter'
+]

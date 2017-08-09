@@ -1,7 +1,7 @@
 import * as util from './util'
 import { isWhereArrayLike } from './helpers'
 import { columnDescriptor } from './enforcers'
-import { KNEX_NO_ARGS, COLUMN_TYPES } from './constants'
+import { KNEX_NO_ARGS, COLUMN_TYPES, IGNORABLE_PROPS } from './constants'
 
 export function toKnexSchema (model, options) {
   return function (table) {
@@ -15,7 +15,7 @@ export function toKnexSchema (model, options) {
 
       const columnProperties = columnDescriptor(descriptor)
       util.each(columnProperties, (value, property) => {
-        if (util.isOneOf(['name', 'type'], property)) return
+        if (util.isOneOf(IGNORABLE_PROPS, property)) return
 
         if (util.isOneOf(KNEX_NO_ARGS, property)) {
           columnProperties[property] && partial[property]()
@@ -36,39 +36,53 @@ export function toKnexSchema (model, options) {
 }
 
 // for insertions / updates
-export function toDefinition (model, object) {
+export function toDefinition (model, object, options) {
   if (isWhereArrayLike(object)) {
-    return toColumnDefinition(model, object[0], object[2])
+    return toColumnDefinition(model, object[0], object[2], options)
   }
 
   if (util.isArray(object)) {
     return util.map(object, clause => {
-      return toDefinition(model, clause)
+      return toDefinition(model, clause, options)
     })
   }
 
   return util.map(object, (value, column) => {
-    return toColumnDefinition(model, column, value)
+    return toColumnDefinition(model, column, value, options)
   })
 }
 
 // for selects
-export function fromDefinition (model, object) {
+export function fromDefinition (model, object, options) {
   return util.map(object, (value, column) => {
-    return fromColumnDefinition(model, column, value)
+    return fromColumnDefinition(model, column, value, options)
   })
 }
 
 // for insertions / updates
-export function toColumnDefinition (model, column, value) {
-  const type = getDataType(model.schema[column])
-  return toInputType(type, value)
+export function toColumnDefinition (model, column, value, options = {}) {
+  const definition = model.schema[column]
+  const type = getDataType(definition)
+  const cast = toInputType(type, value)
+
+  if (!options.raw && util.isFunction(definition.setter)) {
+    return castValue(definition.setter(cast))
+  }
+
+  return cast
 }
 
 // for selects
-export function fromColumnDefinition (model, column, value) {
-  const type = getDataType(model.schema[column])
-  return toReturnType(type, value)
+export function fromColumnDefinition (model, column, value, options) {
+  const definition = model.schema[column]
+  const type = getDataType(definition)
+  const cast = toReturnType(type, value)
+
+  if (!options.raw && util.isFunction(definition.getter)) {
+    return definition.getter(cast)
+  }
+
+  return cast
 }
 
 export function castValue (value) {

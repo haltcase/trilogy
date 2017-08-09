@@ -48,7 +48,8 @@ export const modelOptions = osom({
 export const findOptions = osom({
   order: Any,
   limit: Number,
-  skip: Number
+  skip: Number,
+  raw: Boolean
 })
 
 export const aggregateOptions = osom({
@@ -73,5 +74,7 @@ export const columnDescriptor = osom({
   primary: Boolean,
   nullable: Boolean,
   notNullable: Boolean,
-  index: String
+  index: String,
+  getter: Function,
+  setter: Function
 })
