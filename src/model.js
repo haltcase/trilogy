@@ -5,9 +5,10 @@ import { isArray, isString, isObject, isNil } from './util'
 
 export default class Model {
   constructor (ctx, name, schema, options) {
-    Object.assign(this, {
-      ctx, name, schema, options
-    })
+    this.ctx = ctx
+    this.name = name
+    this.options = options
+    this.schema = schema
   }
 
   create (object, options) {
