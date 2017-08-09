@@ -123,27 +123,19 @@ export default class Model {
   }
 
   get (column, criteria, defaultValue) {
-    return this.findOne(criteria)
-      .then(data => {
-        if (!data) return defaultValue
-        if (typeof data[column] === 'undefined') {
-          return defaultValue
-        }
-
-        return data[column]
-      })
+    return baseGet(this, column, criteria, defaultValue)
   }
 
   set (column, criteria, value) {
-    if (!this.schema[column]) {
-      throw new Error(
-        `no column by the name '${column}' is defined in '${this.name}'`
-      )
-    }
+    return baseSet(this, column, criteria, value)
+  }
 
-    return this.update(criteria, {
-      [column]: value
-    })
+  getRaw (column, criteria, defaultValue) {
+    return baseGet(this, column, criteria, defaultValue, { raw: true })
+  }
+
+  setRaw (column, criteria, value) {
+    return baseSet(this, column, criteria, value, { raw: true })
   }
 
   incr (column, criteria, amount) {
@@ -243,4 +235,28 @@ export default class Model {
       return res[0].max
     })
   }
+}
+
+function baseGet (model, column, criteria, defaultValue, options) {
+  return model.findOne(criteria, options)
+    .then(data => {
+      if (!data) return defaultValue
+      if (typeof data[column] === 'undefined') {
+        return defaultValue
+      }
+
+      return data[column]
+    })
+}
+
+function baseSet (model, column, criteria, value, options) {
+  if (!model.schema[column]) {
+    throw new Error(
+      `no column by the name '${column}' is defined in '${model.name}'`
+    )
+  }
+
+  return model.update(criteria, {
+    [column]: value
+  }, options)
 }

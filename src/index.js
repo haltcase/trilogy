@@ -156,6 +156,18 @@ class Trilogy {
     return model.set(column, criteria, value)
   }
 
+  getRaw (location, criteria, defaultValue) {
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
+    return model.getRaw(column, criteria, defaultValue)
+  }
+
+  setRaw (location, criteria, value) {
+    const [table, column] = location.split('.', 2)
+    const model = checkModel(this, table)
+    return model.setRaw(column, criteria, value)
+  }
+
   incr (location, criteria, amount) {
     const [table, column] = location.split('.', 2)
     const model = checkModel(this, table)
