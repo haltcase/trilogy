@@ -5,10 +5,10 @@ declare module 'trilogy' {
   declare type Data = {
     [key: string]: any
   };
-  
+
   declare type Criteria = Data | [string, any] | [string, string, any];
   declare module.exports: typeof Trilogy
-  
+
   declare class Trilogy {
     constructor (
       path: string,
@@ -18,7 +18,7 @@ declare module 'trilogy' {
         verbose?: () => void
       }
     ): void;
-  
+
     models: string[];
     knex: Knex;
 
@@ -31,130 +31,163 @@ declare module 'trilogy' {
         unique?: string[]
       }
     ): Promise<Model>;
-  
+
     hasModel (name: string): Promise<boolean>;
     dropModel (name: string): Promise<void>;
     raw (query: $QueryBuilder, needResponse?: boolean): Promise<any>;
     close (): Promise<void>;
-  
+
     create (
-      name: string,
+      model: string,
       object: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<Data>;
-  
+
     find (
-      name: string,
+      model: string,
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
         limit?: number,
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Array<Data | any>>;
-  
+
     find (
-      name: string,
+      model: string,
       column: string,
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
         limit?: number,
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Array<Data | any>>;
-  
+
     findOne (
-      name: string,
+      model: string,
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Data | any>;
-  
+
     findOne (
-      name: string,
+      model: string,
       column: string,
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Data | any>;
-  
+
     findOrCreate (
-      name: string,
+      model: string,
       criteria?: Criteria,
       creation?: Data,
       options?: {
         random?: boolean,
         order?: string | [string, string],
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Data>;
-  
+
     update (
-      name: string,
+      model: string,
       data: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<number>;
-  
+
     update (
-      name: string,
+      model: string,
       critiera: Criteria,
       data: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<number>;
-  
+
     updateOrCreate (
-      name: string,
+      model: string,
       criteria?: Criteria,
       data?: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<number>;
-  
+
     get<T> (
-      name: string,
+      model: string,
+      column: string,
+      criteria?: Criteria,
+      defaultValue?: T,
+      options?: {
+        raw?: true
+      }
+    ):Promise<T>;
+
+    set<T> (
+      model: string,
+      column: string,
+      criteria?: Criteria,
+      value?: T,
+      options?: {
+        raw?: true
+      }
+    ): Promise<number>;
+
+    getRaw<T> (
+      model: string,
       column: string,
       criteria?: Criteria,
       defaultValue?: T
     ):Promise<T>;
-  
-    set<T> (
-      name: string,
+
+    setRaw<T> (
+      model: string,
       column: string,
       criteria?: Criteria,
       value?: T
     ): Promise<number>;
-  
+
     incr (
       name: string,
       column: string,
       criteria?: Criteria,
       amount?: number
     ): Promise<number>;
-  
+
     decr (
       name: string,
       column: string,
       criteria?: Criteria,
       amount?: number
     ): Promise<number>;
-  
+
     remove (
       name: string,
       criteria?: Criteria
     ): Promise<number>;
-  
+
     clear (
       name: string
     ): Promise<number>;
-  
+
     count (
       name: string,
       column?: string,
@@ -164,7 +197,7 @@ declare module 'trilogy' {
         group?: string
       }
     ): Promise<number>;
-  
+
     min(
       name: string,
       column: string,
@@ -173,7 +206,7 @@ declare module 'trilogy' {
         group?: string
       }
     ): Promise<number>;
-  
+
     max(
       name: string,
       column: string,
@@ -189,17 +222,18 @@ declare module 'trilogy' {
       object: Data,
       options?: {}
     ): Promise<Data>;
-  
+
     find (
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
         limit?: number,
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Array< Data | any>>;
-  
+
     find (
       column: string,
       criteria?: Criteria,
@@ -207,86 +241,108 @@ declare module 'trilogy' {
         random?: boolean,
         order?: string | [string, string],
         limit?: number,
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Array<Data | any>>;
-  
+
     findOne (
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Data | any>;
-  
+
     findOne (
       column: string,
       criteria?: Criteria,
       options?: {
         random?: boolean,
         order?: string | [string, string],
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Data | any>;
-  
+
     findOrCreate (
       criteria?: Criteria,
       creation?: Data,
       options?: {
         random?: boolean,
         order?: string | [string, string],
-        skip?: number
+        skip?: number,
+        raw?: true
       }
     ): Promise<Data>;
-  
+
     update (
       data: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<number>;
-  
+
     update (
       critiera: Criteria,
       data: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<number>;
-  
+
     updateOrCreate (
       criteria?: Criteria,
       data?: Data,
-      options?: {}
+      options?: {
+        raw?: true
+      }
     ): Promise<number>;
-  
+
     get<T> (
       column: string,
       criteria?: Criteria,
       defaultValue?: T
     ):Promise<T>;
-  
+
     set<T> (
       column: string,
       criteria?: Criteria,
       value?: T
     ): Promise<number>;
-  
+
+    getRaw<T> (
+      column: string,
+      criteria?: Criteria,
+      defaultValue?: T
+    ):Promise<T>;
+
+    setRaw<T> (
+      column: string,
+      criteria?: Criteria,
+      value?: T
+    ): Promise<number>;
+
     incr (
       column: string,
       criteria?: Criteria,
       amount?: number
     ): Promise<number>;
-  
+
     decr (
       column: string,
       criteria?: Criteria,
       amount?: number
     ): Promise<number>;
-  
+
     remove (
       criteria?: Criteria
     ): Promise<number>;
-  
+
     clear (): Promise<number>;
-  
+
     count (
       column?: string,
       criteria?: Criteria,
@@ -295,7 +351,7 @@ declare module 'trilogy' {
         group?: string
       }
     ): Promise<number>;
-  
+
     min(
       column: string,
       criteria?: Criteria,
@@ -303,7 +359,7 @@ declare module 'trilogy' {
         group?: string
       }
     ): Promise<number>;
-  
+
     max(
       column: string,
       criteria?: Criteria,

@@ -34,7 +34,13 @@ declare class Trilogy {
 
   // model methods
 
-  create (model: string, object: Data, options?: {}): Promise<Data>;
+  create (
+    model: string,
+    object: Data,
+    options?: {
+      raw?: boolean
+    }
+  ): Promise<Data>;
 
   find (
     model: string,
@@ -43,7 +49,8 @@ declare class Trilogy {
       random?: boolean,
       order?: string | [string, string],
       limit?: number,
-      skip?: number
+      skip?: number,
+      raw?: boolean
     }
   ): Promise<Array<Data|any>>;
 
@@ -55,7 +62,8 @@ declare class Trilogy {
       random?: boolean,
       order?: string | [string, string],
       limit?: number,
-      skip?: number
+      skip?: number,
+      raw?: boolean
     }
   ): Promise<Array<Data|any>>;
 
@@ -65,7 +73,8 @@ declare class Trilogy {
     options?: {
       random?: boolean,
       order?: string | [string, string],
-      skip?: number
+      skip?: number,
+      raw?: boolean
     }
   ): Promise<Data|any>;
 
@@ -76,7 +85,8 @@ declare class Trilogy {
     options?: {
       random?: boolean,
       order?: string | [string, string],
-      skip?: number
+      skip?: number,
+      raw?: boolean
     }
   ): Promise<Data|any>;
 
@@ -87,38 +97,65 @@ declare class Trilogy {
     options?: {
       random?: boolean,
       order?: string | [string, string],
-      skip?: number
+      skip?: number,
+      raw?: boolean
     }
   ): Promise<Data>;
 
   update (
     model: string,
     data: Data,
-    options?: {}
+    options?: {
+      raw?: boolean
+    }
   ): Promise<number>;
 
   update (
     model: string,
     critiera: Criteria,
     data: Data,
-    options?: {}
+    options?: {
+      raw?: boolean
+    }
   ): Promise<number>;
 
   updateOrCreate (
     model: string,
     criteria?: Criteria,
     data?: Data,
-    options?: {}
+    options?: {
+      raw?: boolean
+    }
   ): Promise<number>;
 
   get<T> (
     model: string,
     column: string,
     criteria?: Criteria,
-    defaultValue?: T
+    defaultValue?: T,
+    options?: {
+      raw?: boolean
+    }
   ): Promise<T>;
 
   set<T> (
+    model: string,
+    column: string,
+    criteria?: Criteria,
+    value?: T,
+    options?: {
+      raw?: boolean
+    }
+  ): Promise<number>;
+
+  getRaw<T> (
+    model: string,
+    column: string,
+    criteria?: Criteria,
+    defaultValue?: T
+  ): Promise<T>;
+
+  setRaw<T> (
     model: string,
     column: string,
     criteria?: Criteria,
@@ -186,7 +223,8 @@ declare class Model {
       random?: boolean,
       order?: string | [string, string],
       limit?: number,
-      skip?: number
+      skip?: number,
+      raw?: true
     }
   ): Promise<Array<Data|any>>;
 
@@ -197,7 +235,8 @@ declare class Model {
       random?: boolean,
       order?: string | [string, string],
       limit?: number,
-      skip?: number
+      skip?: number,
+      raw?: true
     }
   ): Promise<Array<Data|any>>;
 
@@ -206,7 +245,8 @@ declare class Model {
     options?: {
       random?: boolean,
       order?: string | [string, string],
-      skip?: number
+      skip?: number,
+      raw?: true
     }
   ): Promise<Data|any>;
 
@@ -216,7 +256,8 @@ declare class Model {
     options?: {
       random?: boolean,
       order?: string | [string, string],
-      skip?: number
+      skip?: number,
+      raw?: true
     }
   ): Promise<Data|any>;
 
@@ -226,25 +267,32 @@ declare class Model {
     options?: {
       random?: boolean,
       order?: string | [string, string],
-      skip?: number
+      skip?: number,
+      raw?: true
     }
   ): Promise<Data>;
 
   update (
     data: Data,
-    options?: {}
+    options?: {
+      raw?: true
+    }
   ): Promise<number>;
 
   update (
     critiera: Criteria,
     data: Data,
-    options?: {}
+    options?: {
+      raw?: true
+    }
   ): Promise<number>;
 
   updateOrCreate (
     criteria?: Criteria,
     data?: Data,
-    options?: {}
+    options?: {
+      raw?: true
+    }
   ): Promise<number>;
 
   get<T> (
@@ -254,6 +302,18 @@ declare class Model {
   ): Promise<T>;
 
   set<T> (
+    column: string,
+    criteria?: Criteria,
+    value?: T
+  ): Promise<number>;
+
+  getRaw<T> (
+    column: string,
+    criteria?: Criteria,
+    defaultValue?: T
+  ): Promise<T>;
+
+  setRaw<T> (
     column: string,
     criteria?: Criteria,
     value?: T
