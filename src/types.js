@@ -86,6 +86,17 @@ export function castValue (value) {
   return value
 }
 
+export function normalizeSchema (schema) {
+  return util.map(schema, descriptor => {
+    const type = util.isType(descriptor)
+    if (type === 'function' || type === 'string') {
+      return { type: descriptor }
+    }
+
+    return descriptor
+  })
+}
+
 function getDataType (property) {
   let type = property
 

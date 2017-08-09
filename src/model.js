@@ -8,7 +8,7 @@ export default class Model {
     this.ctx = ctx
     this.name = name
     this.options = options
-    this.schema = schema
+    this.schema = types.normalizeSchema(schema)
   }
 
   create (object, options) {
