@@ -19,6 +19,6 @@ export const KNEX_NO_ARGS = [
 export const IGNORABLE_PROPS = [
   'name',
   'type',
-  'getter',
-  'setter'
+  'get',
+  'set'
 ]

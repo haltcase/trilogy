@@ -65,8 +65,8 @@ export function toColumnDefinition (model, column, value, options = {}) {
   const type = getDataType(definition)
   const cast = toInputType(type, value)
 
-  if (!options.raw && util.isFunction(definition.setter)) {
-    return castValue(definition.setter(cast))
+  if (!options.raw && util.isFunction(definition.set)) {
+    return castValue(definition.set(cast))
   }
 
   return cast
@@ -78,8 +78,8 @@ export function fromColumnDefinition (model, column, value, options) {
   const type = getDataType(definition)
   const cast = toReturnType(type, value)
 
-  if (!options.raw && util.isFunction(definition.getter)) {
-    return definition.getter(cast)
+  if (!options.raw && util.isFunction(definition.get)) {
+    return definition.get(cast)
   }
 
   return cast
