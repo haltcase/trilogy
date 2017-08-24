@@ -5,7 +5,7 @@ const external = Object.keys(pkg.dependencies)
   .concat(['fs', 'path', 'sql.js'])
 
 export default {
-  entry: 'src/index.js',
+  input: 'src/index.js',
   external,
   plugins: [
     babel({
@@ -22,8 +22,8 @@ export default {
       exclude: 'node_modules/**'
     })
   ],
-  targets: [{
-    dest: pkg.module,
+  output: [{
+    file: pkg.module,
     format: 'es'
   }]
 }
