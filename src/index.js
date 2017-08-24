@@ -52,7 +52,7 @@ class Trilogy {
 
   model (name, schema, options) {
     if (this.definitions.has(name)) {
-      return this.definitions.get(name)
+      return Promise.resolve(this.definitions.get(name))
     }
 
     const model = new Model(this, name, schema, options)
@@ -82,7 +82,7 @@ class Trilogy {
 
   hasModel (name) {
     if (!this.definitions.has(name)) {
-      return false
+      return Promise.resolve(false)
     }
 
     const query = this.knex.schema.hasTable(name)
@@ -91,7 +91,7 @@ class Trilogy {
 
   dropModel (name) {
     if (!this.definitions.has(name)) {
-      return false
+      return Promise.resolve(false)
     }
 
     const query = this.knex.schema.dropTableIfExists(name)
