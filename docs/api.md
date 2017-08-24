@@ -208,7 +208,7 @@ the number of affected rows will be returned ( if applicable ).
 > **Usage**
 
 ```js
-let query = db.knex('users')
+const query = db.knex('users')
   .innerJoin('accounts', function () {
     this.on('accounts.id', '=', 'users.account_id')
       .orOn('accounts.owner_id', '=', 'users.id')
@@ -303,7 +303,7 @@ import Trilogy from 'trilogy'
 
 const db = new Trilogy('./file.db')
 
-let query = db.knex('users').select('*')
+const query = db.knex('users').select('*')
 console.log(query.toString())
 
 db.raw(query, true).then(users => {})
@@ -312,7 +312,7 @@ db.raw(query, true).then(users => {})
 More complex queries are possible this way:
 
 ```js
-let query = db.knex('users')
+const query = db.knex('users')
   .innerJoin('accounts', function () {
     this.on('accounts.id', '=', 'users.account_id')
       .orOn('accounts.owner_id', '=', 'users.id')
@@ -426,7 +426,7 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 > **Usage**
 
 ```js
-let todos = await db.model('todos', {
+const todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -479,7 +479,7 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 > **Usage**
 
 ```js
-let todos = await db.model('todos', {
+const todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -520,7 +520,7 @@ precedence.
 > **Usage**
 
 ```js
-let people = await db.model('people', {
+const people = await db.model('people', {
   name: { type: String, primary: true },
   age: Number,
   adult: Boolean
@@ -561,7 +561,7 @@ Modify the properties of an existing object.
 > **Usage**
 
 ```js
-let games = await db.model('games', {
+const games = await db.model('games', {
   name: { type: String, primary: true },
   genre: String,
   owned: Boolean
@@ -597,21 +597,19 @@ used, with the properties from `data` taking precedence.
 > **Usage**
 
 ```js
-let games = await db.model('games', {
+const games = await db.model('games', {
   name: { type: String, primary: true },
   genre: String,
   owned: Boolean
 })
 
-let rowsUpdated = await games.updateOrCreate(
+const rowsUpdated = await games.updateOrCreate(
   { name: 'Ms. PacMan' },
   { owned: false, genre: 'arcade' }
 )
-
-console.log(rowsUpdated)
 // -> 1
 
-console.log(await games.findOne({ name: 'Ms. PacMan' }))
+await games.findOne({ name: 'Ms. PacMan' })
 // -> { name: 'Ms. PacMan', owned: false, genre: 'arcade' }
 ```
 
@@ -641,7 +639,7 @@ the value at `column` or, if it does not exist, the supplied `defaultValue`.
 > **Usage**
 
 ```js
-let todos = await db.model('todos', {
+const todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -687,7 +685,7 @@ the value at `column` to be `value` where `criteria` is met.
 > **Usage**
 
 ```js
-let todos = await db.model('todos', {
+const todos = await db.model('todos', {
   name: String,
   body: String,
   priority: Number
@@ -1091,14 +1089,15 @@ to the stored records and their values within those tables.
 
 On the other hand, 'model' will generally be used when referring to
 the definition provided to and handled by Trilogy. These models represent
-a more JavaScript-oriented version of the data, so 'rows' become objects that have properties representing their 'column'.
+a more JavaScript-oriented version of the data, so 'rows' become objects
+that have properties representing their 'column'.
 
 ## column descriptor
 
-Each property of the object you pass to define the schema of a model is called a 'column descriptor'. It's so named because it describes the
+Each property of the object you pass to define the schema of a model is
+called a 'column descriptor'. It's so named because it describes the
 column - its type, such as `String` or `Number`, and its attributes,
-like whether it is the primary key, is nullable, has a default value,
-etc.
+like whether it is the primary key, is nullable, has a default value, etc.
 
 ```js
 db.model('cars', {
@@ -1143,8 +1142,9 @@ instead of just the type. This is done with the next descriptor, `make`:
   make: { type: String, defaultTo: 'Ford' },
 ```
 
-Here, we don't use a string value to declare the type. We use the standard JS `String` constructor. You can do the same with `Number`,
-`Boolean`, and `Date`. This is stored as a `text` column in SQLite.
+Here, we don't use a string value to declare the type. We use the standard JS
+`String` constructor. You can do the same with `Number`, `Boolean`, and `Date`.
+This is stored as a `text` column in SQLite.
 
 We also use the `defaultTo` property to set a value that should be used
 when `make` isn't provided at creation time.
@@ -1163,7 +1163,8 @@ is a required property.
 ```
 
 And finally `year` - back to basics on this one. It's defined with the
-same shorthand as `id`, only this time it's a `Number`. This is stored as an `integer` column in SQLite.
+same shorthand as `id`, only this time it's a `Number`. This is stored
+as an `integer` column in SQLite.
 
 ### valid column types
 
