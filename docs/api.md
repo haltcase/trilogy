@@ -366,7 +366,10 @@ insert will be ignored when violating this constraint.
 
   - _optional_ `{Object} object`: the data to insert
   - _optional_ `{Object} options`
-    - _currently unused_
+
+| property | type      | default | description                               |
+| -------- | :-------: | :-----: | ----------------------------------------- |
+| `raw`    | `boolean` | `false` | If `true`, will bypass getters & setters. |
 
 > **Returns**
 
@@ -412,6 +415,7 @@ array will contain only the `column` property of the found objects.
 | `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
 | `limit`  | `number`                    | -       | Limit the rows returned.                                                            |
 | `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
+| `raw`    | `boolean`                   | `false` | If `true`, will bypass getters & setters.                                           |
 
 _Note: if `options.random` is provided, `options.order` is ignored._
 
@@ -464,6 +468,7 @@ provided, the value at `object[column]`.
 | `random` | `boolean`                   | `false` | Select a single random record.                                                      |
 | `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
 | `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
+| `raw`    | `boolean`                   | `false` | If `true`, will bypass getters & setters.                                           |
 
 _Note: if `options.random` is provided, `options.order` is ignored._
 
@@ -544,7 +549,10 @@ Modify the properties of an existing object.
       - a list containing any number of the above forms
   - `{Object} data`: the updates to be made
   - _optional_ `{Object} options`
-    - _currently unused_
+
+| property | type      | default | description                               |
+| -------- | :-------: | :-----: | ----------------------------------------- |
+| `raw`    | `boolean` | `false` | If `true`, will bypass getters & setters. |
 
 > **Returns**
 
@@ -580,7 +588,7 @@ used, with the properties from `data` taking precedence.
 
   - `{Object} criteria`: criteria to search for
   - `{Object} data`: updates to be made, or used for object creation
-  - _optional_ `{Object} options`:
+  - _optional_ `{Object} options`: same as [`update()`](/api#update)
 
 > **Returns**
 
@@ -645,11 +653,11 @@ await Promise.all([
   todos.create({ name: 'tests', body: 'totally works', priority: 3 })
 ])
 
-console.log(await todos.get('priority', { name: 'code' }))
+await todos.get('priority', { name: 'code' })
 // -> 1
 
 // with default value
-console.log(await todos.get('priority', { name: 'eat' }, 999))
+await todos.get('priority', { name: 'eat' }, 999)
 // -> 999
 ```
 
@@ -691,11 +699,126 @@ await Promise.all([
   todos.create({ name: 'tests', body: 'totally works', priority: 3 })
 ])
 
-console.log(await todos.set('priority', { name: 'docs' }, 40))
+await todos.set('priority', { name: 'docs' }, 40)
 // -> 1
 
-console.log(await todos.set('body', ['priority', '>', 1], 'not important ;)'))
+await todos.set('body', ['priority', '>', 1], 'not important ;)')
 // -> 2
+```
+
+### getRaw
+```js
+model.getRaw(column, criteria, [defaultValue])
+```
+
+Works exactly like [`get()`](/api#get) but bypasses getters and retrieves
+the raw database value.
+
+> **Arguments**
+
+  - `{string} column`: the property to retrieve
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
+  - _optional_ `{mixed} defaultValue`: returned if the result doesn't exist
+
+> **Returns**
+
+`Promise<mixed>`
+
+> **Usage**
+
+```js
+const todos = await db.model('todos', {
+  name: String,
+  body: String,
+  priority: {
+    type: Number,
+    get: priority => { throw new Error('wrecked') }
+  }
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+await todos.getRaw('priority', { name: 'code' })
+// -> 1
+
+// with default value
+await todos.getRaw('priority', { name: 'eat' }, 999)
+// -> 999
+
+// using the non-raw method fires the getter
+// this causes the error above to be thrown
+
+await todos.get('priority', { name: 'code' })
+// -> Error: 'wrecked'
+```
+
+### setRaw
+```js
+model.setRaw(column, criteria, value)
+```
+
+Works exactly like [`set()`](/api#set) but bypasses setters when
+updating the target value.
+
+> **Arguments**
+
+  - `{string} column`: the column to update
+  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
+    - Object syntax means 'where (key) is equal to (value)'
+    - Array syntax is one of:
+      - a length of 2, ie. a key / value pair (equal to)
+      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      - a list containing any number of the above forms
+  - `{mixed} value`: the new value
+
+> **Returns**
+
+`Promise<number>`: the number of rows affected
+
+> **Usage**
+
+```js
+const todos = await db.model('todos', {
+  name: String,
+  body: {
+    type: String,
+    set: body => { throw new Error('watch your back') }
+  },
+  priority: {
+    type: Number,
+    set: priority => { throw new Error('check yourself') }
+  }
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+await todos.setRaw('priority', { name: 'docs' }, 40)
+// -> 1
+
+await todos.setRaw('body', ['priority', '>', 1], 'not important ;)')
+// -> 2
+
+// using the non-raw method fires the setters
+// this causes the errors above to be thrown
+
+await todos.set('priority', { name: 'docs' }, 50)
+// -> Error: 'watch your back'
+
+await todos.set('body', ['priority', '>', 1], 'not important ;)')
+// -> Error: 'check yourself'
 ```
 
 ### incr
@@ -1067,3 +1190,5 @@ Unsupported / unknown types are cast using `String` and stored as `text`.
 | `nullable`    | `Boolean`  | Whether to allow null values.                            |
 | `notNullable` | `Boolean`  | Works inversely to `nullable`.                           |
 | `index`       | `String`   | Specifies the column as an index with the provided name. |
+| `get`         | `Function` | Triggered on selects, receives the raw value and should return a new value. |
+| `set`         | `Function` | Triggered on inserts, receives the input value and should return a new value. |
