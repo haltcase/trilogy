@@ -1,3 +1,68 @@
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/citycide/trilogy/compare/v1.2.1...v1.3.0) (2017-08-24)
+
+This release brings a pair of exciting features!
+
+First up is the ability to define getters and setters when creating models.
+These are useful for things like formatting after selects and making sure
+conforming data before inserts.
+
+```js
+const people = await db.model('people', {
+  name: String,
+  username: {
+    type: String,
+    get (username) {
+      return `username is: ${username}`
+    },
+    set (username) {
+      // remove anything that isn't alphanumeric or underscore
+      return username.replace(/[^\w]/gi, '')
+    }
+  }
+})
+
+await people.create({
+  name: 'Bo Lingen',
+  username: 'ci.ty]ci[d/e'
+})
+// -> { name: 'Bo Lingen', username: 'citycide' }
+
+await people.get('username', { name: 'Bo Lingen' })
+// -> 'username is: citycide'
+
+// can use `getRaw()` and `setRaw()` to bypass getters / setters
+// other methods may also accept a `raw` property in their options object
+await people.getRaw('username', { name: 'Bo Lingen' })
+// -> 'citycide'
+```
+
+There's also a new memory-only mode - if the file path is exactly ':memory:',
+no file will be created and an in-memory store will be used. This doesn't
+persist any data but is useful for speed and performance reasons. For example,
+most of trilogy's tests now use in-memory databases to avoid tons of disk usage.
+
+```js
+const db = new Trilogy(':memory:')
+```
+
+
+### Bug Fixes
+
+* always return promises in async functions ([009f079](https://github.com/citycide/trilogy/commit/009f079))
+
+### Features
+
+* add support for in-memory database ([8587f4b](https://github.com/citycide/trilogy/commit/8587f4b))
+* add getters & setters ([ab5cd7b](https://github.com/citycide/trilogy/commit/ab5cd7b))
+* add `getRaw()` & `setRaw()` ([5fe1f80](https://github.com/citycide/trilogy/commit/5fe1f80))
+
+### Performance Improvements
+
+* **model:** use assignments in constructor ([73e6ebd](https://github.com/citycide/trilogy/commit/73e6ebd))
+* **util:** optimize `each()` and `map()` ([040084d](https://github.com/citycide/trilogy/commit/040084d))
+
+
 <a name="1.2.1"></a>
 ## [1.2.1](https://github.com/citycide/trilogy/compare/v1.2.0...v1.2.1) (2017-07-25)
 
