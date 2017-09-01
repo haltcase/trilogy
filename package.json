@@ -63,7 +63,7 @@
     "sql.js": "^0.4.0",
     "sqlite3": "^3.1.8",
     "standard": "^10.0.2",
-    "standard-changelog": "1.0.2"
+    "standard-changelog": "1.0.3"
   },
   "ava": {
     "files": [
