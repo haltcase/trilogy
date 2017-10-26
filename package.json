@@ -45,7 +45,7 @@
     "osom": "^2.2.2"
   },
   "devDependencies": {
-    "ava": "^0.22.0",
+    "ava": "^0.23.0",
     "babel-core": "^6.25.0",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-external-helpers": "^6.22.0",
@@ -56,14 +56,14 @@
     "cpy-cli": "^1.0.1",
     "docsify-cli": "^4.1.8",
     "rimraf": "^2.6.1",
-    "rollup": "^0.48.2",
+    "rollup": "^0.50.0",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-watch": "^4.0.0",
     "snazzy": "^7.0.0",
     "sql.js": "^0.4.0",
     "sqlite3": "^3.1.8",
     "standard": "^10.0.2",
-    "standard-changelog": "1.0.2"
+    "standard-changelog": "^1.0.4"
   },
   "ava": {
     "files": [
