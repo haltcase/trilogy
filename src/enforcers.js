@@ -15,6 +15,28 @@ function toArray (value) {
   return isArray(value) ? value : [value]
 }
 
+function isValidIndex (value, top) {
+  if (
+    typeof value === 'string' || (
+      isArray(value) && value.every(item => {
+        return top ? isValidIndex(item) : typeof item === 'string'
+      })
+    )
+  ) {
+    return true
+  }
+
+  if (!top) return false
+
+  if (isObject(value)) {
+    for (const prop of Object.keys(value)) {
+      if (!isValidIndex(value[prop])) return false
+    }
+  }
+
+  return true
+}
+
 export const setup = osom({
   client: {
     type: String,
@@ -42,7 +64,13 @@ export const setup = osom({
 export const modelOptions = osom({
   timestamps: Boolean,
   primary: Array,
-  unique: Array
+  unique: Array,
+  index: {
+    type: Any,
+    validate (value) {
+      return isValidIndex(value, true)
+    }
+  }
 })
 
 export const findOptions = osom({

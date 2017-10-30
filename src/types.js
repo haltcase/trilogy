@@ -28,9 +28,27 @@ export function toKnexSchema (model, options) {
     util.each(options, (value, key) => {
       if (key === 'timestamps') {
         options.timestamps && table.timestamps(true, true)
+      } else if (key === 'index') {
+        createIndices(table, value)
       } else {
         table[key](value)
       }
+    })
+  }
+}
+
+function createIndices (table, value) {
+  if (typeof value === 'string') {
+    table.index(value)
+  } else if (util.isArray(value)) {
+    util.each(value, columns => table.index(columns))
+  } else if (util.isObject(value)) {
+    util.each(value, (columns, indexName) => {
+      if (!util.isArray(columns)) {
+        columns = [columns]
+      }
+
+      table.index(columns, indexName)
     })
   }
 }
