@@ -134,7 +134,7 @@ You'll also find a reference for the set of labels used to
 categorize issues, with descriptions of each.
 ([Contributor Guide - issue labels](.github/contributing.md#labels))
 
-Also, please read and follow the project's [Code of Conduct](.github/code_of_conduct.md)
+Also, please read and follow the project's [Code of Conduct](.github/code_of_conduct.md).
 
 ## license
 

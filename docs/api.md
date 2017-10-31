@@ -102,10 +102,11 @@ on Schema Building for the available attributes when creating column tables.
 | `timestamps` | `boolean`       | -       | When `true`, adds `created_at` and `updated_at` properties, both defaulting to the current timestamp. |
 |  `primary`   | `Array<string>` | -       | An Array of column names to specify as a composite primary key. |
 |  `unique`    | `Array<string>` | -       | An Array of column names on which to apply unique constraints. |
+|  `index`     | `string`, `Array<string>`, `Array<Array<string>>`, `Object` | - | See ["advanced indexing"](/api#advanced-indexing) |
 
-_Note: specifying a column as either `primary` or `unique` in both the column descriptor and
-the `options.primary` or `options.unique` Arrays will result in an error, as the constraint
-will have already been applied._
+_Note: specifying a column as either `primary` or `unique` in both the column
+descriptor and the `options.primary` or `options.unique` Arrays will result
+in an error, as the constraint will have already been applied._
 
 > **Returns**
 
@@ -1193,3 +1194,70 @@ Unsupported / unknown types are cast using `String` and stored as `text`.
 | `index`       | `String`   | Specifies the column as an index with the provided name. |
 | `get`         | `Function` | Triggered on selects, receives the raw value and should return a new value. |
 | `set`         | `Function` | Triggered on inserts, receives the input value and should return a new value. |
+
+## model options
+
+### advanced indexing
+
+When creating a model, the column descriptor can contain an `index` property
+to specify that specific column as an index. If you need to define a more
+complex index, such as on multiple columns, you can provide an `index` property
+in the `options` object instead.
+
+Let's use this as our model's schema for all the following examples:
+
+```js
+const schema = {
+  brand: String,
+  color: String,
+  price: Number
+}
+```
+
+`options.index` accepts a variety of index definitions:
+
+#### single column index
+
+This is equivalent to specifying the index in the column descriptor,
+except the index name is automatically generated.
+
+```js
+db.create('shoes', schema, { index: 'brand' })
+```
+
+#### multiple column index
+
+Create a single index on all the specified columns.
+
+```js
+db.create('shoes', schema, { index: ['brand', 'color']})
+```
+
+#### multiple indices on multiple columns
+
+Create an index for each set of columns.
+
+```js
+db.create('shoes', schema, {
+  index: [
+    ['brand', 'color'],
+    ['color', 'price']
+  ]
+})
+```
+
+#### named indices
+
+All other forms will automatically generate a unique index name of
+the format `index_column1[_column2[_column3...]]`. If you want the
+index to have a specific custom name, use an object instead.
+
+```js
+db.create('shoes', schema, {
+  index: {
+    idx_brand: 'brand',
+    idx_brand_color: ['brand', 'color'],
+    idx_color_price: ['color', 'price']
+  }
+})
+```
