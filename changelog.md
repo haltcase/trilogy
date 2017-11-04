@@ -1,3 +1,13 @@
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/citycide/trilogy/compare/v1.3.0...v1.4.0) (2017-11-04)
+
+
+### Features
+
+* **model:** allow multiple indices in model definitions, [#72](https://github.com/citycide/trilogy/pull/72) ([07ebe16](https://github.com/citycide/trilogy/commit/07ebe16))
+
+
+
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/citycide/trilogy/compare/v1.2.1...v1.3.0) (2017-08-24)
 
