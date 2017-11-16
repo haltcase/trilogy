@@ -1,3 +1,10 @@
+<a name="1.4.1"></a>
+## [1.4.1](https://github.com/citycide/trilogy/compare/v1.4.0...v1.4.1) (2017-11-16)
+
+Small patch for TypeScript users to correctly export types.
+
+* **types**: fix TypeScript typings (#75) @IKnowBashFu
+
 <a name="1.4.0"></a>
 # [1.4.0](https://github.com/citycide/trilogy/compare/v1.3.0...v1.4.0) (2017-11-04)
 
