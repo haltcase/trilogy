@@ -4,7 +4,7 @@ import knex = require('knex');
 type Data = { [key: string]: any }
 type Criteria = Data | [string, any] | [string, string, any];
 
-declare class Trilogy {
+export declare class Trilogy {
   constructor (
     path: string,
     options: {
@@ -214,7 +214,7 @@ declare class Trilogy {
   ): Promise<number>;
 }
 
-declare class Model {
+export declare class Model {
   create (object: Data, options?: {}): Promise<Data>;
 
   find (
@@ -362,5 +362,3 @@ declare class Model {
     }
   ): Promise<number>;
 }
-
-export = Trilogy

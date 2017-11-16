@@ -4,6 +4,7 @@
   "description": "No-hassle SQLite with a document store style API.",
   "main": "dist/trilogy.js",
   "module": "dist/trilogy.mjs",
+  "types": "dist/trilogy.d.ts",
   "scripts": {
     "prebuild": "npm run lint && rimraf \"dist/**\"",
     "build": "rollup -c && npm run types",
