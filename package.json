@@ -2,6 +2,36 @@
   "name": "trilogy",
   "version": "1.4.1",
   "description": "No-hassle SQLite with a document store style API.",
+  "license": "MIT",
+  "author": {
+    "name": "Bo Lingen",
+    "email": "lingenbw@gmail.com",
+    "url": "https://github.com/citycide"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/citycide/trilogy"
+  },
+  "homepage": "https://citycide.github.io/trilogy",
+  "bugs": "https://github.com/citycide/trilogy/issues",
+  "keywords": [
+    "knex",
+    "model",
+    "schema",
+    "sqlite",
+    "sql.js",
+    "storage",
+    "database",
+    "electron",
+    "mongoose",
+    "document"
+  ],
+  "engines": {
+    "node": ">=4.7.0"
+  },
+  "files": [
+    "dist"
+  ],
   "main": "dist/trilogy.js",
   "module": "dist/trilogy.mjs",
   "types": "dist/trilogy.d.ts",
@@ -17,28 +47,6 @@
     "changelog": "standard-changelog -i changelog.md -o changelog.md",
     "prepublish": "npm test"
   },
-  "repository": "https://github.com/citycide/trilogy",
-  "keywords": [
-    "knex",
-    "model",
-    "schema",
-    "sqlite",
-    "sql.js",
-    "storage",
-    "database",
-    "electron",
-    "mongoose",
-    "document"
-  ],
-  "author": "citycide",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/citycide/trilogy/issues"
-  },
-  "files": [
-    "dist"
-  ],
-  "homepage": "https://citycide.github.io/trilogy",
   "dependencies": {
     "component-type": "^1.2.1",
     "generic-pool": "^3.1.7",
