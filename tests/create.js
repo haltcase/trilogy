@@ -41,3 +41,27 @@ test('inserts objects into the database', async t => {
     t.deepEqual(selects[i], [object])
   })
 })
+
+test('handles nil values correctly', async t => {
+  const [one, two] = await Promise.all([
+    db.model('people_one', {
+      name: { type: String }
+    }),
+    db.model('people_two', {
+      name: { type: String, notNullable: true }
+    })
+  ])
+
+  await one.create({ name: null })
+  t.deepEqual(await one.findOne(), { name: null })
+
+  t.throws(
+    () => two.create({ name: null }),
+    'people_two.name is not nullable but received nil'
+  )
+
+  t.throws(
+    () => two.create({ name: undefined }),
+    'people_two.name is not nullable but received nil'
+  )
+})

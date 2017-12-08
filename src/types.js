@@ -80,8 +80,12 @@ export function fromDefinition (model, object, options) {
 // for insertions / updates
 export function toColumnDefinition (model, column, value, options = {}) {
   const definition = model.schema[column]
+  if (definition.notNullable && value == null) {
+    throw new Error(`${model.name}.${column} is not nullable but received nil`)
+  }
+
   const type = getDataType(definition)
-  const cast = toInputType(type, value)
+  const cast = value !== null ? toInputType(type, value) : value
 
   if (!options.raw && util.isFunction(definition.set)) {
     return castValue(definition.set(cast))
@@ -94,7 +98,7 @@ export function toColumnDefinition (model, column, value, options = {}) {
 export function fromColumnDefinition (model, column, value, options) {
   const definition = model.schema[column]
   const type = getDataType(definition)
-  const cast = toReturnType(type, value)
+  const cast = value !== null ? toReturnType(type, value) : value
 
   if (!options.raw && util.isFunction(definition.get)) {
     return definition.get(cast)
