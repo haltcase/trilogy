@@ -23,7 +23,7 @@ export default class Model {
 
     return helpers.runQuery(this.ctx, query)
       .then(() => helpers.findLastObject(this, object))
-      .then(res => res || this.findOne(object))
+      .then(res => res || (res != null && this.findOne(object)))
   }
 
   find (column, criteria, options = {}) {
