@@ -119,7 +119,7 @@ export function runQuery (instance, query, needResponse) {
     } else {
       db.run(asString)
 
-      if (util.isOneOf(['insert', 'update', 'delete'], action)) {
+      if (util.includes(['insert', 'update', 'delete'], action)) {
         response = db.getRowsModified()
       }
     }

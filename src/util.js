@@ -39,8 +39,8 @@ export function map (collection, fn) {
   return result
 }
 
-export function isOneOf (array, value) {
-  return array.some(v => v === value)
+export function includes (array, value) {
+  return array.indexOf(value) !== -1
 }
 
 export const isType = (value, kind) => {

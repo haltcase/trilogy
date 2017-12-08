@@ -5,7 +5,7 @@ import {
   isArray,
   isFunction,
   isObject,
-  isOneOf
+  includes
 } from './util'
 
 function Any (value) { return value }
@@ -94,7 +94,7 @@ export const columnDescriptor = osom({
     required: true,
     validate (value) {
       const type = isFunction(value) ? value.name : String(value)
-      return isOneOf(COLUMN_TYPES, type.toLowerCase())
+      return includes(COLUMN_TYPES, type.toLowerCase())
     }
   },
   defaultTo: Any,

@@ -15,9 +15,9 @@ export function toKnexSchema (model, options) {
 
       const columnProperties = columnDescriptor(descriptor)
       util.each(columnProperties, (value, property) => {
-        if (util.isOneOf(IGNORABLE_PROPS, property)) return
+        if (util.includes(IGNORABLE_PROPS, property)) return
 
-        if (util.isOneOf(KNEX_NO_ARGS, property)) {
+        if (util.includes(KNEX_NO_ARGS, property)) {
           columnProperties[property] && partial[property]()
         } else {
           partial[property](value)
@@ -144,7 +144,7 @@ function getDataType (property) {
     type = type.toLowerCase()
   }
 
-  if (!util.isOneOf(COLUMN_TYPES, type)) {
+  if (!util.includes(COLUMN_TYPES, type)) {
     type = 'string'
   }
 
