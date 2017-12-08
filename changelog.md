@@ -1,3 +1,19 @@
+<a name="1.4.2"></a>
+## [1.4.2](https://github.com/citycide/trilogy/compare/v1.4.1...v1.4.2) (2017-12-08)
+
+
+### Bug Fixes
+
+* **create:** prevent error while searching for last object ([5379bb5](https://github.com/citycide/trilogy/commit/5379bb5))
+* **types:** handle nullish values when casting ([e8193c6](https://github.com/citycide/trilogy/commit/e8193c6)), closes [#79](https://github.com/citycide/trilogy/issues/79)
+
+
+### Performance Improvements
+
+* **util:** use `indexOf` instead of `some()` ([559dbe0](https://github.com/citycide/trilogy/commit/559dbe0))
+
+
+
 <a name="1.4.1"></a>
 ## [1.4.1](https://github.com/citycide/trilogy/compare/v1.4.0...v1.4.1) (2017-11-16)
 
