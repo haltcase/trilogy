@@ -1,5 +1,15 @@
+# ide configurations
+.c9
 .idea
 .vscode
+
+# lockfiles
+yarn.lock
+package-lock.json
+npm-shrinkwrap.json
+
+# built files
 dist
-node_modules
 trilogy-*.tgz
+
+node_modules
