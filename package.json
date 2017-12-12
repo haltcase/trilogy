@@ -45,7 +45,7 @@
     "lint": "standard \"src/**/*.js\" \"tests/**/*.js\" | snazzy",
     "docs": "docsify serve docs",
     "changelog": "changelog",
-    "prepublish": "npm test"
+    "prepublishOnly": "npm test"
   },
   "dependencies": {
     "component-type": "^1.2.1",
