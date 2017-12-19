@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/citycide/trilogy/master/media/logo.svg" width="420" alt="trilogy">
+  <img src="https://rawgit.com/citycide/trilogy/master/media/logo.svg" width="420" alt="trilogy">
   <br>
   <a href="https://www.npmjs.com/package/trilogy"><img src="https://img.shields.io/npm/v/trilogy.svg?style=flat-square" alt="Version"></a>
   <a href="https://www.npmjs.com/package/trilogy"><img src="https://img.shields.io/npm/l/trilogy.svg?style=flat-square" alt="License"></a>
