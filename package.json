@@ -78,23 +78,5 @@
     "files": [
       "tests/**/*.js"
     ]
-  },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": "4.7.0"
-          },
-          "loose": true
-        }
-      ],
-      "stage-0"
-    ],
-    "plugins": [
-      "external-helpers",
-      "add-module-exports"
-    ]
   }
 }
