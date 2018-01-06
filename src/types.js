@@ -56,7 +56,11 @@ function createIndices (table, value) {
 // for insertions / updates
 export function toDefinition (model, object, options) {
   if (isWhereArrayLike(object)) {
-    return toColumnDefinition(model, object[0], object[2], options)
+    const clone = object.slice()
+    const valueIndex = clone.length - 1
+    clone[valueIndex] =
+      toColumnDefinition(model, clone[0], clone[valueIndex], options)
+    return clone
   }
 
   if (util.isArray(object)) {

@@ -45,7 +45,7 @@ test('allows for using multiple where clauses', async t => {
 
   const list = [
     { age: 31, gender: 'male' },
-    { age: 41, gender: 'male' },
+    { age: 51, gender: 'male' },
     { age: 51, gender: 'female' },
     { age: 49, gender: 'female' }
   ]
@@ -63,8 +63,9 @@ test('allows for using multiple where clauses', async t => {
   ])
 
   t.is(affected, 2)
-  t.is(results.length, 2)
+  t.is(results.length, 3)
   t.deepEqual(results, [
+    { age: 51, gender: 'male' },
     { age: 51, gender: 'male' },
     { age: 49, gender: 'male' }
   ])

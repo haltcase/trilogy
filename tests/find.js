@@ -48,3 +48,26 @@ test('allows for multiple where clauses', async t => {
   t.is(found.length, 1)
   t.deepEqual(found, [{ age: 51, gender: 'female' }])
 })
+
+test('2 element tuple works within multiple where clauses', async t => {
+  const people = await db.model('find_people2', {
+    age: Number,
+    gender: String
+  })
+
+  const list = [
+    { age: 20, gender: 'male' },
+    { age: 20, gender: 'female' }
+  ]
+
+  await Promise.all(list.map(p => people.create(p)))
+
+  const results = await people.find([
+    ['age', 20],
+    { gender: 'male' }
+  ])
+
+  t.deepEqual(results, [
+    { age: 20, gender: 'male' }
+  ])
+})
