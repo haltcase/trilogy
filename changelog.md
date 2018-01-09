@@ -1,3 +1,14 @@
+<a name="1.4.4"></a>
+### [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
+
+
+###### BUG FIXES
+
+* **enforcers:** `groupBy` -> `group` ([3eaed9a](https://github.com/citycide/trilogy/commit/3eaed9a))
+
+
+---
+
 <a name="1.4.3"></a>
 ### [`1.4.3`](https://github.com/citycide/trilogy/compare/v1.4.2...v1.4.3) (2018-01-09)
 
