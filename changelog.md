@@ -1,3 +1,14 @@
+<a name="1.4.3"></a>
+### [`1.4.3`](https://github.com/citycide/trilogy/compare/v1.4.2...v1.4.3) (2018-01-09)
+
+
+###### BUG FIXES
+
+* handle tuple where clauses correctly ([efbea74](https://github.com/citycide/trilogy/commit/efbea74))
+
+
+---
+
 <a name="1.4.2"></a>
 ### [`1.4.2`](https://github.com/citycide/trilogy/compare/v1.4.1...v1.4.2) (2017-12-08)
 
