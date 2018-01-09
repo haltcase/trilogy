@@ -82,7 +82,7 @@ export const findOptions = osom({
 
 export const aggregateOptions = osom({
   order: Any,
-  groupBy: {
+  group: {
     type: Any,
     transform: [toArray]
   }
