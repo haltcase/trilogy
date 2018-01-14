@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "importHelpers": true,
+    "lib": ["es2015", "es2016"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "pretty": true,
+    "target": "es2015"
+  },
+  "include": [
+    "src/*.ts"
+  ]
+}

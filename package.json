@@ -27,56 +27,56 @@
     "document"
   ],
   "engines": {
-    "node": ">=4.7.0"
+    "node": ">=6"
   },
   "files": [
-    "dist"
+    "dist",
+    "es"
   ],
-  "main": "dist/trilogy.js",
-  "module": "dist/trilogy.mjs",
-  "types": "dist/trilogy.d.ts",
+  "main": "dist/index.js",
+  "module": "es/index.mjs",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "prebuild": "npm run lint && rimraf \"dist/**\"",
-    "build": "rollup -c && npm run types",
-    "watch": "npm run types && rimraf \"dist/**\" && rollup -c -w",
-    "types": "cpy \"types/**/*\" dist",
-    "pretest": "npm run build",
-    "test": "ava",
-    "lint": "standard \"src/**/*.js\" \"tests/**/*.js\" | snazzy",
+    "prebuild": "npm run lint && rimraf dist es",
+    "build": "npm run build:dist && npm run build:es",
+    "build:dist": "tsc -d",
+    "build:es": "tsc -m es2015 --outDir es",
+    "test": "ava-ts",
+    "lint": "tslint -p tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "docs": "docsify serve docs",
     "changelog": "changelog",
     "prepublishOnly": "npm test"
   },
   "dependencies": {
     "component-type": "^1.2.1",
-    "generic-pool": "^3.1.7",
-    "knex": "^0.13.0",
-    "osom": "^2.2.2"
+    "generic-pool": "^3.4.0",
+    "io-ts": "^0.9.4",
+    "knex": "^0.14.2",
+    "tslib": "^1.8.1"
   },
   "devDependencies": {
     "@citycide/changelog": "^1.0.0",
-    "ava": "^0.23.0",
-    "babel-core": "^6.25.0",
-    "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.5.2",
-    "babel-preset-stage-0": "^6.24.1",
-    "babel-register": "^6.24.1",
-    "babel-runtime": "^6.23.0",
+    "@types/bluebird": "^3.5.19",
+    "@types/generic-pool": "^3.1.0",
+    "@types/knex": "^0.14.0",
+    "@types/node": "^8.5.2",
+    "@types/rimraf": "^2.0.2",
+    "@types/sql.js": "^0.0.29",
+    "ava": "^0.24.0",
+    "ava-ts": "^0.24.0",
     "cpy-cli": "^1.0.1",
-    "docsify-cli": "^4.1.8",
+    "docsify-cli": "^4.2.0",
     "rimraf": "^2.6.1",
-    "rollup": "^0.51.6",
-    "rollup-plugin-babel": "^3.0.2",
-    "rollup-watch": "^4.0.0",
-    "snazzy": "^7.0.0",
-    "sql.js": "^0.4.0",
-    "sqlite3": "^3.1.8",
-    "standard": "^10.0.2"
+    "sql.js": "^0.5.0",
+    "sqlite3": "^3.1.13",
+    "ts-node": "^4.1.0",
+    "tslint": "^5.8.0",
+    "tslint-config-standard": "^7.0.0",
+    "typescript": "^2.6.2"
   },
   "ava": {
     "files": [
-      "tests/**/*.js"
+      "tests/**/*.ts"
     ]
   }
 }

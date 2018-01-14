@@ -1,7 +1,7 @@
 import test from 'ava'
-import Trilogy from '../dist/trilogy'
+import { create } from '../src'
 
-const db = new Trilogy(':memory:')
+const db = create(':memory:')
 
 const people = [
   { name: 'Dale', age: 30 },
@@ -19,6 +19,12 @@ test.before(async () => {
 })
 
 test.after.always(() => db.close())
+
+test('returns the number of models when parameter count === 0', async t => {
+  t.is(await db.count(), 1)
+  await db.model('count_crayons', { color: String })
+  t.is(await db.count(), 2)
+})
 
 test('returns the total number of rows', async t => {
   const res = await db.count('people')
