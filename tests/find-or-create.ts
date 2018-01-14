@@ -1,7 +1,7 @@
 import test from 'ava'
-import Trilogy from '../dist/trilogy'
+import { create } from '../src'
 
-const db = new Trilogy(':memory:')
+const db = create(':memory:')
 
 const makeInput = date => ({ name: 'Overwatch', last_played: date, genre: 'FPS' })
 

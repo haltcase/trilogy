@@ -1,12 +1,13 @@
-import Trilogy from '../dist/trilogy'
-
 import test from 'ava'
-import rimraf from 'rimraf'
 import { existsSync } from 'fs'
 import { join, basename } from 'path'
 
+import * as rimraf from 'rimraf'
+
+import { create } from '../src'
+
 const getPath = name =>
-  join(__dirname, `${basename(`${__filename}-${name}`, '.js')}.db`)
+  join(__dirname, `${basename(`${__filename}-${name}`, '.ts')}.db`)
 
 const [js, native] = [getPath('sqljs'), getPath('native')]
 
@@ -20,20 +21,21 @@ test.after.always('remove test database file', async () => {
 })
 
 test('throws if no file path is provided', t => {
-  t.throws(() => new Trilogy(), Error)
+  // @ts-ignore
+  t.throws(() => create(), Error)
 })
 
 test('native client creates a new file immediately', t => {
   t.false(existsSync(native))
 
-  dbNative = new Trilogy(native)
+  dbNative = create(native)
   t.true(existsSync(native))
 })
 
 test('sql.js client creates a new file immediately', t => {
   t.false(existsSync(js))
 
-  dbJS = new Trilogy(js, { client: 'sql.js' })
+  dbJS = create(js, { client: 'sql.js' })
   t.true(existsSync(js))
 })
 
@@ -41,7 +43,7 @@ test('in-memory database does not create a file', t => {
   const fakePath = join(process.cwd(), ':memory:')
   t.false(existsSync(fakePath))
 
-  // eslint-disable-next-line no-new
-  new Trilogy(':memory:')
+  // tslint:disable-next-line no-unused-expression
+  create(':memory:')
   t.false(existsSync(fakePath))
 })

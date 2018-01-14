@@ -1,0 +1,8 @@
+{
+  "extends": "tslint-config-standard",
+  "rules": {
+    "no-empty": [true, "allow-empty-catch"],
+    "strict-type-predicates": [false],
+    "max-line-length": [true, 100]
+  }
+}

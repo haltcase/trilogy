@@ -1,10 +1,13 @@
-import pool from 'generic-pool'
 import { dirname } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
 
+import { createPool, Pool } from 'generic-pool'
+import { Database } from 'sql.js'
+
+import { Trilogy } from '.'
 import { makeDirPath } from './util'
 
-export function readDatabase (instance) {
+export function readDatabase (instance): Database {
   const SQL = require('sql.js')
   const { filename } = instance.options.connection
 
@@ -30,26 +33,23 @@ export function readDatabase (instance) {
   return client
 }
 
-export function writeDatabase (instance, db) {
+export function writeDatabase (instance: Trilogy, db: Database) {
   const { filename } = instance.options.connection
   if (filename === ':memory:') return
 
-  const data = db.export()
-  const buffer = Buffer.from(data)
-
   makeDirPath(dirname(filename))
-  writeFileSync(filename, buffer, { mode: parseInt('0777', 8) })
+  writeFileSync(filename, db.export(), { mode: parseInt('0777', 8) })
 }
 
-export function connect (instance) {
-  return pool.createPool({
+export function connect (instance: Trilogy): Pool<Database> {
+  return createPool({
     create () {
       return Promise.resolve(readDatabase(instance))
     },
 
-    destroy (client) {
+    destroy (client: Database): Promise<undefined> {
       client.close()
-      return Promise.resolve()
+      return Promise.resolve(undefined)
     }
   }, { min: 1, max: 1 })
 }

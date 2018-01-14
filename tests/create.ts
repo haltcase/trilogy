@@ -1,7 +1,7 @@
 import test from 'ava'
-import Trilogy from '../dist/trilogy'
+import { create } from '../src'
 
-const db = new Trilogy(':memory:')
+const db = create(':memory:')
 
 const schema = {
   first: String,
@@ -22,7 +22,7 @@ test.before(() => {
 
 test.after.always(() => db.close())
 
-test('inserts objects into the database', async t => {
+test('create: inserts objects into the database', async t => {
   const inserts = [
     { table: 'one', object: { first: 'hello', second: 1 } },
     { table: 'two', object: { first: 'hello', second: 2 } },
@@ -42,7 +42,7 @@ test('inserts objects into the database', async t => {
   })
 })
 
-test('handles nil values correctly', async t => {
+test('create: handles nil values correctly', async t => {
   const [one, two] = await Promise.all([
     db.model('people_one', {
       name: { type: String }

@@ -1,10 +1,10 @@
-import Trilogy from '../dist/trilogy'
-
 import test from 'ava'
 import { join, basename } from 'path'
 
-const filePath = join(__dirname, `${basename(__filename, '.js')}.db`)
-const db = new Trilogy(filePath)
+import { create } from '../src'
+
+const filePath = join(__dirname, `${basename(__filename, '.ts')}.db`)
+const db = create(filePath)
 
 test.before('insert default data', async () => {
   await db.model('data', {
