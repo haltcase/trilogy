@@ -43,7 +43,6 @@ test('in-memory database does not create a file', t => {
   const fakePath = join(process.cwd(), ':memory:')
   t.false(existsSync(fakePath))
 
-  // tslint:disable-next-line no-unused-expression
   create(':memory:')
   t.false(existsSync(fakePath))
 })
