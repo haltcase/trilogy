@@ -1,8 +1,6 @@
 import { dirname } from 'path'
 import { mkdirSync, statSync } from 'fs'
 
-import * as type from 'component-type'
-
 import * as types from './types'
 
 export function eachObj <T extends object, K extends keyof T> (
@@ -29,18 +27,12 @@ export function mapObj <T extends object, K extends keyof T> (
   return result
 }
 
-export function isType (value): string
-export function isType (value, kind: string): boolean
-export function isType (value, kind?: string) {
-  if (!kind) return type(value)
-  return type(value) === kind.toLowerCase()
-}
+export const isObject = (value): value is types.ObjectLiteral =>
+  (value && value.constructor === Object) || false
 
-export const isArray = (value): value is any[] => isType(value, 'array')
-export const isObject = (value): value is types.ObjectLiteral => isType(value, 'object')
-export const isFunction = (value): value is Function => isType(value, 'function')
-export const isString = (value): value is string => isType(value, 'string')
-export const isNumber = (value): value is number => isType(value, 'number')
+export const isFunction = (value): value is Function => typeof value === 'function'
+export const isString = (value): value is string => typeof value === 'string'
+export const isNumber = (value): value is number => typeof value === 'number'
 export const isNil = (value): value is undefined | null => value == null
 
 export const defaultTo = <T, V> (value: T, fallback: V) => isNil(value) ? fallback : value
