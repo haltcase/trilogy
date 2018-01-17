@@ -355,6 +355,5 @@ function ensureExists (atPath: string) {
 
 export { default as Model } from './model'
 export * from './types'
-export { TrilogyError } from './util'
 
 export const create = (path: string, options?: types.TrilogyOptions) => new Trilogy(path, options)
