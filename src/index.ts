@@ -18,11 +18,13 @@ import * as t from 'io-ts'
 
 export type ModelPlugin = (model: typeof Model) => typeof Model
 
-export type Plugin = (context: {
+export interface PluginContext {
   instance: Trilogy,
-  extend: types.ObjectLiteral,
+  extend: (object: types.ObjectLiteral) => any,
   extendModel: (fn: ModelPlugin) => any
-}) => any
+}
+
+export type Plugin = (context: PluginContext) => any
 
 const mixPlugins = (parent: typeof Model, mixins: Set<ModelPlugin>): typeof Model => {
   let result = parent
