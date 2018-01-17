@@ -121,7 +121,7 @@ function getDataType (property: types.ColumnDescriptor): string | never {
     return lower
   }
 
-  return undefined
+  return invariant(false, `column type must be of type string`)
 }
 
 export function toKnexMethod (type: string): string {
