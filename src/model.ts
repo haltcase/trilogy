@@ -1,7 +1,7 @@
 import { Trilogy } from '.'
 import * as helpers from './helpers'
 import { Cast, normalizeSchema } from './schema-helpers'
-import { invariant, isArray, isString, isObject, isNil } from './util'
+import { invariant, isString, isObject, isNil } from './util'
 
 import * as types from './types'
 
@@ -78,7 +78,7 @@ export default class Model {
     if (options.skip) query = query.offset(options.skip)
 
     const response = await helpers.runQuery(this.ctx, query, true)
-    if (!isArray(response)) {
+    if (!Array.isArray(response)) {
       return response ? [response] : []
     }
 
@@ -125,7 +125,7 @@ export default class Model {
     if (options.skip) query = query.offset(options.skip)
 
     const response = await helpers.runQuery(this.ctx, query, true)
-    const result = isArray(response) ? response[0] : response
+    const result = Array.isArray(response) ? response[0] : response
     if (isNil(result)) return result
 
     if (!column) {
@@ -280,7 +280,7 @@ export default class Model {
     if (options.group) query = query.groupBy(...options.group)
 
     const res = await helpers.runQuery(this.ctx, query, true)
-    if (!isArray(res)) return 0
+    if (!Array.isArray(res)) return 0
     return res[0].count
   }
 
@@ -298,7 +298,7 @@ export default class Model {
     if (options.group) query = query.groupBy(...options.group)
 
     const res = await helpers.runQuery(this.ctx, query, true)
-    if (!isArray(res)) return undefined
+    if (!Array.isArray(res)) return undefined
     return res[0].min
   }
 
@@ -316,7 +316,7 @@ export default class Model {
     if (options.group) query = query.groupBy(...options.group)
 
     const res = await helpers.runQuery(this.ctx, query, true)
-    if (!isArray(res)) return undefined
+    if (!Array.isArray(res)) return undefined
     return res[0].max
   }
 }

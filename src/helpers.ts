@@ -42,7 +42,7 @@ export function buildOrder (
     return partial.orderBy(order)
   }
 
-  if (util.isArray(order)) {
+  if (Array.isArray(order)) {
     const { length } = order
     if (length === 1 || length === 2) {
       // typescript doesn't like this:
@@ -84,7 +84,7 @@ export function buildWhere (
 
 export function isWhereTuple (where): where is types.WhereTuple {
   return (
-    util.isArray(where) &&
+    Array.isArray(where) &&
     (where.length === 2 || where.length === 3) &&
     typeof where[0] === 'string'
   )
@@ -92,7 +92,7 @@ export function isWhereTuple (where): where is types.WhereTuple {
 
 export function isWhereMultiple (where): where is types.WhereMultiple {
   return (
-    util.isArray(where) &&
+    Array.isArray(where) &&
     where.every(item => isWhereTuple(item) || util.isObject(item))
   )
 }

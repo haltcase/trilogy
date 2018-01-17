@@ -46,7 +46,7 @@ export function toKnexSchema (model: Model, options: types.ModelOptions) {
 function createIndices (table: knex.TableBuilder, value: types.Index) {
   if (typeof value === 'string') {
     table.index([value])
-  } else if (util.isArray(value)) {
+  } else if (Array.isArray(value)) {
     if (value.every(item => typeof item === 'string')) {
       table.index(value as string[])
     }
@@ -54,7 +54,7 @@ function createIndices (table: knex.TableBuilder, value: types.Index) {
     value.forEach(columns => table.index(columns as string[]))
   } else if (util.isObject(value)) {
     util.eachObj(value, (columns, indexName) => {
-      if (!util.isArray(columns)) {
+      if (!Array.isArray(columns)) {
         columns = [columns]
       }
 

@@ -48,7 +48,6 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "component-type": "^1.2.1",
     "generic-pool": "^3.4.0",
     "io-ts": "^0.9.4",
     "knex": "^0.14.2",
