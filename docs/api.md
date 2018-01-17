@@ -1,33 +1,31 @@
-# Trilogy (`Class`)
+# create
 
 ```js
-new Trilogy(path, [options])
+create(path, [options])
 ```
 
-Initialize a new datastore instance, creating a SQLite database
-file at the provided `path` if it does not yet exist, or reading
-it if it does.
+Initialize a new datastore instance, creating a SQLite database file at
+the provided `path` if it does not yet exist, or reading it if it does.
 
-Trilogy can use both the native `sqlite3` module or `sql.js` -
-the latter does not require compiling, whereas the former must
-be built against its runtime environment. The goal is that the
-difference should be invisible to you, so usage from Trilogy's
-standpoint stays the same no matter which one you choose. You
-should also be able to change it at any time without any hitches.
+trilogy can use both the native `sqlite3` module or `sql.js` &mdash; the
+latter does not require compiling, whereas the former must be built against
+its runtime environment. The goal is that the difference should be totally
+invisible to you, so usage from trilogy's standpoint stays the same no
+matter which one you choose. You should also be able to change it at any
+time without any hitches.
 
-If `path` is exactly `':memory:'`, no file will be created and
-an in-memory store will be used. This doesn't persist any of the
-data.
+If `path` is exactly `':memory:'`, no file will be created and an in-memory
+store will be used. This doesn't persist any of the data.
 
 See ["Choosing a Backend"](/backends) for more on how these two
 modules may differ.
 
 > **Arguments**
 
-- `{string} path`:
-  absolute or relative file path. If relative it is resolved against
-  `process.cwd()`, or the `options.dir` property if it is provided.
-- _optional_ `{Object} options`:
+  * `{string} path`:
+    absolute or relative file path. If relative it is resolved against
+    `process.cwd()`, or the `options.dir` property if it is provided.
+  * _optional_ `{object} options`:
 
 | property  | type       | default         | description                                         |
 | --------- | :-------:  | :-------------: | --------------------------------------------------- |
@@ -35,20 +33,24 @@ modules may differ.
 | `dir`     | `string`   | `process.cwd()` | The working directory with which to resolve `path`. |
 | `verbose` | `Function` | `() => {}`      | Receives every query run against the database.      |
 
+> **Returns**
+
+[`Trilogy`](#trilogy-class)
+
 > **Usage**
 
 ```js
-import Trilogy from 'trilogy'
+import { create } from 'trilogy'
 
 // defaults to using `sqlite3`
-const db = new Trilogy('./storage.db')
+const db = create('./storage.db')
 ```
 
 With an options object:
 
 ```js
-const db = new Trilogy('./storage.db', {
-  // use `sql.js` to avoid build issues like gyp
+const db = create('./storage.db', {
+  // use `sql.js` to avoid build issues with gyp
   client: 'sql.js',
 
   // directory with which to resolve `path`
@@ -64,45 +66,45 @@ const db = new Trilogy('./storage.db', {
 
 if `path` is not provided.
 
-## Methods
+## Trilogy (`Class`)
 
 ### model
 ```js
 db.model(name, schema, [options])
 ```
 
-Define a new model with the provided `schema`, or return the
-existing model if one is already defined with `name`.
+Define a new model with the provided `schema`, or return the existing model
+if one is already defined with `name`.
 
-Each property of `schema` describes a column, where its key is
-the name of the column and its value describes its attributes.
-The value can be either a type, such as `String`, `Number`, or
-`'increments'`, or a more descriptive object. See the docs on
-[column descriptors](/api#column-descriptor) for more information.
+Each property of `schema` describes a column, where its key is the name of
+the column and its value describes its attributes. The value can be either
+a type, such as `String`, `Number`, or `'increments'`, or a more descriptive
+object. See the docs on [column descriptors](/api#column-descriptor) for more
+information.
 
-This schema controls the handling of values inserted into and
-retreived from the database, casting them as needed. For example,
-SQLite does not support a Boolean data type and instead stores
-them as integers. Trilogy will transparently cast Booleans to
-integers when inserting them and back to Booleans when retreiving
-them. The same goes for all other [supported data types](/api#valid-column-types).
+This schema controls the handling of values inserted into and retreived from
+the database, casting them as needed. For example, SQLite does not support a
+Boolean data type and instead stores them as integers. trilogy will
+transparently cast Booleans to integers when inserting them and back to
+Booleans when retreiving them. The same goes for all other
+[supported data types](/api#valid-column-types).
 
-If any property of `schema` is not present in knex's methods
-it will be ignored. See [knex's documentation](http://knexjs.org/#Schema-Building)
+If any property of `schema` is not present in knex's methods it will be
+ignored. See [knex's documentation](http://knexjs.org/#Schema-Building)
 on Schema Building for the available attributes when creating column tables.
 
 > **Arguments**
 
-  - `{string} name`: name of the model
-  - `{Object} schema`: describes the schema of the table
-  - _optional_ `{Object} options`:
+  * `{string} name`: name of the model
+  * `{object} schema`: describes the schema of the table
+  * _optional_ `{object} options`:
 
 |  property    | type            | default | description                      |
 | ------------ | :-------------: | :-----: | -------------------------------- |
 | `timestamps` | `boolean`       | -       | When `true`, adds `created_at` and `updated_at` properties, both defaulting to the current timestamp. |
-|  `primary`   | `Array<string>` | -       | An Array of column names to specify as a composite primary key. |
-|  `unique`    | `Array<string>` | -       | An Array of column names on which to apply unique constraints. |
-|  `index`     | `string`, `Array<string>`, `Array<Array<string>>`, `Object` | - | See ["advanced indexing"](/api#advanced-indexing) |
+| `primary`    | `Array<string>` | -       | An Array of column names to specify as a composite primary key. |
+| `unique`     | `Array<string>` | -       | An Array of column names on which to apply unique constraints. |
+| `index`      | `string`, `Array<string>`, `Array<Array<string>>`, `object` | - | See ["advanced indexing"](/api#advanced-indexing) |
 
 _Note: specifying a column as either `primary` or `unique` in both the column
 descriptor and the `options.primary` or `options.unique` Arrays will result
@@ -115,39 +117,80 @@ in an error, as the constraint will have already been applied._
 > **Usage**
 
 ```js
-db.model('people', {
+await db.model('people', {
   name: String,
   age: Number,
   email: String,
   uid: { type: Number, primary: true }
 })
 
-db.find('people', { /* ... */ })
-db.create('people', { /* ... */ })
-db.min('people.age', { /* ... */ })
+await db.find('people', { /* ... */ })
+await db.create('people', { /* ... */ })
+await db.min('people.age', { /* ... */ })
 
 // already defined, so it's returned
-const people = db.model('people')
+const people = await db.model('people')
 
 // since `model()` returns a model instance,
 // you can use methods on that instance like so:
-people.find({ /* ... */ })
-people.create({ /* ... */ })
-people.min('age', { /* ... */ })
+await people.find({ /* ... */ })
+await people.create({ /* ... */ })
+await people.min('age', { /* ... */ })
 ```
+
+### getModel
+```js
+db.getModel(name)
+```
+
+Provides a way to synchronously retrieve a model. If that model doesn't
+exist a `TrilogyError` will be thrown, so you should only use this if
+you're sure it has been defined. Otherwise you should use methods like
+[`hasModel`](#hasmodel) or [`model`](#model), which returns existing
+definitions.
+
+> **Arguments**
+
+  * `{string} name`: name of the model
+
+> **Returns**
+
+[`Model`](#model-class)
+
+> **Usage**
+
+```js
+db.getModel('people')
+// TrilogyError: no model defined by the name 'people'
+
+const people = await db.model('people', {
+  name: String
+})
+
+const alsoPeople = db.getModel('people')
+alsoPeople.find(/*...*/)
+
+// these reference the exact same object (the `Model`)
+people === alsoPeople
+// -> true
+```
+
+> **Throws**
+
+if no model by the name of `name` has been created
 
 ### hasModel
 ```js
 db.hasModel(name)
 ```
 
-First checks if the model's been defined with Trilogy, then
-runs an existence query on the database, returning `true` if
-the table exists or `false` if it doesn't.
+First checks if the model's been defined with trilogy, then runs an existence
+query on the database, returning `true` if the table exists or `false` if it
+doesn't.
 
 > **Arguments**
 
-  - `{string} name`: the name of the model to check
+  * `{string} name`: the name of the model to check
 
 > **Returns**
 
@@ -156,12 +199,10 @@ the table exists or `false` if it doesn't.
 > **Usage**
 
 ```js
-db.hasModel('people')
-  .then(has => {
-    if (has) {
-      console.log('it exists!')
-    }
-  })
+const exists = await db.hasModel('people')
+if (exists) {
+  console.log('it exists!')
+}
 ```
 
 ### dropModel
@@ -169,23 +210,22 @@ db.hasModel('people')
 db.dropModel(name)
 ```
 
-Removes the specified model from Trilogy's definition and the database.
+Removes the specified model from trilogy's definition and the database.
 
 > **Arguments**
 
-  - `{string} name`: the name of the model to remove
+  * `{string} name`: the name of the model to remove
 
 > **Returns**
 
-`Promise`
+ `Promise<boolean>`: `true` if successful or `false` if the model was not
+ defined with trilogy
 
 > **Usage**
 
 ```js
-db.dropModel('people')
-  .then(() => {
-    // model & table dropped
-  })
+await db.dropModel('people')
+// model & table dropped
 ```
 
 ### raw
@@ -193,18 +233,18 @@ db.dropModel('people')
 db.raw(query, needResponse)
 ```
 
-Allows running any arbitrary query generated by Trilogy's [`.knex`](/api#knex)
+Allows running any arbitrary query generated by trilogy's [`.knex`](/api#knex)
 instance. If the result is needed, pass `true` as the second argument, otherwise
 the number of affected rows will be returned ( if applicable ).
 
 > **Arguments**
 
-  - `{KnexQuery} query`: any knex query created with [`.knex`](/api#knex)
-  - `{boolean} needResponse`: whether to return the result of the query
+  * `{KnexQuery} query`: any knex query created with [`.knex`](/api#knex)
+  * `{boolean} needResponse`: whether to return the result of the query
 
 > **Returns**
 
-`Promise<mixed>`
+`Promise<any>`
 
 > **Usage**
 
@@ -223,10 +263,9 @@ db.raw(query, true).then(result => {})
 db.close()
 ```
 
-Drains the connection pools and releases connections to any open
-database files. This should always be called at the end of your
-program to gracefully shut down, and only once since the connection
-can't be reopened.
+Drains the connection pools and releases connections to any open database
+files. This should always be called at the end of your program to gracefully
+shut down, and only once since the connection can't be reopened.
 
 > **Arguments**
 
@@ -234,14 +273,14 @@ None
 
 > **Returns**
 
-`Promise`
+`Promise<void>`
 
 > **Usage**
 
 ```js
-import Trilogy from 'trilogy'
+import { create } from 'trilogy'
 
-const db = new Trilogy('./file.db')
+const db = create('./file.db')
 
 db.find('title', ['release', '>', 2001])
   .then(titles => {
@@ -268,44 +307,45 @@ An array of all model names defined on the instance.
 
 ### knex
 
-Exposes Trilogy's knex instance to allow more complex query building.
+Exposes trilogy's knex instance to allow more complex query building.
 You can use this to create queries that aren't necessarily feasible
-with Trilogy's API, like nested where clauses that require functions
+with trilogy's API, like nested where clauses that require functions
 as arguments.
 
-**IMPORTANT**: Do _not_ call `then` or otherwise execute the query.
-Pass the knex query object as-is to [`raw()`](/api#raw) for execution.
+!> Do _not_ call `then` or otherwise execute the query.
+   Pass the knex query object as-is to [`raw()`](/api#raw) for execution.
 
 All of the following methods will cause execution when chained to a
 knex query, so avoid using these when building raw queries you intend
-to run with Trilogy:
+to run with trilogy:
 
-- Promises: `then`, `catch`, `tap`, `map`, `reduce`, `bind`, `return`
-- Callbacks: `asCallback`
-- Streams: `stream`, `pipe`
+  * Promises: `then`, `catch`, `tap`, `map`, `reduce`, `bind`, `return`
+  * Callbacks: `asCallback`
+  * Streams: `stream`, `pipe`
 
 The following methods shouldn't cause problems, but they aren't
 guaranteed to work, especially when using `sql.js`:
 
-- Events: `on` [`'query'`, `'query-error'`, `'query-response'`]
+  * Events: `on` [`'query'`, `'query-error'`, `'query-response'`]
 
 And finally the following methods will work just fine, but you should
-not chain them on a query object before passing it to Trilogy. Running
+not chain them on a query object before passing it to trilogy. Running
 them separately is fine:
 
-- Other: `toString`, `toSQL`
+  * Other: `toString`, `toSQL`
 
 For more advanced usage, see [knex's own documentation](http://knexjs.org/).
 
 > **Usage**
 
 ```js
-import Trilogy from 'trilogy'
+import { create } from 'trilogy'
 
-const db = new Trilogy('./file.db')
+const db = create('./file.db')
 
 const query = db.knex('users').select('*')
 console.log(query.toString())
+// -> 'select * from `users`'
 
 db.raw(query, true).then(users => {})
 ```
@@ -331,25 +371,23 @@ db.knex('users').select('*')
 
 # Model (`Class`)
 
-Model instances are created using [`model()`](/api#model).
-All model instance methods are also accessible at the top
-level of a trilogy instance, meaning the following calls are
-equivalent:
+Model instances are created using [`model()`](/api#model). All model instance
+methods are also accessible at the top level of a trilogy instance, meaning
+the following calls are equivalent:
 
 ```js
 // given this setup:
-const db = new Trilogy('./storage.db')
+const db = create('./storage.db')
 const users = await db.model('users', { /* some schema */ })
 
 // these are equivalent:
-db.find('users', { name: 'citycide' })
-users.find({ name: 'citycide' })
+await db.find('users', { name: 'citycide' })
+await users.find({ name: 'citycide' })
 ```
 
-The function signatures remain the same except you provide
-the model name and, in some cases, the column name, as the
-first argument. Column names should be passed along with
-the table in dot-notation, ie. `'users.name'`.
+The function signatures remain the same except you provide the model name and,
+in some cases, the column name, as the first argument. Column names should be
+passed along with the table in dot-notation, ie. `'users.name'`.
 
 ## Methods
 
@@ -358,15 +396,15 @@ the table in dot-notation, ie. `'users.name'`.
 model.create(object, [options])
 ```
 
-Insert an object into the table. `object` should match the
-model's defined schema, values will cast into types as needed.
-If a unique or primary constraint exists on a property the
-insert will be ignored when violating this constraint.
+Insert an object into the table. `object` should match the model's defined
+schema, values will cast into types as needed. If a unique or primary
+constraint exists on a property the insert will be ignored when violating
+this constraint.
 
 > **Arguments**
 
-  - _optional_ `{Object} object`: the data to insert
-  - _optional_ `{Object} options`
+  * _optional_ `{object} object`: the data to insert
+  * _optional_ `{object} options`
 
 | property | type      | default | description                               |
 | -------- | :-------: | :-----: | ----------------------------------------- |
@@ -374,7 +412,7 @@ insert will be ignored when violating this constraint.
 
 > **Returns**
 
-`Promise<Object>`: the created object
+`Promise<object>`: the created object
 
 > **Usage**
 
@@ -401,14 +439,14 @@ array will contain only the `column` property of the found objects.
 
 > **Arguments**
 
-  - _optional_ `{string} column`: if provided, only this column's value will be selected
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{Object} options`:
+  * _optional_ `{string} column`: if provided, only this column's value will be selected
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{object} options`:
 
 | property | type                        | default | description                                                                         |
 | -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
@@ -422,7 +460,8 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 
 > **Returns**
 
-`Promise<Array<Object | mixed>>`: array of found objects, or `object[column]` if a column was provided
+`Promise<Array<object | any>>`: array of found objects, or `object[column]` if
+a column was provided
 
 > **Usage**
 
@@ -455,14 +494,14 @@ provided, the value at `object[column]`.
 
 > **Arguments**
 
-  - _optional_ `{string} column`: if provided, only this column's value will be selected
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{Object} options`:
+  * _optional_ `{string} column`: if provided, only this column's value will be selected
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{object} options`:
 
 | property | type                        | default | description                                                                         |
 | -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
@@ -475,7 +514,7 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 
 > **Returns**
 
-`Promise<Object | mixed>`: the found object, or `object[column]` if a column was provided
+`Promise<object | any>`: the found object, or `object[column]` if a column was provided
 
 > **Usage**
 
@@ -503,20 +542,19 @@ todos.findOne('body', { name: 'docs' }).then(found => {
 model.findOrCreate(criteria, creation, [options])
 ```
 
-Find a matching object based on `criteria`, or create it if it doesn't
-exist. When creating the object, a merged object created from `criteria`
-and `creation` will be used, with the properties from `creation` taking
-precedence.
+Find a matching object based on `criteria`, or create it if it doesn't exist.
+When creating the object, a merged object created from `criteria` and `creation`
+will be used, with the properties from `creation` taking precedence.
 
 > **Arguments**
 
-  - `{Object} criteria`: criteria to search for
-  - `{Object} creation`: data used to create the object if it doesn't exist
-  - _optional_ `{Object} options`: same as [`findOne()`](/api#findOne)
+  * `{object} criteria`: criteria to search for
+  * `{object} creation`: data used to create the object if it doesn't exist
+  * _optional_ `{object} options`: same as [`findOne()`](/api#findOne)
 
 > **Returns**
 
-`Promise<Object>`: the found object, after creation if necessary
+`Promise<object>`: the found object, after creation if necessary
 
 > **Usage**
 
@@ -542,14 +580,14 @@ Modify the properties of an existing object.
 
 > **Arguments**
 
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - `{Object} data`: the updates to be made
-  - _optional_ `{Object} options`
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * `{object} data`: the updates to be made
+  * _optional_ `{object} options`
 
 | property | type      | default | description                               |
 | -------- | :-------: | :-----: | ----------------------------------------- |
@@ -587,9 +625,9 @@ used, with the properties from `data` taking precedence.
 
 > **Arguments**
 
-  - `{Object} criteria`: criteria to search for
-  - `{Object} data`: updates to be made, or used for object creation
-  - _optional_ `{Object} options`: same as [`update()`](/api#update)
+  * `{object} criteria`: criteria to search for
+  * `{object} data`: updates to be made, or used for object creation
+  * _optional_ `{object} options`: same as [`update()`](/api#update)
 
 > **Returns**
 
@@ -624,18 +662,18 @@ the value at `column` or, if it does not exist, the supplied `defaultValue`.
 
 > **Arguments**
 
-  - `{string} column`: the property to retrieve
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{mixed} defaultValue`: returned if the result doesn't exist
+  * `{string} column`: the property to retrieve
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{any} defaultValue`: returned if the result doesn't exist
 
 > **Returns**
 
-`Promise<mixed>`
+`Promise<any>`
 
 > **Usage**
 
@@ -670,14 +708,14 @@ the value at `column` to be `value` where `criteria` is met.
 
 > **Arguments**
 
-  - `{string} column`: the column to update
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - `{mixed} value`: the new value
+  * `{string} column`: the column to update
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * `{any} value`: the new value
 
 > **Returns**
 
@@ -715,18 +753,18 @@ the raw database value.
 
 > **Arguments**
 
-  - `{string} column`: the property to retrieve
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{mixed} defaultValue`: returned if the result doesn't exist
+  * `{string} column`: the property to retrieve
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{any} defaultValue`: returned if the result doesn't exist
 
 > **Returns**
 
-`Promise<mixed>`
+`Promise<any>`
 
 > **Usage**
 
@@ -770,14 +808,14 @@ updating the target value.
 
 > **Arguments**
 
-  - `{string} column`: the column to update
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - `{mixed} value`: the new value
+  * `{string} column`: the column to update
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * `{any} value`: the new value
 
 > **Returns**
 
@@ -830,15 +868,15 @@ to `1` if not provided.
 
 > **Arguments**
 
-  - `{string} column`: the target value
-  - _optional_ `{number} amount`
-    - _default_ = `1`
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
+  * `{string} column`: the target value
+  * _optional_ `{number} amount`
+    * _default_ = `1`
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
 
 > **Returns**
 
@@ -859,23 +897,23 @@ people.increment('age', { name: 'Bob' })
 model.decr(column, criteria, [amount = 1], [allowNegative = false])
 ```
 
-Decrement a value at `column` by a specified `amount`, which defaults
-to `1` if not provided. To allow the target value to dip below `0`,
-pass `true` as the final argument.
+Decrement a value at `column` by a specified `amount`, which defaults to `1`
+if not provided. To allow the target value to dip below `0`, pass `true` as
+the final argument.
 
 > **Arguments**
 
-  - `{string} column`: the target value
-  - _optional_ `{number} amount`
-    - _default_ = `1`
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{boolean} allowNegative`: unless set to `true`, the value will not be allowed to go below a value of `0`.
-    - _default_ = `false`
+  * `{string} column`: the target value
+  * _optional_ `{number} amount`
+    * _default_ = `1`
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{boolean} allowNegative`: unless set to `true`, the value will not be allowed to go below a value of `0`
+    * _default_ = `false`
 
 > **Returns**
 
@@ -898,19 +936,19 @@ people.decrement('age', { name: 'Benjamin Button' }, true)
 model.remove(criteria)
 ```
 
-Delete a row from the table matching `criteria`. If `criteria` is
-empty or absent, nothing will be done. This is a safeguard against
-unintentionally deleting everything in the table. Use
-[`#clear()`](/api#clear) if you want to remove all rows.
+Delete a row from the table matching `criteria`. If `criteria` is empty or
+absent, nothing will be done. This is a safeguard against unintentionally
+deleting everything in the table. Use [`#clear()`](/api#clear) if you want
+to remove all rows.
 
 > **Arguments**
 
-  - `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
+  * `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
 
 > **Returns**
 
@@ -942,14 +980,14 @@ Count the number of rows, matching `criteria` if specified.
 
 > **Arguments**
 
-  - _optional_ `{string} column`: column to select on
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{Object} options`:
+  * _optional_ `{string} column`: column to select on
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{object} options`:
 
 |  property   | type       | default | description                      |
 | ----------- | :--------: | :-----: | -------------------------------- |
@@ -958,7 +996,7 @@ Count the number of rows, matching `criteria` if specified.
 
 > **Returns**
 
-`Promise<number>`: the number of rows found, matching `criteria` if specified.
+`Promise<number>`: the number of rows found, matching `criteria` if specified
 
 > **Usage**
 
@@ -982,7 +1020,7 @@ people.count({ age: 18 })
 ```
 
 Now assume we've defined models `people`, `places`, `things`, & `ideas`.
-If we use `count()` with no arguments on the Trilogy instance we can count
+If we use `count()` with no arguments on the trilogy instance we can count
 the number of tables in the database:
 
 ```js
@@ -1000,14 +1038,14 @@ in `column` that match `criteria`.
 
 > **Arguments**
 
-  - _optional_ `{string} column`: column to compare
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{Object} options`:
+  * _optional_ `{string} column`: column to compare
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{object} options`:
 
 | property | type     | default | description                      |
 | -------- | :------: | :-----: | -------------------------------- |
@@ -1042,14 +1080,14 @@ in `column` that match `criteria`.
 
 > **Arguments**
 
-  - _optional_ `{string} column`: column to compare
-  - _optional_ `{Object | Array} criteria`: criteria used to restrict selection
-    - Object syntax means 'where (key) is equal to (value)'
-    - Array syntax is one of:
-      - a length of 2, ie. a key / value pair (equal to)
-      - a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
-      - a list containing any number of the above forms
-  - _optional_ `{Object} options`:
+  * _optional_ `{string} column`: column to compare
+  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{object} options`:
 
 | property | type     | default | description                      |
 | -------- | :------: | :-----: | -------------------------------- |
@@ -1076,29 +1114,29 @@ people.max('age')
 
 # Information
 
-> miscellaneous info that should be helpful while using Trilogy
+> miscellaneous info that should be helpful while using trilogy
 
 ## terminology
 
-Trilogy is a layer over a SQLite backend with the kind of API you
-normally find used with document stores. So there a few sort of
-interchangeable terms involved.
+trilogy is a layer over a SQLite backend with the kind of API you normally
+find used with document stores. So there a few sort of interchangeable terms
+involved.
 
-'Table' will generally refer to the actual persisted SQLite
-representation of the data, just as 'row' and 'column' usually refer
-to the stored records and their values within those tables.
+'Table' will generally refer to the actual persisted SQLite representation of
+the data, just as 'row' and 'column' usually refer to the stored records and
+their values within those tables.
 
-On the other hand, 'model' will generally be used when referring to
-the definition provided to and handled by Trilogy. These models represent
-a more JavaScript-oriented version of the data, so 'rows' become objects
-that have properties representing their 'column'.
+On the other hand, 'model' will generally be used when referring to the
+definition provided to and handled by trilogy. These models represent a more
+JavaScript-oriented version of the data, so 'rows' become objects that have
+properties representing their 'column'.
 
 ## column descriptor
 
-Each property of the object you pass to define the schema of a model is
-called a 'column descriptor'. It's so named because it describes the
-column - its type, such as `String` or `Number`, and its attributes,
-like whether it is the primary key, is nullable, has a default value, etc.
+Each property of the object you pass to define the schema of a model is called
+a 'column descriptor'. It's so named because it describes the column - its type,
+such as `String` or `Number`, and its attributes, like whether it is the primary
+key, is nullable, has a default value, etc.
 
 ```js
 db.model('cars', {
@@ -1163,20 +1201,20 @@ is a required property.
 }
 ```
 
-And finally `year` - back to basics on this one. It's defined with the
-same shorthand as `id`, only this time it's a `Number`. This is stored
-as an `integer` column in SQLite.
+And finally `year` - back to basics on this one. It's defined with the same
+shorthand as `id`, only this time it's a `Number`. This is stored as an
+`integer` column in SQLite.
 
 ### valid column types
 
 | type           | description                                                           |
 | -------------- | ----------------------------------------------------------------------|
-| `String`       | stored as `text`                                                      |
-| `Number`       | stored as `integer`                                                   |
-| `Boolean`      | stored as `integer`                                                   |
+| `string`       | stored as `text`                                                      |
+| `number`       | stored as `integer`                                                   |
+| `boolean`      | stored as `integer`                                                   |
 | `Date`         | stored as `datetime`                                                  |
 | `Array`        | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
-| `Object`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
+| `object`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
 | `'json'`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
 | `'increments'` | set as an auto-incrementing `integer` & primary key                   |
 
@@ -1186,12 +1224,12 @@ Unsupported / unknown types are cast using `String` and stored as `text`.
 
 | attribute     | type       | description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
-| `primary`     | `Boolean`  | Whether to set this column as the primary key.           |
-| `defaultTo`   | `mixed`    | Default value to use when absent.                        |
-| `unique`      | `Boolean`  | Whether the column is required to be unique.             |
-| `nullable`    | `Boolean`  | Whether to allow null values.                            |
-| `notNullable` | `Boolean`  | Works inversely to `nullable`.                           |
-| `index`       | `String`   | Specifies the column as an index with the provided name. |
+| `primary`     | `boolean`  | Whether to set this column as the primary key.           |
+| `defaultTo`   | `any`    | Default value to use when absent.                        |
+| `unique`      | `boolean`  | Whether the column is required to be unique.             |
+| `nullable`    | `boolean`  | Whether to allow null values.                            |
+| `notNullable` | `boolean`  | Works inversely to `nullable`.                           |
+| `index`       | `string`   | Specifies the column as an index with the provided name. |
 | `get`         | `Function` | Triggered on selects, receives the raw value and should return a new value. |
 | `set`         | `Function` | Triggered on inserts, receives the input value and should return a new value. |
 

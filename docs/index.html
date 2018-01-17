@@ -49,9 +49,9 @@
 </head>
 <body>
   <nav>
-    <a href="#/">Home</a>
-    <a href="#/api">Documentation</a>
-    <a href="#/backends">SQLite3 vs SQL.js</a>
+    <a href="#/">home</a>
+    <a href="#/api">documentation</a>
+    <a href="#/changelog">changelog</a>
   </nav>
   <div id="app"></div>
 </body>
@@ -60,7 +60,7 @@
   const baseURL = 'https://raw.githubusercontent.com/citycide/trilogy/master'
   window.$docsify = {
     alias: {
-      '.*?/readme': `${baseURL}/readme`,
+      // '.*?/readme': `${baseURL}/readme`,
       '.*?/changelog': `${baseURL}/changelog`,
       '.*?/license': `${baseURL}/license`,
       '.*?/(?:\.github/)?contributing': `${baseURL}/.github/contributing`,
@@ -68,7 +68,8 @@
     },
     auto2top: true,
     coverpage: 'cover.md',
-    homepage: `${baseURL}/readme.md`,
+    // homepage: `${baseURL}/readme.md`,
+    homepage: 'readme.md',
     loadSidebar: true,
     mergeNavbar: true,
     maxLevel: 4,
