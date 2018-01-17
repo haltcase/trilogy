@@ -7,7 +7,7 @@ import Model from './model'
 import { runQuery } from './helpers'
 import { toKnexSchema } from './schema-helpers'
 import { connect, readDatabase } from './sqljs-handler'
-import { invariant, makeDirPath, defaultTo } from './util'
+import { invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
 import { Database } from 'sql.js'
@@ -101,11 +101,13 @@ export class Trilogy {
 
       extend: (object: types.ObjectLiteral) => {
         for (const key of Object.keys(object)) {
-          const fn = object[key]
-          if (typeof fn === 'function') {
-            this[key] = defaultTo(this[key], fn.bind(this))
+          if (this[key] != null) continue
+
+          const value = object[key]
+          if (typeof value === 'function') {
+            this[key] = value.bind(this)
           } else {
-            this[key] = defaultTo(this[key], fn)
+            this[key] = value
           }
         }
       },
