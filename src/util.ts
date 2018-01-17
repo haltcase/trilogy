@@ -37,19 +37,13 @@ export const isNil = (value): value is undefined | null => value == null
 
 export const defaultTo = <T, V> (value: T, fallback: V) => isNil(value) ? fallback : value
 
-export class TrilogyError extends Error {
-  framesToPop: number
+export type Falsy = false | null | undefined | 0 | ''
 
-  constructor (message: string) {
-    super(message)
-    this.name = 'TrilogyError'
-    this.framesToPop = 1
-  }
-}
-
-export function invariant <T> (condition: T, message?: string): T | never {
+export function invariant (condition: Falsy, message?: string): never
+export function invariant <T> (condition: T, message?: string): T
+export function invariant <T> (condition: T | Falsy, message?: string): T | never {
   if (!condition) {
-    throw new TrilogyError(message || 'Invariant Violation')
+    throw new Error(message || 'Invariant Violation')
   }
 
   return condition
