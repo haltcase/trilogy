@@ -150,6 +150,8 @@ export type UpdateOptions = t.TypeOf<typeof UpdateOptions>
 export type FindOptions = t.TypeOf<typeof FindOptions>
 export type ColumnKind = t.TypeOf<typeof ColumnKind>
 export type ColumnDescriptor = t.TypeOf<typeof ColumnDescriptor>
+export type StorageType = string | number | Date | null | undefined
+export type ReturnType = string | number | boolean | Date | any[] | ObjectLiteral | null | undefined
 
 export interface SchemaRaw {
   [key: string]: ColumnKind | ColumnDescriptor

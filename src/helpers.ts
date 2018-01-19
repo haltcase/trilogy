@@ -56,12 +56,10 @@ export function buildOrder (
 
 export function buildWhere (
   partial: knex.QueryBuilder,
-  where, // : types.WhereClause || types.WhereMultiple
+  where: types.WhereClause | types.WhereMultiple | undefined,
   inner?: boolean
 ): knex.QueryBuilder {
-  if (util.isObject(where)) {
-    return partial.where(util.mapObj(where, castValue))
-  }
+  if (where === undefined) return partial
 
   if (isWhereTuple(where)) {
     const i = where.length - 1
@@ -78,8 +76,11 @@ export function buildWhere (
     }, partial)
   }
 
-  // TODO: consider throwing an error for invalid where clauses
-  return partial
+  if (util.isObject(where)) {
+    return partial.where(util.mapObj(where, castValue))
+  }
+
+  return util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
 export function isWhereTuple (where): where is types.WhereTuple {

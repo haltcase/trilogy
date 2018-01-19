@@ -142,7 +142,7 @@ export function toKnexMethod (type: string): string {
   }
 }
 
-export function toInputType (type: string, value) {
+export function toInputType (type: string, value: any): types.StorageType | never {
   switch (type) {
     case 'string':
       return String(value)
@@ -157,11 +157,11 @@ export function toInputType (type: string, value) {
     case 'date':
       return new Date(value)
     default:
-      return value
+      return invariant(false, `invalid type on insert to database: ${type}`)
   }
 }
 
-export function toReturnType (type: string, value) {
+export function toReturnType (type: string, value: any): types.ReturnType | never {
   switch (type) {
     case 'string':
       return String(value)
@@ -177,25 +177,29 @@ export function toReturnType (type: string, value) {
     case 'date':
       return new Date(value)
     default:
-      return value
+      return invariant(false, `invalid type returned from database: ${type}`)
   }
 }
+
+type CastToDefinition =
+  | { [key: string]: types.StorageType }
+  | [string, types.StorageType]
+  | [string, string, types.StorageType]
+  | types.WhereMultiple
+  | never
 
 export class Cast {
   constructor (private model: Model) {}
 
-  toDefinition (object, options: { raw?: boolean }) {
-    if (isObject(object)) {
-      return mapObj(object, (value, column) => {
-        return this.toColumnDefinition(column, value, options)
-      })
-    }
-
+  toDefinition (
+    object: types.ObjectLiteral | types.WhereTuple | types.WhereMultiple,
+    options: { raw?: boolean }
+  ): CastToDefinition {
     if (isWhereTuple(object)) {
       const clone = object.slice()
       const valueIndex = clone.length - 1
       clone[valueIndex] =
-        this.toColumnDefinition(clone[0], clone[valueIndex], options)
+      this.toColumnDefinition(clone[0], clone[valueIndex], options)
       return clone
     }
 
@@ -203,10 +207,19 @@ export class Cast {
       return object.map(clause => this.toDefinition(clause, options))
     }
 
-    // TODO: consider throwing for unrecognized types
+    if (isObject(object)) {
+      return mapObj(object, (value, column) => {
+        return this.toColumnDefinition(column, value, options)
+      })
+    }
+
+    return invariant(false, `invalid input type: '${typeof object}'`)
   }
 
-  fromDefinition (object, options: { raw?: boolean }) {
+  fromDefinition (
+    object,
+    options: { raw?: boolean }
+  ): { [key: string]: types.ReturnType } {
     return mapObj(object, (value, column) => {
       return this.fromColumnDefinition(column, value, options)
     })
@@ -216,7 +229,7 @@ export class Cast {
     column: string,
     value: any,
     options: { raw?: boolean } = { raw: false }
-  ) {
+  ): types.StorageType {
     const definition = this.model.schema[column]
     invariant(
       !(definition.notNullable && value == null),
@@ -237,7 +250,7 @@ export class Cast {
     column: string,
     value: any,
     options: { raw?: boolean } = { raw: false }
-  ) {
+  ): types.ReturnType {
     const definition = this.model.schema[column]
     const type = getDataType(definition)
     const cast = value !== null ? toReturnType(type, value) : value
