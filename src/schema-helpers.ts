@@ -193,20 +193,13 @@ export function toReturnType (type: string, value: any): types.ReturnType | neve
   }
 }
 
-type CastToDefinition =
-  | { [key: string]: types.StorageType }
-  | [string, types.StorageType]
-  | [string, string, types.StorageType]
-  | types.WhereMultiple
-  | never
-
 export class Cast {
   constructor (private model: Model) {}
 
   toDefinition (
     object: types.ObjectLiteral | types.WhereTuple | types.WhereMultiple,
     options: { raw?: boolean }
-  ): CastToDefinition {
+  ): types.CastToDefinition {
     if (isWhereTuple(object)) {
       const clone = object.slice()
       const valueIndex = clone.length - 1
