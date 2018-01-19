@@ -105,7 +105,7 @@ const db = create(':memory:', {
 
 ;(async function () {
   const games = await db.model('games', {
-    name: { type: String, primary: true },   // primary key
+    name: { type: String, unique: true },    // unique constraint
     genre: String,                           // type shorthand
     released: Date,
     awards: Array,
