@@ -18,7 +18,7 @@ export const raise: (
   validation: Left<t.ValidationError[], any> | Right<t.ValidationError[], any>
 ) => void = ThrowReporter.report
 
-export function validate <L, T> (value, type, defaultValue?: T): T {
+export function validate <L, T = L> (value: L, type, defaultValue?: T): L | T {
   const result = t.validate<L, T>(value, type)
   return raise(result) || result.getOrElseValue(defaultValue)
 }
