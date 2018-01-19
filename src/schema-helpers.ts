@@ -23,14 +23,26 @@ export function toKnexSchema (model: Model, options: types.ModelOptions) {
 
       if (isFunction(descriptor) || !isObject(descriptor)) return
 
-      const columnProperties =
-        types.validate(descriptor, types.ColumnDescriptor, {})
+      const props =
+        types.validate<types.ColumnDescriptor>(
+          descriptor,
+          types.ColumnDescriptor,
+          {}
+        )
 
-      eachObj(columnProperties, (value, property) => {
+      if ('nullable' in props) {
+        if ('notNullable' in props) {
+          invariant(false, `can't set both 'nullable' & 'notNullable' - they work inversely`)
+        }
+
+        props.notNullable = !props.nullable
+      }
+
+      eachObj(props, (value, property) => {
         if (IGNORABLE_PROPS.includes(property)) return
 
         if (KNEX_NO_ARGS.includes(property)) {
-          columnProperties[property] && partial[property]()
+          props[property] && partial[property]()
         } else {
           partial[property](value)
         }
