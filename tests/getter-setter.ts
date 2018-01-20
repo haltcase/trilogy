@@ -1,5 +1,6 @@
 import test from 'ava'
 import { create } from '../src'
+import { Person } from './helpers/types'
 
 const db = create(':memory:')
 
@@ -53,7 +54,7 @@ test('getters & setters are not fired by `getRaw()` or `setRaw()`', async t => {
   const initial = await db.getRaw('people.name', { age: 44 })
   t.is(initial, 'John Doe')
 
-  const affected = await db.findOne('people', { age: 44 })
+  const affected = await db.findOne<Person>('people', { age: 44 })
   t.is(affected.name, 'JOHN DOE')
   t.is(affected.age, 44)
 
@@ -91,8 +92,8 @@ test('getters are not fired when `options.raw` is set', async t => {
   }, options)
 
   const [fired, bypassed] = await Promise.all([
-    db.findOne('people', { age: 99 }),
-    db.findOne('people', { age: 99 }, options)
+    db.findOne<Person>('people', { age: 99 }),
+    db.findOne<Person>('people', { age: 99 }, options)
   ])
 
   t.is(fired.name, 'A-A-RON')

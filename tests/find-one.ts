@@ -3,8 +3,18 @@ import { create } from '../src'
 
 const db = create(':memory:')
 
+interface First {
+  first: string,
+  second: string
+}
+
+interface People {
+  age: number,
+  gender: string
+}
+
 test.before(async () => {
-  await db.model('first', {
+  await db.model<First>('first', {
     first: String,
     second: String
   })
@@ -24,12 +34,12 @@ test('retrieves a single object', async t => {
 })
 
 test('allows retrieving a specific property', async t => {
-  const res = await db.findOne('first.second')
+  const res = await db.findOne<string>('first.second')
   t.deepEqual(res, 'blah')
 })
 
 test('allows for multiple where clauses', async t => {
-  const people = await db.model('findOne_people', {
+  const people = await db.model<People>('findOne_people', {
     age: Number,
     gender: String
   })

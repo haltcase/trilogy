@@ -25,7 +25,7 @@ test.serial('decrements by 1 when no amount is provided', async t => {
     people.map(({ name, age }, i) => {
       people[i].age -= 1
       return db.decr('people.age', { name })
-        .then(() => db.get('people.age', { name }))
+        .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
   )
@@ -38,7 +38,7 @@ test.serial('decrements by a specified amount', async t => {
     people.map(({ name, age }, i) => {
       people[i].age -= 4
       return db.decr('people.age', { name }, 4)
-        .then(() => db.get('people.age', { name }))
+        .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
   )
@@ -49,7 +49,7 @@ test.serial('decrements by a specified amount', async t => {
 test.serial('does not allow negative values when allowNegative is falsy', async t => {
   await db.create('people', { name: 'Benjamin Button', age: 100 })
   await db.decr('people.age', { name: 'Benjamin Button' }, 200)
-  const res = await db.get('people.age', { name: 'Benjamin Button' })
+  const res = await db.get<number>('people.age', { name: 'Benjamin Button' })
   t.is(res, 0)
 })
 
