@@ -30,7 +30,7 @@ export default class Model <D = types.ObjectLiteral> {
   }
 
   create (
-    object: types.ObjectLiteral,
+    object: D,
     options: types.ObjectLiteral = {}
   ): Promise<D> {
     const insertion = this.cast.toDefinition(object, options)
@@ -148,12 +148,15 @@ export default class Model <D = types.ObjectLiteral> {
   }
 
   async findOrCreate (
-    criteria: types.Criteria,
+    criteria: Partial<D>,
     creation: types.ObjectLiteral = {},
     options?: types.FindOptions
   ): Promise<D> {
     const existing = await this.findOne(criteria, options)
-    return existing || this.create({ ...criteria, ...creation })
+    // must cast `criteria` to any as a workaround for
+    // not being able to spread a generic type, see:
+    // https://github.com/Microsoft/TypeScript/issues/10727
+    return existing || this.create({ ...(criteria as any), ...creation })
   }
 
   update (
@@ -173,14 +176,14 @@ export default class Model <D = types.ObjectLiteral> {
   }
 
   async updateOrCreate (
-    criteria: types.CriteriaObj,
-    data: types.ObjectLiteral,
+    criteria: Partial<D>,
+    data: Partial<D>,
     options: types.UpdateOptions & types.CreateOptions = {}
   ): Promise<number> {
     const found = await this.find(criteria, options)
 
     if (!found || !found.length) {
-      return this.create({ ...criteria, ...data }, options)
+      return this.create({ ...(criteria as any), ...(data as any) }, options)
         .then(res => Number(!!res))
     } else {
       return this.update(criteria, data, options)
