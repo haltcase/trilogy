@@ -51,7 +51,7 @@ export class Trilogy {
   pool: Pool<Database>
   verbose?: (query: string) => any
 
-  private _definitions: Map<string, Model>
+  private _definitions: Map<string, Model<any>>
   private _modelPlugins: Set<ModelPlugin>
 
   constructor (path: string, options: types.TrilogyOptions = {}) {
@@ -124,17 +124,17 @@ export class Trilogy {
     return [...this._definitions.keys()]
   }
 
-  async model (
+  async model <D = types.ObjectLiteral> (
     name: string,
     schema: types.SchemaRaw,
     options: types.ModelOptions = {}
-  ): Promise<Model> {
+  ): Promise<Model<D>> {
     if (this._definitions.has(name)) {
       return this._definitions.get(name)
     }
 
     const ModelClass = mixPlugins(Model, this._modelPlugins)
-    const model = new ModelClass(this, name, schema, options)
+    const model = new ModelClass<D>(this, name, schema, options)
 
     this._definitions.set(name, model)
 
@@ -161,6 +161,7 @@ export class Trilogy {
     }
   }
 
+  getModel <D = types.ObjectLiteral> (name: string): Model<D> | never
   getModel (name: string): Model | never {
     return invariant(
       this._definitions.get(name),
@@ -202,23 +203,56 @@ export class Trilogy {
     }
   }
 
-  create (table: string, object: types.ObjectLiteral, options?: types.ObjectLiteral) {
+  create <T = types.ObjectLiteral> (
+    table: string,
+    object: types.ObjectLiteral,
+    options?: types.ObjectLiteral
+  ): Promise<T>
+  create (
+    table: string,
+    object: types.ObjectLiteral,
+    options?: types.ObjectLiteral
+  ) {
     const model = this.getModel(table)
     return model.create(object, options)
   }
 
-  find (location: string, criteria?: types.Criteria, options?: types.FindOptions) {
+  find <T = types.ObjectLiteral> (
+    location: string,
+    criteria?: types.Criteria,
+    options?: types.FindOptions
+  ): Promise<T[]>
+  find (
+    location: string,
+    criteria?: types.Criteria,
+    options?: types.FindOptions
+  ) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.find(column, criteria, options)
   }
 
-  findOne (location: string, criteria?: types.Criteria, options?: types.FindOptions) {
+  findOne <T = types.ObjectLiteral> (
+    location: string,
+    criteria?: types.Criteria,
+    options?: types.FindOptions
+  ): Promise<T>
+  findOne (
+    location: string,
+    criteria?: types.Criteria,
+    options?: types.FindOptions
+  ) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.findOne(column, criteria, options)
   }
 
+  findOrCreate <T = types.ObjectLiteral> (
+    table: string,
+    criteria: types.Criteria,
+    creation?: types.ObjectLiteral,
+    options?: types.FindOptions
+  ): Promise<T>
   findOrCreate (
     table: string,
     criteria: types.Criteria,
@@ -249,37 +283,39 @@ export class Trilogy {
     return model.updateOrCreate(criteria, data, options)
   }
 
-  get (location: string, criteria: types.Criteria): any
-  get <T> (location: string, criteria: types.Criteria, defaultValue: T): Promise<T>
-  get <T> (
+  get <T = types.ReturnType> (
     location: string,
     criteria: types.Criteria,
-    defaultValue?: T
-  ): Promise<T> {
+    defaultValue?: T): Promise<T>
+  get (
+    location: string,
+    criteria: types.Criteria,
+    defaultValue?: any
+  ): Promise<any> {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.get(column, criteria, defaultValue)
   }
 
-  set (location: string, criteria: types.Criteria, value) {
+  set <T> (location: string, criteria: types.Criteria, value: T) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.set(column, criteria, value)
   }
 
-  getRaw (location: string, criteria: types.Criteria): any
   getRaw <T> (location: string, criteria: types.Criteria, defaultValue: T): Promise<T>
-  getRaw <T> (
+  getRaw (location: string, criteria: types.Criteria): Promise<types.ReturnType>
+  getRaw (
     location: string,
     criteria: types.Criteria,
-    defaultValue?: T
-  ): Promise<T> {
+    defaultValue?: any
+  ): Promise<any> {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.getRaw(column, criteria, defaultValue)
   }
 
-  setRaw (location: string, criteria: types.Criteria, value) {
+  setRaw <T> (location: string, criteria: types.Criteria, value: T) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.setRaw(column, criteria, value)

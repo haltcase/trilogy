@@ -7,7 +7,7 @@ import * as types from './types'
 
 const MODEL_FLAG = Symbol('trilogy-model')
 
-export default class Model {
+export default class Model <D = types.ObjectLiteral> {
   cast: Cast
   schema: types.Schema
 
@@ -32,7 +32,7 @@ export default class Model {
   create (
     object: types.ObjectLiteral,
     options: types.ObjectLiteral = {}
-  ): Promise<object> {
+  ): Promise<D> {
     const insertion = this.cast.toDefinition(object, options)
 
     const query = this.ctx.knex.raw(
@@ -43,7 +43,7 @@ export default class Model {
     )
 
     return helpers.runQuery(this.ctx, query)
-      .then(() => helpers.findLastObject(this, object))
+      .then(() => helpers.findLastObject<D>(this, object))
       .then(res => res || (res != null && this.findOne(object)))
   }
 
@@ -51,11 +51,11 @@ export default class Model {
     column: string,
     criteria: types.Criteria,
     options?: types.FindOptions
-  ): Promise<any[]>
+  ): Promise<types.ReturnType[]>
   async find (
     criteria?: types.Criteria,
     options?: types.FindOptions
-  ): Promise<any[]>
+  ): Promise<D[]>
   async find (
     column: string | types.Criteria,
     criteria?: types.Criteria,
@@ -95,15 +95,20 @@ export default class Model {
     })
   }
 
+  async findOne <T> (
+    column: string,
+    criteria: types.Criteria,
+    options?: types.FindOptions
+  ): Promise<T>
   async findOne (
     column: string,
     criteria: types.Criteria,
     options?: types.FindOptions
-  ): Promise<any>
+  ): Promise<types.ReturnType>
   async findOne (
     criteria?: types.Criteria,
     options?: types.FindOptions
-  ): Promise<any>
+  ): Promise<D>
   async findOne (
     column?: string | types.Criteria,
     criteria?: types.Criteria,
@@ -125,7 +130,7 @@ export default class Model {
     if (options.skip) query = query.offset(options.skip)
 
     const response = await helpers.runQuery(this.ctx, query, true)
-    const result = Array.isArray(response) ? response[0] : response
+    const result: D = Array.isArray(response) ? response[0] : response
     if (isNil(result)) return result
 
     if (!column) {
@@ -144,9 +149,9 @@ export default class Model {
 
   async findOrCreate (
     criteria: types.Criteria,
-    creation: types.ObjectLiteral,
+    creation: types.ObjectLiteral = {},
     options?: types.FindOptions
-  ): Promise<types.ObjectLiteral> {
+  ): Promise<D> {
     const existing = await this.findOne(criteria, options)
     return existing || this.create({ ...criteria, ...creation })
   }
@@ -182,7 +187,7 @@ export default class Model {
     }
   }
 
-  get <T> (column: string, criteria?: types.Criteria, defaultValue?: T) {
+  get <T = types.ReturnType> (column: string, criteria?: types.Criteria, defaultValue?: T) {
     return baseGet(this, column, criteria, defaultValue)
   }
 
@@ -321,7 +326,7 @@ export default class Model {
   }
 }
 
-async function baseGet <T> (
+async function baseGet <T = types.ReturnType> (
   model: Model,
   column: string,
   criteria: types.Criteria,
@@ -336,11 +341,11 @@ async function baseGet <T> (
   return data[column]
 }
 
-async function baseSet (
+async function baseSet <T> (
   model: Model,
   column: string,
   criteria: types.Criteria,
-  value,
+  value: T,
   options?: types.ObjectLiteral
 ) {
   invariant(
