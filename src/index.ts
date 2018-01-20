@@ -317,7 +317,7 @@ export class Trilogy {
     criteria?: types.Criteria,
     options?: types.AggregateOptions
   ): Promise<number> {
-    if (arguments.length === 0) {
+    if (location == null && criteria == null && options == null) {
       const query = this.knex('sqlite_master')
         .whereNot('name', 'sqlite_sequence')
         .where({ type: 'table' })
