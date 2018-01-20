@@ -169,7 +169,15 @@ export type WhereClause = t.TypeOf<typeof WhereClause>
 export type WhereMultiple = WhereClause[]
 
 export type StorageType = string | number | Date | null | undefined
-export type ReturnType = string | number | boolean | Date | any[] | ObjectLiteral | null | undefined
+export type ReturnType =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | any[]
+  | Date
+  | ObjectLiteral
 
 export type CastToDefinition =
   | { [key: string]: StorageType }
