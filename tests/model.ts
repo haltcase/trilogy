@@ -70,8 +70,14 @@ test('defines a model with multiple indices', async t => {
   t.is(single.sql, 'CREATE INDEX `sodas_single_name_index` on `sodas_single` (`name`)')
 
   const array = results.filter(item => item.tbl_name === 'sodas_array')
-  t.is(array[0].sql, 'CREATE INDEX `sodas_array_name_flavor_index` on `sodas_array` (`name`, `flavor`)')
-  t.is(array[1].sql, 'CREATE INDEX `sodas_array_flavor_name_index` on `sodas_array` (`flavor`, `name`)')
+  t.is(
+    array[0].sql,
+    'CREATE INDEX `sodas_array_name_flavor_index` on `sodas_array` (`name`, `flavor`)'
+  )
+  t.is(
+    array[1].sql,
+    'CREATE INDEX `sodas_array_flavor_name_index` on `sodas_array` (`flavor`, `name`)'
+  )
 
   const object = results.filter(item => item.tbl_name === 'sodas_object')
   t.is(object[0].sql, 'CREATE INDEX `idx_name_flvr` on `sodas_object` (`name`, `flavor`)')
