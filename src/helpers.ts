@@ -147,10 +147,10 @@ export async function runQuery (
   return response
 }
 
-export async function findLastObject (
+export async function findLastObject <D = types.ObjectLiteral> (
   model: Model,
   object: types.ObjectLiteral
-): Promise<types.ObjectLiteral | void> {
+): Promise<D | void> {
   const { key, hasIncrements } = findKey(model.schema)
 
   if (!key && !hasIncrements) {

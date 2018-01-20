@@ -179,6 +179,8 @@ export type ReturnType =
   | Date
   | ObjectLiteral
 
+export type ReturnDict = { [key: string]: ReturnType }
+
 export type CastToDefinition =
   | { [key: string]: StorageType }
   | [string, StorageType]
