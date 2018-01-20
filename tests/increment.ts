@@ -25,7 +25,7 @@ test.serial('increments by 1 when no amount is provided', async t => {
     people.map(({ name, age }, i) => {
       people[i].age += 1
       return db.incr('people.age', { name })
-        .then(() => db.get('people.age', { name }))
+        .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
   )
@@ -38,7 +38,7 @@ test.serial('increments by a specified amount', async t => {
     people.map(({ name, age }, i) => {
       people[i].age += 4
       return db.incr('people.age', { name }, 4)
-        .then(() => db.get('people.age', { name }))
+        .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
   )

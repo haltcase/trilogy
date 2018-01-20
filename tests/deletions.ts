@@ -1,6 +1,8 @@
 import test from 'ava'
 import { create } from '../src'
 
+import { Person, Person3 } from './helpers/types'
+
 const db = create(':memory:')
 
 const somePeople = [
@@ -16,19 +18,21 @@ const morePeople = [
 ]
 
 test.before(async () => {
-  await db.model('people', {
-    name: { type: String, primary: true },
-    age: Number
-  })
+  const [people, others] = await Promise.all([
+    db.model<Person>('people', {
+      name: { type: String, primary: true },
+      age: Number
+    }),
 
-  await db.model('others', {
-    name: { type: String, primary: true },
-    age: Number
-  })
+    db.model<Person>('others', {
+      name: { type: String, primary: true },
+      age: Number
+    })
+  ])
 
   return Promise.all([
-    ...somePeople.map(person => db.create('people', person)),
-    ...morePeople.map(person => db.create('others', person))
+    ...somePeople.map(person => people.create(person)),
+    ...morePeople.map(person => others.create(person))
   ])
 })
 
@@ -45,18 +49,18 @@ test.serial('removes an object from the specified model', async t => {
 test.serial('removes all objects from the specified model', async t => {
   await db.clear('people')
 
-  const values = await Promise.all([
-    db.count('people'),
-    ...morePeople.map(({ name }) => {
-      return db.findOne('people', { name })
-    })
-  ])
+  const quantity = await db.count('people')
+  t.falsy(quantity)
+
+  const values = await Promise.all(
+    morePeople.map(({ name }) => db.findOne('people', { name }))
+  )
 
   values.forEach(value => t.falsy(value))
 })
 
 test('allows for multiple where clauses', async t => {
-  const people = await db.model('deletions_people', {
+  const people = await db.model<Person3>('deletions_people', {
     age: Number,
     favoriteColor: String
   })

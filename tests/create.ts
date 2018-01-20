@@ -44,10 +44,10 @@ test('create: inserts objects into the database', async t => {
 
 test('create: handles nil values correctly', async t => {
   const [one, two] = await Promise.all([
-    db.model('people_one', {
+    db.model<{ name: string }>('people_one', {
       name: { type: String }
     }),
-    db.model('people_two', {
+    db.model<{ name: string }>('people_two', {
       name: { type: String, notNullable: true }
     })
   ])

@@ -1,18 +1,20 @@
 import test from 'ava'
 import { create } from '../src'
 
+import { FirstSecond, Person2 } from './helpers/types'
+
 const db = create(':memory:')
 
 const arr = ['fee', 'fi', 'fo', 'fum']
 
 test.before(async () => {
-  await db.model('select', {
+  const select = await db.model<FirstSecond>('select', {
     first: String,
     second: String
   })
 
   return Promise.all(
-    arr.map(v => db.create('select', { first: v, second: 'blah' }))
+    arr.map(v => select.create({ first: v, second: 'blah' }))
   )
 })
 
@@ -26,7 +28,7 @@ test('retrieves rows as arrays of objects', async t => {
 })
 
 test('allows for multiple where clauses', async t => {
-  const people = await db.model('find_people', {
+  const people = await db.model<Person2>('find_people', {
     age: Number,
     gender: String
   })
