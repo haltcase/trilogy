@@ -52,8 +52,12 @@ export type ObjectLiteral = { [key: string]: any }
 export type Criteria2 = [string, any]
 export type Criteria3 = [string, string, any]
 export type CriteriaList = Array<Criteria2 | Criteria3>
-export type CriteriaObj = ObjectLiteral
-export type Criteria = CriteriaObj | CriteriaList | Criteria2 | Criteria3
+export type CriteriaObj <D> = Partial<D>
+export type Criteria <D = ObjectLiteral> =
+  | CriteriaObj<D>
+  | CriteriaList
+  | Criteria2
+  | Criteria3
 
 export const Index = t.union([
   t.string,

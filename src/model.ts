@@ -49,15 +49,15 @@ export default class Model <D = types.ObjectLiteral> {
 
   async find (
     column: string,
-    criteria: types.Criteria,
+    criteria: types.Criteria<D>,
     options?: types.FindOptions
   ): Promise<types.ReturnType[]>
   async find (
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     options?: types.FindOptions
   ): Promise<D[]>
   async find (
-    column: string | types.Criteria,
+    column: string | types.Criteria<D>,
     criteria?: types.Criteria,
     options: types.FindOptions = {}
   ): Promise<any[]> {
@@ -97,20 +97,20 @@ export default class Model <D = types.ObjectLiteral> {
 
   async findOne <T> (
     column: string,
-    criteria: types.Criteria,
+    criteria: types.Criteria<D>,
     options?: types.FindOptions
   ): Promise<T>
   async findOne (
     column: string,
-    criteria: types.Criteria,
+    criteria: types.Criteria<D>,
     options?: types.FindOptions
   ): Promise<types.ReturnType>
   async findOne (
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     options?: types.FindOptions
   ): Promise<D>
   async findOne (
-    column?: string | types.Criteria,
+    column?: string | types.Criteria<D>,
     criteria?: types.Criteria,
     options: types.FindOptions = {}
   ): Promise<any> {
@@ -148,7 +148,7 @@ export default class Model <D = types.ObjectLiteral> {
   }
 
   async findOrCreate (
-    criteria: Partial<D>,
+    criteria: types.CriteriaObj<D>,
     creation: types.ObjectLiteral = {},
     options?: types.FindOptions
   ): Promise<D> {
@@ -160,7 +160,7 @@ export default class Model <D = types.ObjectLiteral> {
   }
 
   update (
-    criteria: types.Criteria,
+    criteria: types.Criteria<D>,
     data: types.ObjectLiteral,
     options: types.UpdateOptions = {}
   ): Promise<number> {
@@ -176,7 +176,7 @@ export default class Model <D = types.ObjectLiteral> {
   }
 
   async updateOrCreate (
-    criteria: Partial<D>,
+    criteria: types.CriteriaObj<D>,
     data: Partial<D>,
     options: types.UpdateOptions & types.CreateOptions = {}
   ): Promise<number> {
@@ -190,19 +190,19 @@ export default class Model <D = types.ObjectLiteral> {
     }
   }
 
-  get <T = types.ReturnType> (column: string, criteria?: types.Criteria, defaultValue?: T) {
+  get <T = types.ReturnType> (column: string, criteria?: types.Criteria<D>, defaultValue?: T) {
     return baseGet(this, column, criteria, defaultValue)
   }
 
-  set <T> (column: string, criteria?: types.Criteria, value?: T) {
+  set <T> (column: string, criteria?: types.Criteria<D>, value?: T) {
     return baseSet(this, column, criteria, value)
   }
 
-  getRaw <T> (column: string, criteria: types.Criteria, defaultValue?: T) {
+  getRaw <T> (column: string, criteria: types.Criteria<D>, defaultValue?: T) {
     return baseGet(this, column, criteria, defaultValue, { raw: true })
   }
 
-  setRaw <T> (column: string, criteria?: types.Criteria, value?: T) {
+  setRaw <T> (column: string, criteria?: types.Criteria<D>, value?: T) {
     return baseSet(this, column, criteria, value, { raw: true })
   }
 
