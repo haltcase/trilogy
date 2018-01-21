@@ -1,3 +1,124 @@
+<a name="2.0.0-beta.1"></a>
+### [`2.0.0-beta.1`](https://github.com/citycide/trilogy/compare/v1.4.4...v2.0.0-beta.1) (2018-01-21)
+
+v2.0.0 is a significant release &mdash; the highlights are:
+
+* rewritten in TypeScript
+* plugin support
+* Node 6 minimum version requirement
+
+#### codename: solid source
+
+trilogy has been rewritten in TypeScript, which has already paid off &mdash;
+the last two patch releases contained fixes found in the process of refactoring
+the code base with types. It also provides a much better editing experience:
+
+<details>
+<summary>click to expand</summary>
+
+```ts
+import * as trilogy from 'trilogy'
+
+const db = trilogy.create(':memory:')
+
+// you can provide types like this to `model()`
+// to get compiler assistance
+interface Person {
+  name: string
+}
+
+;(async () => {
+  let people: trilogy.Model = await db.model<Person>('people', {
+    name: String
+  })
+})()
+```
+</details>
+
+#### extensible ecosystem
+
+Plugins are now supported! They are simple functions accepting a context
+object that provides the trilogy instance and two helper functions for adding
+functionality. They look like this:
+
+<details>
+<summary>click to expand</summary>
+
+```js
+import { create } from 'trilogy'
+
+const db = create('./storage.db')
+
+const plugin = ({ instance, extend, extendModel }) => {
+  extend({
+    findAllAdmins (table, username) {
+      return instance.knex(table)
+        .where(function () => {
+          this.where({ is_admin: true }).orWhere('permission', '>', 10)
+        })
+        .orWhere({ name: username })
+    }
+  })
+
+  extendModel(Model => class extends Model {
+    logModelName () {
+      console.log(`logging from ${this.name}`)
+    }
+  })
+}
+
+db.use(plugin)
+
+db.findAllAdmins('users', 'citycide')
+  .then(admins => console.log(admins))
+// -> ['citycide', ...]
+
+db.model('users', { username: String })
+  .then(users => users.logModelName())
+// -> 'logging from users'
+```
+</details>
+
+###### FEATURES
+
+* write in typescript, add plugin support ([6d9b9b3](https://github.com/citycide/trilogy/commit/6d9b9b3))
+* **invariant:** throw standard `Error` instead of custom type ([5a4bf70](https://github.com/citycide/trilogy/commit/5a4bf70))
+* **schema:** make `nullable` actually work inversely to `notNullable` ([e4ccc51](https://github.com/citycide/trilogy/commit/e4ccc51))
+* **schema-helpers:** throw on non-string column types ([43eebb6](https://github.com/citycide/trilogy/commit/43eebb6))
+* **where,cast:** make casting & where clauses stricter ([3ecee37](https://github.com/citycide/trilogy/commit/3ecee37))
+
+
+###### PERFORMANCE
+
+* **count:** avoid `arguments` usage ([cb33ff1](https://github.com/citycide/trilogy/commit/cb33ff1))
+
+
+###### BREAKING CHANGES
+
+* **schema:** providing both the `nullable` & `notNullable` properties will cause an `Error` to be thrown
+* **where,cast:** invalid where clauses and unrecognized types at casting will now cause `Error`s to be thrown
+* **schema-helpers:** An error will be thrown when column type cannot be retrieved.
+* **invariant:** `InvariantError`s are no longer thrown. They are `Error`s instead.
+
+Support for Node 4 has been dropped, meaning trilogy now requires >=6.
+
+trilogy no longer has a default export in order to better support TypeScript
+users. The recommended way to create a new instance has also changed (though
+the old way is still possible).
+
+```js
+// before
+import Trilogy from 'trilogy'
+const db = new Trilogy(':memory:')
+```
+
+```js
+// after
+import { create } from 'trilogy'
+const db = create(':memory:')
+
+---
+
 <a name="1.4.4"></a>
 ### [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
 
