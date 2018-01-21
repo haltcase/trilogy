@@ -24,7 +24,8 @@
     "database",
     "electron",
     "mongoose",
-    "document"
+    "document",
+    "typescript"
   ],
   "engines": {
     "node": ">=6"
