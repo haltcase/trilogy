@@ -116,6 +116,7 @@ const db = new Trilogy(':memory:')
 // after
 import { create } from 'trilogy'
 const db = create(':memory:')
+```
 
 ---
 
