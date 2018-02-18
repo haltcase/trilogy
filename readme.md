@@ -99,11 +99,11 @@ const db = new Trilogy(':memory:', {
 
 ;(async function () {
   const games = await db.model('games', {
-    name: { type: String, primary: true },   // primary key
+    name: { type: String },
     genre: String,                           // type shorthand
     released: Date,
     awards: Array,
-    id: 'increments'                         // special type
+    id: 'increments'                         // special type, primary key
   })
 
   await games.create({
