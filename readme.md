@@ -105,11 +105,11 @@ const db = create(':memory:', {
 
 ;(async function () {
   const games = await db.model('games', {
-    name: { type: String, unique: true },    // unique constraint
+    name: { type: String },
     genre: String,                           // type shorthand
     released: Date,
     awards: Array,
-    id: 'increments'                         // special type
+    id: 'increments'                         // special type, primary key
   })
 
   await games.create({
