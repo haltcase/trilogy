@@ -12,9 +12,9 @@ const tables = [
 ]
 
 test.before(() => {
-  return Promise.all(tables.map(table => {
-    db.model(table.name, table.schema)
-  }))
+  return Promise.all(
+    tables.map(table => db.model(table.name, table.schema))
+  )
 })
 
 test.after.always(() => db.close())
