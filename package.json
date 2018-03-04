@@ -51,27 +51,27 @@
   "dependencies": {
     "generic-pool": "^3.4.0",
     "io-ts": "^0.9.4",
-    "knex": "^0.14.2",
-    "tslib": "^1.8.1"
+    "knex": "^0.14.4",
+    "tslib": "^1.9.0"
   },
   "devDependencies": {
     "@citycide/changelog": "^1.0.0",
-    "@types/generic-pool": "^3.1.0",
-    "@types/knex": "^0.14.0",
+    "@types/generic-pool": "^3.1.1",
+    "@types/knex": "^0.14.8",
     "@types/node": "^8.5.2",
     "@types/rimraf": "^2.0.2",
     "@types/sql.js": "^0.0.29",
-    "ava": "^0.24.0",
+    "ava": "0.24.0",
     "ava-ts": "^0.24.0",
     "cpy-cli": "^1.0.1",
     "docsify-cli": "^4.2.0",
-    "rimraf": "^2.6.1",
+    "rimraf": "^2.6.2",
     "sql.js": "^0.5.0",
     "sqlite3": "^3.1.13",
-    "ts-node": "^4.1.0",
-    "tslint": "^5.8.0",
+    "ts-node": "^5.0.1",
+    "tslint": "^5.9.1",
     "tslint-config-standard": "^7.0.0",
-    "typescript": "^2.6.2"
+    "typescript": "^2.7.2"
   },
   "ava": {
     "files": [
