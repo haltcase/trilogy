@@ -1,20 +1,12 @@
 import test from 'ava'
 import { create } from '../src'
 
+import { FirstSecond, Person2 } from './helpers/types'
+
 const db = create(':memory:')
 
-interface First {
-  first: string,
-  second: string
-}
-
-interface People {
-  age: number,
-  gender: string
-}
-
 test.before(async () => {
-  await db.model<First>('first', {
+  await db.model<FirstSecond>('first', {
     first: String,
     second: String
   })
@@ -39,7 +31,7 @@ test('allows retrieving a specific property', async t => {
 })
 
 test('allows for multiple where clauses', async t => {
-  const people = await db.model<People>('findOne_people', {
+  const people = await db.model<Person2>('findOne_people', {
     age: Number,
     gender: String
   })
@@ -54,7 +46,7 @@ test('allows for multiple where clauses', async t => {
   await Promise.all(list.map(p => people.create(p)))
 
   const found = await people.findOne([
-    ['age', '>', 50],
+    ['age', '>', 50] as [string, string, number],
     { gender: 'female' }
   ])
 

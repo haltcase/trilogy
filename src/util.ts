@@ -3,9 +3,9 @@ import { mkdirSync, statSync } from 'fs'
 
 import * as types from './types'
 
-export function eachObj <T extends object, K extends keyof T> (
+export function eachObj <T extends object> (
   collection: T,
-  fn: (value: T[K], key: string, collection: T) => any
+  fn: (value: T[keyof T], key: string, collection: T) => any
 ) {
   const keys = Object.keys(collection)
   for (let i = 0; i < keys.length; i++) {
@@ -15,10 +15,10 @@ export function eachObj <T extends object, K extends keyof T> (
   }
 }
 
-export function mapObj <T extends object, K extends keyof T> (
+export function mapObj <T extends object> (
   collection: T,
-  fn: (value: T[K], key: string, collection: T) => any
-): { [key: string]: T[K] } {
+  fn: (value: T[keyof T], key: string, collection: T) => any
+): { [key: string]: T[keyof T] } {
   const result = {}
   eachObj(collection, (value, key, collection) => {
     result[key] = fn(value, key, collection)

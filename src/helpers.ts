@@ -33,7 +33,7 @@ export function parseResponse (
 
 export function buildOrder (
   partial: knex.QueryBuilder,
-  order: string | [string, string]
+  order: string | [string] | [string, string]
 ): knex.QueryBuilder {
   if (util.isString(order)) {
     if (order === 'random') {

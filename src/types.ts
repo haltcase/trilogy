@@ -4,8 +4,6 @@ import { ThrowReporter } from 'io-ts/lib/ThrowReporter'
 import { COLUMN_TYPES } from './constants'
 import { isFunction } from './util'
 
-import * as Bluebird from 'bluebird'
-
 import {
   Raw,
   SchemaBuilder,
@@ -40,22 +38,29 @@ export function withDefault <T extends t.Any> (
   )
 }
 
+interface Thenable <T> {
+  then <U> (
+    onFulfilled?: (value: T) => U | Thenable<U>,
+    onRejected?: (error: any) => U | Thenable<U>
+  ): Thenable<U>
+}
+
 export type Query =
   | Raw
   | QueryBuilder
   | SchemaBuilder
   // include this for knex methods like `schema.hasTable()`
-  | Bluebird<any>
+  | Thenable<any>
 
 export type ObjectLiteral = { [key: string]: any }
 
 export type Criteria2 = [string, any]
 export type Criteria3 = [string, string, any]
-export type CriteriaList = Array<Criteria2 | Criteria3>
-export type CriteriaObj <D> = Partial<D>
+export type CriteriaList <D = ObjectLiteral> = Array<Partial<D> | Criteria2 | Criteria3>
+export type CriteriaObj <D = ObjectLiteral> = Partial<D>
 export type Criteria <D = ObjectLiteral> =
   | CriteriaObj<D>
-  | CriteriaList
+  | CriteriaList<D>
   | Criteria2
   | Criteria3
 
