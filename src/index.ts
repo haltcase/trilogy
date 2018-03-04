@@ -143,12 +143,7 @@ export class Trilogy {
       types.validate(options, types.ModelOptions, {})
     )
     const check = this.knex.schema.hasTable(name)
-    const query = this.knex.schema
-      .createTableIfNotExists(name, opts)
-
-    // despite the `IfNotExists`, we still explicitly check to see if
-    // the table exists because errors are thrown on attempts to create
-    // indices that have already been created
+    const query = this.knex.schema.createTable(name, opts)
 
     if (this.isNative) {
       // tslint:disable-next-line:await-promise
