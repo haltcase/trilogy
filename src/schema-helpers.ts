@@ -204,7 +204,7 @@ export class Cast {
       const clone = object.slice()
       const valueIndex = clone.length - 1
       clone[valueIndex] =
-      this.toColumnDefinition(clone[0], clone[valueIndex], options)
+        this.toColumnDefinition(clone[0], clone[valueIndex], options)
       return clone
     }
 
