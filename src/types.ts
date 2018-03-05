@@ -16,13 +16,13 @@ export const raise: (
   validation: Left<t.ValidationError[], any> | Right<t.ValidationError[], any>
 ) => void = ThrowReporter.report
 
-export function validate <L, T = L> (value: L, type, defaultValue?: T): L | T {
-  const result = t.validate<L, T>(value, type)
-  return raise(result) || result.getOrElseValue(defaultValue)
+export function validate <L> (value: L, type: t.Type<L>, defaultValue?: L): L {
+  const result = type.decode(value)
+  return raise(result) || result.getOrElse(defaultValue)
 }
 
 // based on `withDefault` from io-ts tests: https://git.io/vNGS6
-export function withDefault <T extends t.Any> (
+export function withDefault <T extends t.Mixed> (
   type: T,
   defaultValue: (() => t.TypeOf<T>) | t.TypeOf<T>
 ): t.Type<t.InputOf<T>, t.TypeOf<T>> {
@@ -34,7 +34,7 @@ export function withDefault <T extends t.Any> (
     `withDefault(${type.name}, ${JSON.stringify(value)})`,
     type.is,
     (v, c) => type.validate(v != null ? v : value, c),
-    type.serialize
+    type.encode
   )
 }
 
