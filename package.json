@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "generic-pool": "^3.4.0",
-    "io-ts": "^0.9.4",
+    "io-ts": "^1.0.5",
     "knex": "^0.14.4",
     "tslib": "^1.9.0"
   },
