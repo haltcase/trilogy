@@ -25,7 +25,7 @@ export function validate <L> (value: L, type: t.Type<L>, defaultValue?: L): L {
 export function withDefault <T extends t.Mixed> (
   type: T,
   defaultValue: (() => t.TypeOf<T>) | t.TypeOf<T>
-): t.Type<t.InputOf<T>, t.TypeOf<T>> {
+): t.Type<t.TypeOf<T>, t.TypeOf<T>> {
   const value = isFunction(defaultValue)
     ? defaultValue()
     : defaultValue
