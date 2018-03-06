@@ -43,6 +43,12 @@ const mixPlugins = (parent: typeof Model, mixins: Set<ModelPlugin>): typeof Mode
   return result
 }
 
+const ensureExists = (atPath: string) => {
+  try {
+    closeSync(openSync(atPath, 'wx'))
+  } catch (e) {}
+}
+
 export class Trilogy {
   isNative: boolean
   knex: knex
@@ -376,12 +382,6 @@ export class Trilogy {
     const model = this.getModel(table)
     return model.max(column, criteria, options)
   }
-}
-
-function ensureExists (atPath: string) {
-  try {
-    closeSync(openSync(atPath, 'wx'))
-  } catch (e) {}
 }
 
 export { default as Model } from './model'
