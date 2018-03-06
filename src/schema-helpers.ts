@@ -209,7 +209,7 @@ export class Cast {
     }
 
     if (isWhereMultiple(object)) {
-      return object.map(clause => this.toDefinition(clause, options))
+      return object.map(clause => this.toDefinition(clause, options)) as types.WhereMultiple
     }
 
     if (isObject(object)) {
