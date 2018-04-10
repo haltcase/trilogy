@@ -3,24 +3,24 @@ import { mkdirSync, statSync } from 'fs'
 
 import * as types from './types'
 
-export function eachObj <T extends object> (
+export function eachObj <T, K extends keyof T> (
   collection: T,
-  fn: (value: T[keyof T], key: string, collection: T) => any
+  fn: (value: T[K], key: K, collection: T) => any
 ) {
   const keys = Object.keys(collection)
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i]
     const value = collection[key]
-    if (fn(value, key, collection) === false) break
+    if (fn(value, key as K, collection) === false) break
   }
 }
 
-export function mapObj <T extends object> (
+export function mapObj <T, K extends keyof T, U> (
   collection: T,
-  fn: (value: T[keyof T], key: string, collection: T) => any
-): { [key: string]: T[keyof T] } {
-  const result = {}
-  eachObj(collection, (value, key, collection) => {
+  fn: (value: T[K], key: K, collection: T) => U
+): Record<keyof T, U> {
+  const result = {} as Record<keyof T, U>
+  eachObj<T, K>(collection, (value, key, collection) => {
     result[key] = fn(value, key, collection)
   })
 
