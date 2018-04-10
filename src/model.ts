@@ -5,7 +5,7 @@ import { invariant, isString, isObject, isNil } from './util'
 
 import * as types from './types'
 
-const MODEL_FLAG = Symbol('trilogy-model')
+export const MODEL_FLAG = Symbol('trilogy-model')
 
 export default class Model <D = types.ObjectLiteral> {
   cast: Cast
