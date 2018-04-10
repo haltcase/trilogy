@@ -46,7 +46,7 @@ test('allows for multiple where clauses', async t => {
   await Promise.all(list.map(p => people.create(p)))
 
   const found = await people.findOne([
-    ['age', '>', 50] as [string, string, number],
+    ['age', '>', 50],
     { gender: 'female' }
   ])
 
