@@ -126,6 +126,7 @@ export async function runQuery (
     return res ? res.length : 0
   }
 
+  // tslint:disable-next-line:await-promise
   const db = await instance.pool.acquire()
   let response
 
