@@ -73,11 +73,8 @@ function createIndices (table: knex.TableBuilder, value: types.Index) {
     value.forEach(columns => table.index(columns as string[]))
   } else if (isObject(value)) {
     eachObj(value, (columns, indexName) => {
-      if (!Array.isArray(columns)) {
-        columns = [columns]
-      }
-
-      table.index(columns, indexName)
+      const names = Array.isArray(columns) ? columns : [columns]
+      table.index(names, indexName)
     })
   }
 }
