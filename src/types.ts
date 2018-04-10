@@ -49,20 +49,33 @@ export type Query =
   | Raw
   | QueryBuilder
   | SchemaBuilder
-  // include this for knex methods like `schema.hasTable()`
   | Thenable<any>
+
+export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
+  ? [string, string, V]
+  : T extends [string, V]
+    ? [string, V]
+    : T extends V[]
+      ? V[]
+      : V
 
 export type ObjectLiteral = { [key: string]: any }
 
-export type Criteria2 = [string, any]
-export type Criteria3 = [string, string, any]
-export type CriteriaList <D = ObjectLiteral> = Array<Partial<D> | Criteria2 | Criteria3>
+export type Criteria2 <D = ObjectLiteral> = [keyof D, D[keyof D]]
+export type Criteria3 <D = ObjectLiteral> = [keyof D, string, D[keyof D]]
 export type CriteriaObj <D = ObjectLiteral> = Partial<D>
-export type Criteria <D = ObjectLiteral> =
-  | CriteriaObj<D>
+
+export type CriteriaBase <D = ObjectLiteral> =
+  | Criteria2<DistinctArrayTuple<D>>
+  | Criteria3<DistinctArrayTuple<D>>
+  | Partial<D>
+
+export type CriteriaList <D = ObjectLiteral> = CriteriaBase<DistinctArrayTuple<D>>[]
+
+export type Criteria<D = ObjectLiteral> =
+  | CriteriaBase<D>
+  // TODO: making this generic causes type errors
   | CriteriaList<D>
-  | Criteria2
-  | Criteria3
 
 export const Index = t.union([
   t.string,
