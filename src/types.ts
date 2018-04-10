@@ -38,7 +38,7 @@ export function withDefault <T extends t.Mixed> (
   )
 }
 
-interface Thenable <T> {
+export interface Thenable <T> {
   then <U> (
     onFulfilled?: (value: T) => U | Thenable<U>,
     onRejected?: (error: any) => U | Thenable<U>
