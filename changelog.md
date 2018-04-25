@@ -1,3 +1,13 @@
+<a name="1.4.5"></a>
+### [`1.4.5`](https://github.com/citycide/trilogy/compare/v1.4.4...v1.4.5) (2018-04-24)
+
+
+No changes since `1.4.4` - this release restores the v1 release line to the `latest` tag,
+where a v2 beta was accidentally publish.
+
+
+---
+
 <a name="1.4.4"></a>
 ### [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
 

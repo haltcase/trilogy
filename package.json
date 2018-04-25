@@ -1,6 +1,6 @@
 {
   "name": "trilogy",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "No-hassle SQLite with a document store style API.",
   "license": "MIT",
   "author": {
