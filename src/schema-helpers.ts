@@ -194,7 +194,7 @@ export class Cast {
   constructor (private model: Model) {}
 
   toDefinition (
-    object: types.ObjectLiteral | types.WhereTuple | types.WhereMultiple,
+    object: types.LooseObject | types.WhereTuple | types.WhereMultiple,
     options: { raw?: boolean }
   ): types.CastToDefinition {
     if (isWhereTuple(object)) {

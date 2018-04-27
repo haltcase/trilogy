@@ -12,7 +12,7 @@ const HAS_TABLE_SUBSTRING = `from sqlite_master where type = 'table'`
 
 export function parseResponse (
   contents: types.SqlJsResponse
-): types.ObjectLiteral[] {
+): types.LooseObject[] {
   if (!contents || !contents.length) return []
 
   const [{ columns, values }] = contents
@@ -148,9 +148,9 @@ export async function runQuery (
   return response
 }
 
-export async function findLastObject <D = types.ObjectLiteral> (
+export async function findLastObject <D = types.LooseObject> (
   model: Model,
-  object: types.ObjectLiteral
+  object: types.LooseObject
 ): Promise<D | void> {
   const { key, hasIncrements } = findKey(model.schema)
 

@@ -59,20 +59,20 @@ export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
       ? V[]
       : V
 
-export type ObjectLiteral = { [key: string]: any }
+export type LooseObject = { [key: string]: any }
 
-export type Criteria2 <D = ObjectLiteral> = [keyof D, D[keyof D]]
-export type Criteria3 <D = ObjectLiteral> = [keyof D, string, D[keyof D]]
-export type CriteriaObj <D = ObjectLiteral> = Partial<D>
+export type Criteria2 <D = LooseObject> = [keyof D, D[keyof D]]
+export type Criteria3 <D = LooseObject> = [keyof D, string, D[keyof D]]
+export type CriteriaObj <D = LooseObject> = Partial<D>
 
-export type CriteriaBase <D = ObjectLiteral> =
+export type CriteriaBase <D = LooseObject> =
   | Criteria2<DistinctArrayTuple<D>>
   | Criteria3<DistinctArrayTuple<D>>
   | Partial<D>
 
-export type CriteriaList <D = ObjectLiteral> = CriteriaBase<DistinctArrayTuple<D>>[]
+export type CriteriaList <D = LooseObject> = CriteriaBase<DistinctArrayTuple<D>>[]
 
-export type Criteria<D = ObjectLiteral> =
+export type Criteria<D = LooseObject> =
   | CriteriaBase<D>
   // TODO: making this generic causes type errors
   | CriteriaList<D>
@@ -199,7 +199,7 @@ export type ReturnType =
   | undefined
   | any[]
   | Date
-  | ObjectLiteral
+  | LooseObject
 
 export type ReturnDict = { [key: string]: ReturnType }
 

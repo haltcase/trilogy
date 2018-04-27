@@ -27,7 +27,7 @@ export function mapObj <T, K extends keyof T, U> (
   return result
 }
 
-export const isObject = (value): value is types.ObjectLiteral =>
+export const isObject = (value): value is types.LooseObject =>
   (value && value.constructor === Object) || false
 
 export const isFunction = (value): value is Function => typeof value === 'function'

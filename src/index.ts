@@ -130,7 +130,7 @@ export class Trilogy {
     return [...this._definitions.keys()]
   }
 
-  async model <D = types.ObjectLiteral> (
+  async model <D = types.LooseObject> (
     name: string,
     schema: types.SchemaRaw,
     options: types.ModelOptions = {}
@@ -162,7 +162,7 @@ export class Trilogy {
     }
   }
 
-  getModel <D = types.ObjectLiteral> (name: string): Model<D> | never
+  getModel <D = types.LooseObject> (name: string): Model<D> | never
   getModel (name: string): Model | never {
     return invariant(
       this._definitions.get(name),
@@ -204,21 +204,21 @@ export class Trilogy {
     }
   }
 
-  create <T = types.ObjectLiteral> (
+  create <T = types.LooseObject> (
     table: string,
-    object: types.ObjectLiteral,
-    options?: types.ObjectLiteral
+    object: types.LooseObject,
+    options?: types.LooseObject
   ): Promise<T>
   create (
     table: string,
-    object: types.ObjectLiteral,
-    options?: types.ObjectLiteral
+    object: types.LooseObject,
+    options?: types.LooseObject
   ) {
     const model = this.getModel(table)
     return model.create(object, options)
   }
 
-  find <T = types.ObjectLiteral> (
+  find <T = types.LooseObject> (
     location: string,
     criteria?: types.Criteria,
     options?: types.FindOptions
@@ -233,7 +233,7 @@ export class Trilogy {
     return model.find(column, criteria, options)
   }
 
-  findOne <T = types.ObjectLiteral> (
+  findOne <T = types.LooseObject> (
     location: string,
     criteria?: types.Criteria,
     options?: types.FindOptions
@@ -248,16 +248,16 @@ export class Trilogy {
     return model.findOne(column, criteria, options)
   }
 
-  findOrCreate <T = types.ObjectLiteral> (
+  findOrCreate <T = types.LooseObject> (
     table: string,
     criteria: types.Criteria,
-    creation?: types.ObjectLiteral,
+    creation?: types.LooseObject,
     options?: types.FindOptions
   ): Promise<T>
   findOrCreate (
     table: string,
     criteria: types.Criteria,
-    creation?: types.ObjectLiteral,
+    creation?: types.LooseObject,
     options?: types.FindOptions
   ) {
     const model = this.getModel(table)
@@ -267,7 +267,7 @@ export class Trilogy {
   update (
     table: string,
     criteria: types.Criteria,
-    data: types.ObjectLiteral,
+    data: types.LooseObject,
     options?: types.UpdateOptions
   ) {
     const model = this.getModel(table)
@@ -277,7 +277,7 @@ export class Trilogy {
   updateOrCreate (
     table: string,
     criteria: types.Criteria,
-    data: types.ObjectLiteral,
+    data: types.LooseObject,
     options?: types.CreateOptions & types.UpdateOptions
   ) {
     const model = this.getModel(table)

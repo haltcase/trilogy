@@ -7,7 +7,7 @@ import * as types from './types'
 
 export const MODEL_FLAG = Symbol('trilogy-model')
 
-export default class Model <D = types.ObjectLiteral> {
+export default class Model <D = types.LooseObject> {
   cast: Cast
   schema: types.Schema
 
@@ -31,7 +31,7 @@ export default class Model <D = types.ObjectLiteral> {
 
   create (
     object: D,
-    options: types.ObjectLiteral = {}
+    options: types.LooseObject = {}
   ): Promise<D> {
     const insertion = this.cast.toDefinition(object, options)
 
@@ -149,7 +149,7 @@ export default class Model <D = types.ObjectLiteral> {
 
   async findOrCreate (
     criteria: types.CriteriaObj<D>,
-    creation: types.ObjectLiteral = {},
+    creation: types.LooseObject = {},
     options?: types.FindOptions
   ): Promise<D> {
     const existing = await this.findOne(criteria, options)
@@ -161,7 +161,7 @@ export default class Model <D = types.ObjectLiteral> {
 
   update (
     criteria: types.Criteria<D>,
-    data: types.ObjectLiteral,
+    data: types.LooseObject,
     options: types.UpdateOptions = {}
   ): Promise<number> {
     options = types.validate(options, types.UpdateOptions)
@@ -334,7 +334,7 @@ async function baseGet <T = types.ReturnType> (
   column: string,
   criteria: types.Criteria,
   defaultValue: T,
-  options?: types.ObjectLiteral
+  options?: types.LooseObject
 ): Promise<T> {
   const data = await model.findOne(criteria, options)
   if (!data || data[column] === undefined) {
@@ -349,7 +349,7 @@ async function baseSet <T> (
   column: string,
   criteria: types.Criteria,
   value: T,
-  options?: types.ObjectLiteral
+  options?: types.LooseObject
 ) {
   invariant(
     model.schema[column],
