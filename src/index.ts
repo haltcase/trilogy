@@ -46,7 +46,7 @@ const mixPlugins = (parent: typeof Model, mixins: Set<ModelPlugin>): typeof Mode
 const ensureExists = (atPath: string) => {
   try {
     closeSync(openSync(atPath, 'wx'))
-  } catch (e) {}
+  } catch {}
 }
 
 export class Trilogy {
