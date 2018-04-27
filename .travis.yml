@@ -2,11 +2,9 @@ dist: trusty
 
 language: node_js
 node_js:
+  - '10'
   - '8'
   - '6'
-
-before_install:
-  - if [[ `npm -v` == 2* ]]; then npm i -g npm@latest; fi
 
 notifications:
   email: false
