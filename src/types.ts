@@ -74,7 +74,6 @@ export type CriteriaList <D = LooseObject> = CriteriaBase<DistinctArrayTuple<D>>
 
 export type Criteria<D = LooseObject> =
   | CriteriaBase<D>
-  // TODO: making this generic causes type errors
   | CriteriaList<D>
 
 export const Index = t.union([
