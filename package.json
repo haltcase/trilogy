@@ -63,7 +63,7 @@
     "babel-preset-stage-0": "^6.24.1",
     "babel-register": "^6.24.1",
     "babel-runtime": "^6.23.0",
-    "cpy-cli": "^1.0.1",
+    "cpy-cli": "^2.0.0",
     "docsify-cli": "^4.1.8",
     "rimraf": "^2.6.1",
     "rollup": "^0.51.6",
