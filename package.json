@@ -66,7 +66,7 @@
     "cpy-cli": "^1.0.1",
     "docsify-cli": "^4.1.8",
     "rimraf": "^2.6.1",
-    "rollup": "^0.51.6",
+    "rollup": "^0.52.0",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-watch": "^4.0.0",
     "snazzy": "^7.0.0",
