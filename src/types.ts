@@ -59,10 +59,12 @@ export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
       ? V[]
       : V
 
+export type StringKeys <D = LooseObject> = Extract<keyof D, string>
+
 export type LooseObject = { [key: string]: any }
 
-export type Criteria2 <D = LooseObject> = [keyof D, D[keyof D]]
-export type Criteria3 <D = LooseObject> = [keyof D, string, D[keyof D]]
+export type Criteria2 <D = LooseObject> = [StringKeys<D>, D[StringKeys<D>]]
+export type Criteria3 <D = LooseObject> = [StringKeys<D>, string, D[StringKeys<D>]]
 export type CriteriaObj <D = LooseObject> = Partial<D>
 
 export type CriteriaBase <D = LooseObject> =

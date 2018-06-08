@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "generic-pool": "^3.4.2",
-    "io-ts": "^1.0.5",
+    "io-ts": "^1.1.4",
     "knex": "^0.14.5",
     "tslib": "^1.9.0"
   },
@@ -71,7 +71,7 @@
     "ts-node": "^5.0.1",
     "tslint": "^5.9.1",
     "tslint-config-standard": "^7.0.0",
-    "typescript": "^2.8.1"
+    "typescript": "^2.9.1"
   },
   "ava": {
     "files": [
