@@ -16,33 +16,6 @@ import * as types from './types'
 // @ts-ignore: throwaway reference to satisfy compiler
 import * as t from 'io-ts'
 
-export type ModelPlugin = (model: typeof Model) => typeof Model
-
-export interface PluginContext {
-  instance: Trilogy,
-  extend: (object: types.ObjectLiteral) => any,
-  extendModel: (fn: ModelPlugin) => any
-}
-
-export type Plugin = (context: PluginContext) => any
-
-const mixPlugins = (parent: typeof Model, mixins: Set<ModelPlugin>): typeof Model => {
-  let result = parent
-
-  let i = 0
-  for (const mixin of mixins) {
-    const child = mixin(result)
-    invariant(
-      child instanceof parent,
-      `Model plugins must extend Model (plugin at index ${i})`
-    )
-    result = child
-    i += 1
-  }
-
-  return result
-}
-
 const ensureExists = (atPath: string) => {
   try {
     closeSync(openSync(atPath, 'wx'))
@@ -52,13 +25,13 @@ const ensureExists = (atPath: string) => {
 export class Trilogy {
   isNative: boolean
   knex: knex
-  Model: typeof Model
   options: types.TrilogyOptions
   pool: Pool<Database>
   verbose?: (query: string) => any
 
+  Model = Model
+
   private _definitions: Map<string, Model<any>>
-  private _modelPlugins: Set<ModelPlugin>
 
   constructor (path: string, options: types.TrilogyOptions = {}) {
     invariant(path, 'trilogy constructor must be provided a file path')
@@ -93,37 +66,6 @@ export class Trilogy {
     }
 
     this._definitions = new Map()
-    this._modelPlugins = new Set()
-  }
-
-  use (plugin: Plugin) {
-    invariant(
-      typeof plugin === 'function',
-      'trilogy plugins must be of type function'
-    )
-
-    plugin({
-      instance: this,
-
-      extend: (object: types.ObjectLiteral) => {
-        for (const key of Object.keys(object)) {
-          if (this[key] != null) continue
-
-          const value = object[key]
-          if (typeof value === 'function') {
-            this[key] = value.bind(this)
-          } else {
-            this[key] = value
-          }
-        }
-      },
-
-      extendModel: (fn: ModelPlugin) => {
-        this._modelPlugins.add(fn)
-      }
-    })
-
-    return this
   }
 
   get models () {
@@ -139,9 +81,7 @@ export class Trilogy {
       return this._definitions.get(name)
     }
 
-    const ModelClass = mixPlugins(Model, this._modelPlugins)
-    const model = new ModelClass<D>(this, name, schema, options)
-
+    const model = new this.Model<D>(this, name, schema, options)
     this._definitions.set(name, model)
 
     const opts = toKnexSchema(
@@ -386,5 +326,6 @@ export class Trilogy {
 
 export { default as Model } from './model'
 export * from './types'
+export * from './plugins'
 
 export const create = (path: string, options?: types.TrilogyOptions) => new Trilogy(path, options)
