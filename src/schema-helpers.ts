@@ -95,9 +95,11 @@ export function castValue (value) {
 }
 
 export function normalizeSchema (schema: types.SchemaRaw): types.Schema {
-  const result = {}
+  const keys = Object.keys(schema)
+  invariant(keys.length > 0, 'model schemas cannot be empty')
 
-  for (const key of Object.keys(schema)) {
+  const result = {}
+  for (const key of keys) {
     const descriptor = schema[key]
     const type = typeof descriptor
 
