@@ -79,7 +79,7 @@ project maintainers:
 | type: feature             | Request for a new feature or enhancement.                 |
 | type: performance         | Opportunity for performance improvements.                 |
 | type: question            | Not a true issue, usually a question relating to usage.   |
-| type: tests               | Issues concerns the tests.                                |
+| type: test                | Issues concerns the tests.                                |
 
 #### type labels
 
