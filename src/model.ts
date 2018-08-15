@@ -182,7 +182,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
   async incr (
     column?: string,
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     amount?: number
   ): Promise<number> {
     const cast = Number(amount)
@@ -197,7 +197,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
   async decr (
     column?: string,
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     amount?: number,
     allowNegative?: boolean
   ): Promise<number> {
@@ -215,7 +215,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     return helpers.runQuery(this.ctx, query)
   }
 
-  async remove (criteria: types.Criteria): Promise<number> {
+  async remove (criteria: types.Criteria<D>): Promise<number> {
     if (
       !helpers.isValidWhere(criteria) ||
       (isObject(criteria) && !Object.keys(criteria).length)
@@ -234,15 +234,15 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
   async count (
     column: string,
-    criteria: types.Criteria,
+    criteria: types.Criteria<D>,
     options?: types.AggregateOptions
   ): Promise<number>
   async count (
-    criteria: types.Criteria,
+    criteria: types.Criteria<D>,
     options?: types.AggregateOptions
   ): Promise<number>
   async count (
-    column?: string | types.Criteria,
+    column?: string | types.Criteria<D>,
     criteria?: types.Criteria,
     options: types.AggregateOptions = {}
   ): Promise<number> {
@@ -268,7 +268,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
   async min (
     column: string,
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     options: types.AggregateOptions = {}
   ): Promise<number | void> {
     options = types.validate(options, types.AggregateOptions)
@@ -286,7 +286,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
   async max (
     column: string,
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     options?: types.AggregateOptions
   ): Promise<number | void> {
     options = types.validate(options, types.AggregateOptions)

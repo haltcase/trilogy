@@ -72,7 +72,7 @@ export class Trilogy {
     return [...this._definitions.keys()]
   }
 
-  async model <D = types.LooseObject> (
+  async model <D extends types.LooseObject = types.LooseObject> (
     name: string,
     schema: types.SchemaRaw,
     options: types.ModelOptions = {}
@@ -102,7 +102,7 @@ export class Trilogy {
     }
   }
 
-  getModel <D = types.LooseObject> (name: string): Model<D> | never
+  getModel <D extends types.LooseObject = types.LooseObject> (name: string): Model<D> | never
   getModel (name: string): Model | never {
     return invariant(
       this._definitions.get(name),
