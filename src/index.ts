@@ -336,4 +336,5 @@ export { default as Model, ModelParams } from './model'
 export * from './types'
 export * from './plugins'
 
-export const create = (path: string, options?: types.TrilogyOptions) => new Trilogy(path, options)
+export const create = (path: string, options?: types.TrilogyOptions) =>
+  new Trilogy(path, options)

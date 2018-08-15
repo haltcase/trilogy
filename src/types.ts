@@ -61,7 +61,9 @@ export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
 
 export type StringKeys <D = LooseObject> = Extract<keyof D, string>
 
-export type LooseObject = { [key: string]: any }
+export interface LooseObject {
+  [key: string]: any
+}
 
 export type TrilogyParams = [string, TrilogyOptions?]
 
