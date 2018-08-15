@@ -7,8 +7,8 @@ import * as types from './types'
 
 export const MODEL_FLAG = Symbol('trilogy-model')
 
-export default class Model <D = types.LooseObject> {
-  cast: Cast
+export default class Model <D extends types.ReturnDict = types.LooseObject> {
+  cast: Cast<D>
   schema: types.Schema
 
   constructor (
@@ -18,7 +18,7 @@ export default class Model <D = types.LooseObject> {
     public options: {}
   ) {
     this.schema = normalizeSchema(schema)
-    this.cast = new Cast(this)
+    this.cast = new Cast<D>(this)
   }
 
   static get [MODEL_FLAG] () {

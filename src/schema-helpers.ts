@@ -192,8 +192,8 @@ export function toReturnType (type: string, value: any): types.ReturnType | neve
   }
 }
 
-export class Cast {
-  constructor (private model: Model) {}
+export class Cast <D extends types.ReturnDict> {
+  constructor (private model: Model<D>) {}
 
   toDefinition (
     object: types.LooseObject | types.WhereTuple | types.WhereMultiple,
@@ -220,13 +220,10 @@ export class Cast {
     return invariant(false, `invalid input type: '${typeof object}'`)
   }
 
-  fromDefinition (
-    object,
-    options: { raw?: boolean }
-  ): { [key: string]: types.ReturnType } {
+  fromDefinition (object: types.LooseObject, options: { raw?: boolean }): D {
     return mapObj(object, (value, column) => {
       return this.fromColumnDefinition(column, value, options)
-    })
+    }) as D
   }
 
   toColumnDefinition (
@@ -254,7 +251,7 @@ export class Cast {
     column: string,
     value: any,
     options: { raw?: boolean } = { raw: false }
-  ): types.ReturnType {
+  ): D[keyof D] {
     const definition = this.model.schema[column]
     const type = getDataType(definition)
     const cast = value !== null ? toReturnType(type, value) : value
