@@ -48,25 +48,9 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
   }
 
   async find (
-    column: string,
-    criteria: types.Criteria<D>,
-    options?: types.FindOptions
-  ): Promise<types.ReturnType[]>
-  async find (
     criteria?: types.Criteria<D>,
-    options?: types.FindOptions
-  ): Promise<D[]>
-  async find (
-    column: string | types.Criteria<D>,
-    criteria?: types.Criteria,
     options: types.FindOptions = {}
-  ): Promise<any[]> {
-    if (column && !isString(column)) {
-      options = criteria || {}
-      criteria = column
-      column = ''
-    }
-
+  ): Promise<D[]> {
     options = types.validate(options, types.FindOptions)
 
     const order = options.random ? 'random' : options.order
@@ -83,43 +67,29 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     }
 
     return response.map(object => {
-      if (!column) {
-        return this.cast.fromDefinition(object, options)
-      } else {
-        return this.cast.fromColumnDefinition(
-          column as string,
-          object[column as string],
-          options
-        )
-      }
+      return this.cast.fromDefinition(object, options) as D
     })
   }
 
-  async findOne <T> (
+  async findIn (
     column: string,
-    criteria: types.Criteria<D>,
-    options?: types.FindOptions
-  ): Promise<T>
-  async findOne (
-    column: string,
-    criteria: types.Criteria<D>,
-    options?: types.FindOptions
-  ): Promise<types.ReturnType>
-  async findOne (
     criteria?: types.Criteria<D>,
     options?: types.FindOptions
-  ): Promise<D>
-  async findOne (
-    column?: string | types.Criteria<D>,
-    criteria?: types.Criteria,
-    options: types.FindOptions = {}
-  ): Promise<any> {
-    if (column && !isString(column)) {
-      options = criteria || {}
-      criteria = column
-      column = ''
-    }
+  ): Promise<(D[keyof D])[]> {
+    const response = await this.find(criteria, options)
+    return response.map(object => {
+      return this.cast.fromColumnDefinition(
+        column,
+        object[column],
+        options
+      )
+    })
+  }
 
+  async findOne (
+    criteria?: types.Criteria<D>,
+    options: types.FindOptions = {}
+  ): Promise<D> {
     options = types.validate(options, types.FindOptions)
 
     const order = options.random ? 'random' : options.order
@@ -133,18 +103,20 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     const result: D = Array.isArray(response) ? response[0] : response
     if (isNil(result)) return result
 
-    if (!column) {
-      return this.cast.fromDefinition(result, options)
-    } else {
-      // if a column was provided, skip casting
-      // the entire object and just process then
-      // return that particular property
-      return this.cast.fromColumnDefinition(
-        column as string,
-        result[column as string],
-        options
-      )
-    }
+    return this.cast.fromDefinition(result, options) as D
+  }
+
+  async findOneIn <T = types.ReturnType> (
+    column: string,
+    criteria?: types.Criteria<D>,
+    options: types.FindOptions = {}
+  ): Promise<T> {
+    const response = await this.findOne(criteria, options)
+    return this.cast.fromColumnDefinition(
+      column,
+      response[column],
+      options
+    ) as T
   }
 
   async findOrCreate (

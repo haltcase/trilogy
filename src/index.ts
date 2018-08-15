@@ -170,7 +170,11 @@ export class Trilogy {
   ) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
-    return model.find(column, criteria, options)
+    if (column) {
+      return model.findIn(column, criteria, options)
+    } else {
+      return model.find(criteria, options)
+    }
   }
 
   findOne <T = types.LooseObject> (
@@ -185,7 +189,11 @@ export class Trilogy {
   ) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
-    return model.findOne(column, criteria, options)
+    if (column) {
+      return model.findOneIn(column, criteria, options)
+    } else {
+      return model.findOne(criteria, options)
+    }
   }
 
   findOrCreate <T = types.LooseObject> (
