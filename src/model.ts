@@ -7,6 +7,8 @@ import * as types from './types'
 
 export const MODEL_FLAG = Symbol('trilogy-model')
 
+export type ModelParams = [Trilogy, string, types.SchemaRaw, {}?]
+
 export default class Model <D extends types.ReturnDict = types.LooseObject> {
   cast: Cast<D>
   schema: types.Schema

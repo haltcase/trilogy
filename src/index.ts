@@ -332,7 +332,7 @@ export class Trilogy {
   }
 }
 
-export { default as Model } from './model'
+export { default as Model, ModelParams } from './model'
 export * from './types'
 export * from './plugins'
 

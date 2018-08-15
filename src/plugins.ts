@@ -2,9 +2,10 @@ import { Trilogy } from '.'
 import { LooseObject } from './types'
 
 export type Constructor <T> = new (...args: any[]) => T
+export type PluginBase = Constructor<Trilogy>
 
 export interface Plugin <T = LooseObject> {
-  (TrilogyBase: Constructor<Trilogy>): Constructor<Trilogy & T>
+  (TrilogyBase: PluginBase): Constructor<Trilogy & T>
 }
 
 // please for the love of all that is good in the cosmos:
