@@ -27,5 +27,5 @@ test('creates missing objects or returns an existing one', async t => {
   t.deepEqual(fresh, existing)
   t.is(await games.count({ genre: 'FPS' }), 1)
 
-  t.is(fresh.last_played, existing.last_played)
+  t.is(fresh!.last_played, existing!.last_played)
 })
