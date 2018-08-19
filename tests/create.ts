@@ -43,11 +43,13 @@ test('create: inserts objects into the database', async t => {
 })
 
 test('create: handles nil values correctly', async t => {
+  // in TypeScript code with a type provided, these are compile time errors
+
   const [one, two] = await Promise.all([
-    db.model<{ name: string }>('people_one', {
+    db.model('people_one', {
       name: { type: String }
     }),
-    db.model<{ name: string }>('people_two', {
+    db.model('people_two', {
       name: { type: String, notNullable: true }
     })
   ])
