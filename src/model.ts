@@ -27,7 +27,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     return true
   }
 
-  static [Symbol.hasInstance] (object) {
+  static [Symbol.hasInstance] (object: any) {
     return object[MODEL_FLAG] === true
   }
 

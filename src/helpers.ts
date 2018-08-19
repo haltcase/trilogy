@@ -19,7 +19,7 @@ export function parseResponse (
   const results = []
 
   for (let i = 0; i < values.length; i++) {
-    const line = {}
+    const line: types.LooseObject = {}
 
     for (let j = 0; j < columns.length; j++) {
       line[columns[j]] = values[i][j]
@@ -83,7 +83,7 @@ export function buildWhere (
   return util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
-export function isWhereTuple (where): where is types.WhereTuple {
+export function isWhereTuple (where: any): where is types.WhereTuple {
   return (
     Array.isArray(where) &&
     (where.length === 2 || where.length === 3) &&
@@ -91,14 +91,14 @@ export function isWhereTuple (where): where is types.WhereTuple {
   )
 }
 
-export function isWhereMultiple (where): where is types.WhereMultiple {
+export function isWhereMultiple (where: any): where is types.WhereMultiple {
   return (
     Array.isArray(where) &&
     where.every(item => isWhereTuple(item) || util.isObject(item))
   )
 }
 
-export function isValidWhere (where): where is types.WhereClause {
+export function isValidWhere (where: any): where is types.WhereClause {
   return (
     isWhereTuple(where) ||
     util.isObject(where) ||

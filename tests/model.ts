@@ -35,7 +35,7 @@ test('defines a model with a single named index', async t => {
 
   const query = db.knex.raw('SELECT * FROM sqlite_master WHERE type = "index"')
   const results = await db.raw(query, true)
-  const def = results.filter(item => item.tbl_name === 'sodas2')
+  const def = results.filter((item: any) => item.tbl_name === 'sodas2')
   t.is(def[0].sql, 'CREATE INDEX `idx_name` on `sodas2` (`name`)')
 })
 
@@ -66,10 +66,10 @@ test('defines a model with multiple indices', async t => {
   const query = db.knex.raw('SELECT * FROM sqlite_master WHERE type = "index"')
   const results = await db.raw(query, true)
 
-  const single = results.find(item => item.tbl_name === 'sodas_single')
+  const single = results.find((item: any) => item.tbl_name === 'sodas_single')
   t.is(single.sql, 'CREATE INDEX `sodas_single_name_index` on `sodas_single` (`name`)')
 
-  const array = results.filter(item => item.tbl_name === 'sodas_array')
+  const array = results.filter((item: any) => item.tbl_name === 'sodas_array')
   t.is(
     array[0].sql,
     'CREATE INDEX `sodas_array_name_flavor_index` on `sodas_array` (`name`, `flavor`)'
@@ -79,7 +79,7 @@ test('defines a model with multiple indices', async t => {
     'CREATE INDEX `sodas_array_flavor_name_index` on `sodas_array` (`flavor`, `name`)'
   )
 
-  const object = results.filter(item => item.tbl_name === 'sodas_object')
+  const object = results.filter((item: any) => item.tbl_name === 'sodas_object')
   t.is(object[0].sql, 'CREATE INDEX `idx_name_flvr` on `sodas_object` (`name`, `flavor`)')
   t.is(object[1].sql, 'CREATE INDEX `idx_flvr_name` on `sodas_object` (`flavor`, `name`)')
 })

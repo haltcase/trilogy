@@ -8,11 +8,11 @@ test.before(async () => {
   await db.model('people', {
     name: {
       type: String,
-      get: name => name.toUpperCase()
+      get: (name: string) => name.toUpperCase()
     },
     age: {
       type: Number,
-      set: age => age + 1
+      set: (age: number) => age + 1
     }
   })
 

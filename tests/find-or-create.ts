@@ -5,7 +5,7 @@ import { Game } from './helpers/types'
 
 const db = create(':memory:')
 
-const makeInput = date => ({ name: 'Overwatch', last_played: date, genre: 'FPS' })
+const makeInput = (date: Date) => ({ name: 'Overwatch', last_played: date, genre: 'FPS' })
 
 test.after.always(() => db.close())
 

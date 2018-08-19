@@ -79,7 +79,7 @@ function createIndices (table: knex.TableBuilder, value: types.Index) {
   }
 }
 
-export function castValue (value) {
+export function castValue (value: any) {
   const type = typeof value
   if (type === 'number' || type === 'string') {
     return value

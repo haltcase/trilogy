@@ -6,13 +6,13 @@ import * as rimraf from 'rimraf'
 
 import { create } from '../src'
 
-const getPath = name =>
+const getPath = (name: any) =>
   join(__dirname, `${basename(`${__filename}-${name}`, '.ts')}.db`)
 
 const [js, native] = [getPath('sqljs'), getPath('native')]
 
-let dbJS
-let dbNative
+let dbJS: Trilogy
+let dbNative: Trilogy
 
 test.after.always('remove test database file', async () => {
   await Promise.all([dbJS.close(), dbNative.close()])

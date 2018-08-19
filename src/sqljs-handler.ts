@@ -7,7 +7,7 @@ import { Database } from 'sql.js'
 import { Trilogy } from '.'
 import { makeDirPath } from './util'
 
-export function readDatabase (instance): Database {
+export function readDatabase (instance: Trilogy): Database {
   const SQL = require('sql.js')
   const { filename } = instance.options.connection
 

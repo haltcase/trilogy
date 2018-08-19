@@ -27,13 +27,13 @@ export function mapObj <T, K extends types.StringKeys<T>, U> (
   return result
 }
 
-export const isObject = (value): value is types.LooseObject =>
+export const isObject = (value: any): value is types.LooseObject =>
   (value && value.constructor === Object) || false
 
-export const isFunction = (value): value is Function => typeof value === 'function'
-export const isString = (value): value is string => typeof value === 'string'
-export const isNumber = (value): value is number => typeof value === 'number'
-export const isNil = (value): value is undefined | null => value == null
+export const isFunction = (value: any): value is Function => typeof value === 'function'
+export const isString = (value: any): value is string => typeof value === 'string'
+export const isNumber = (value: any): value is number => typeof value === 'number'
+export const isNil = (value: any): value is undefined | null => value == null
 
 export const defaultTo = <T, V> (value: T, fallback: V) => isNil(value) ? fallback : value
 
