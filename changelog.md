@@ -1,11 +1,20 @@
-<a name="2.0.0-beta.1"></a>
-### [`2.0.0-beta.1`](https://github.com/citycide/trilogy/compare/v1.4.4...v2.0.0-beta.1) (2018-01-21)
+<a name="2.0.0-rc.2"></a>
+### [`2.0.0-rc.2`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.2) (2018-08-19)
 
-v2.0.0 is a significant release &mdash; the highlights are:
+v2.0.0 is a significant release. This is a release candidate available on npm
+under the `@next` tag. The highlights are:
 
 * rewritten in TypeScript
 * plugin support
 * Node 6 minimum version requirement
+
+To try it out, use:
+
+```shell
+npm i trilogy@next
+# or
+npm i trilogy@2.0.0-rc.2
+```
 
 #### codename: solid source
 
@@ -19,11 +28,11 @@ the code base with types. It also provides a much better editing experience:
 ```ts
 import * as trilogy from 'trilogy'
 
-const db = trilogy.create(':memory:')
+const db = trilogy.connect(':memory:')
 
 // you can provide types like this to `model()`
 // to get compiler assistance
-interface Person {
+type Person = {
   name: string
 }
 
@@ -31,51 +40,51 @@ interface Person {
   let people: trilogy.Model = await db.model<Person>('people', {
     name: String
   })
+
+  await people.create({ names: 'typo' })
+  // !> Property 'names' does not exist in type 'Person'. Did you mean 'name'?
 })()
 ```
 </details>
 
 #### extensible ecosystem
 
-Plugins are now supported! They are simple functions accepting a context
-object that provides the trilogy instance and two helper functions for adding
-functionality. They look like this:
+Plugins are now supported! They are fairly simple functions accepting a base
+`Trilogy` class and returning a subclass (so these are _mixins_):
 
 <details>
 <summary>click to expand</summary>
 
-```js
-import { create } from 'trilogy'
+```ts
+import { Plugin, PluginBase, mix } from 'trilogy'
 
-const db = create('./storage.db')
+// plugins should have a type that specifies what they provide
+// so users can maintain strong typechecking abilities
+interface MyCustomPlugin {
+  findAllAdmins: (table: string, username: string) => object
+}
 
-const plugin = ({ instance, extend, extendModel }) => {
-  extend({
-    findAllAdmins (table, username) {
-      return instance.knex(table)
-        .where(function () => {
+const plugin: Plugin<MyCustomPlugin> = (Base: PluginBase) => {
+  return class extends Base {
+    findAllAdmins (table: string, username: string) {
+      // this is a small example from the knex documentation
+      return this.knex(table)
+        .where(function () {
           this.where({ is_admin: true }).orWhere('permission', '>', 10)
         })
         .orWhere({ name: username })
     }
-  })
-
-  extendModel(Model => class extends Model {
-    logModelName () {
-      console.log(`logging from ${this.name}`)
-    }
-  })
+  }
 }
 
-db.use(plugin)
+// the `mix` function combines the types from all the provided plugins
+// and returns a subclass of `Trilogy` implementing all those types
+const Base = mix([plugin])
+const db = new Base(':memory:')
 
 db.findAllAdmins('users', 'citycide')
   .then(admins => console.log(admins))
 // -> ['citycide', ...]
-
-db.model('users', { username: String })
-  .then(users => users.logModelName())
-// -> 'logging from users'
 ```
 </details>
 
@@ -86,6 +95,10 @@ db.model('users', { username: String })
 * **schema:** make `nullable` actually work inversely to `notNullable` ([e4ccc51](https://github.com/citycide/trilogy/commit/e4ccc51))
 * **schema-helpers:** throw on non-string column types ([43eebb6](https://github.com/citycide/trilogy/commit/43eebb6))
 * **where,cast:** make casting & where clauses stricter ([3ecee37](https://github.com/citycide/trilogy/commit/3ecee37))
+* **schema-helpers:** throw on empty schemas ([ce4a066](https://github.com/citycide/trilogy/pull/82/commits/ce4a066ecea487a995eade1d210b27cb9b2398cb))
+* **find\*:** move column signatures into their own methods ([a73f773](https://github.com/citycide/trilogy/pull/82/commits/a73f77398dad236bcfd03a033861fbff05269b41))
+* **count:** split `model.count` with column to `countIn` ([df4ccb4](https://github.com/citycide/trilogy/pull/82/commits/df4ccb4754a29c1434f7326c7f2a3c27fb57fd34))
+* **schema-helpers:** throw on invalid column types ([9d22fc2](https:/github.com/citycide/trilogy/pull/82/9d22fc221db8d14c63b2a2b435683371a19bd69d))
 
 
 ###### PERFORMANCE
@@ -95,10 +108,14 @@ db.model('users', { username: String })
 
 ###### BREAKING CHANGES
 
-* **schema:** providing both the `nullable` & `notNullable` properties will cause an `Error` to be thrown
-* **where,cast:** invalid where clauses and unrecognized types at casting will now cause `Error`s to be thrown
-* **schema-helpers:** An error will be thrown when column type cannot be retrieved.
-* **invariant:** `InvariantError`s are no longer thrown. They are `Error`s instead.
+* **schema:** providing both the `nullable` & `notNullable` properties will cause an `Error` to be thrown.
+* **where,cast:** invalid where clauses and unrecognized types at casting will now cause `Error`s to be thrown.
+* **schema-helpers:** an error will be thrown when column type cannot be retrieved.
+* **invariant:** `InvariantError`s are no longer thrown, they are `Error`s instead.
+* **flow:** flow definitions have been removed.
+* **find\*:** `find()` and `findOne()` on models no longer accept an optional column argument. Instead, use the new `findIn()` or `findOneIn()` methods. Top level trilogy methods still accept `table.column` dot notation.
+* **count:** `model.count` no longer has a signature allowing a column as the first parameter. This is now a separate method called `countIn`.
+* **schema-helpers:** using an unknown column type in a descriptor will now result in an error.
 
 Support for Node 4 has been dropped, meaning trilogy now requires >=6.
 
@@ -114,8 +131,8 @@ const db = new Trilogy(':memory:')
 
 ```js
 // after
-import { create } from 'trilogy'
-const db = create(':memory:')
+import { connect } from 'trilogy'
+const db = connect(':memory:')
 ```
 
 ---
