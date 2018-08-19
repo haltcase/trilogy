@@ -6,7 +6,8 @@ import {
   isFunction,
   isObject,
   isString,
-  mapObj
+  mapObj,
+  toArray
 } from './util'
 
 import * as knex from 'knex'
@@ -76,8 +77,7 @@ function createIndices (table: knex.TableBuilder, value: types.Index) {
     value.forEach(columns => table.index(columns as string[]))
   } else if (isObject(value)) {
     eachObj(value, (columns, indexName) => {
-      const names = Array.isArray(columns) ? columns : [columns]
-      table.index(names, indexName)
+      table.index(toArray(columns), indexName)
     })
   }
 }
