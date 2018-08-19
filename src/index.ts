@@ -7,7 +7,7 @@ import Model from './model'
 import { runQuery } from './helpers'
 import { toKnexSchema } from './schema-helpers'
 import { pureConnect, readDatabase } from './sqljs-handler'
-import { invariant, makeDirPath } from './util'
+import { defaultTo, invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
 import { Database } from 'sql.js'
@@ -312,7 +312,7 @@ export class Trilogy {
         .then(([{ count }]) => count)
     }
 
-    const [table, column] = location.split('.', 2)
+    const [table, column] = defaultTo(location, '').split('.', 2)
     const model = this.getModel(table)
     return column
       ? model.count(column, criteria, options)
