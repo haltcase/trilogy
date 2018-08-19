@@ -1,7 +1,7 @@
 import { Trilogy } from '.'
 import * as helpers from './helpers'
 import { Cast, normalizeSchema } from './schema-helpers'
-import { invariant, isString, isObject, isNil, defaultTo } from './util'
+import { invariant, isString, isObject, isNil, toArray, defaultTo } from './util'
 
 import * as types from './types'
 
@@ -242,74 +242,80 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
   }
 
   async count (
-    column: string,
-    criteria: types.Criteria<D>,
-    options?: types.AggregateOptions
-  ): Promise<number>
-  async count (
-    criteria: types.Criteria<D>,
-    options?: types.AggregateOptions
-  ): Promise<number>
-  async count (
-    column?: string | types.Criteria<D>,
-    criteria?: types.Criteria,
+    criteria?: types.Criteria<D>,
     options: types.AggregateOptions = {}
   ): Promise<number> {
-    if (!isString(column)) {
-      options = criteria || {}
-      criteria = column
-      column = '*'
-    }
+    return baseCount<D>(this, '*', criteria, options)
+  }
 
-    options = types.validate(options, types.AggregateOptions)
-
-    const val = `${column} as count`
-    const method = options.distinct ? 'countDistinct' : 'count'
-    let query = this.ctx.knex(this.name)[method](val)
-    query = helpers.buildWhere(query, criteria)
-
-    if (options.group) query = query.groupBy(...options.group)
-
-    const res = await helpers.runQuery(this.ctx, query, true)
-    if (!Array.isArray(res)) return 0
-    return res[0].count
+  async countIn (
+    column: keyof D,
+    criteria?: types.Criteria<D>,
+    options: types.AggregateOptions = {}
+  ): Promise<number> {
+    return baseCount<D>(this, column, criteria, options)
   }
 
   async min (
-    column: string,
+    column: keyof D,
     criteria?: types.Criteria<D>,
     options: types.AggregateOptions = {}
-  ): Promise<number | void> {
-    options = types.validate(options, types.AggregateOptions)
-
-    const val = `${column} as min`
-    let query = this.ctx.knex(this.name).min(val)
-    query = helpers.buildWhere(query, criteria)
-
-    if (options.group) query = query.groupBy(...options.group)
-
-    const res = await helpers.runQuery(this.ctx, query, true)
-    if (!Array.isArray(res)) return undefined
-    return res[0].min
+  ): Promise<number | undefined> {
+    return baseMinMax(this, 'min', column, criteria, options)
   }
 
   async max (
-    column: string,
+    column: keyof D,
     criteria?: types.Criteria<D>,
     options?: types.AggregateOptions
-  ): Promise<number | void> {
-    options = types.validate(options, types.AggregateOptions)
-
-    const val = `${column} as max`
-    let query = this.ctx.knex(this.name).max(val)
-    query = helpers.buildWhere(query, criteria)
-
-    if (options.group) query = query.groupBy(...options.group)
-
-    const res = await helpers.runQuery(this.ctx, query, true)
-    if (!Array.isArray(res)) return undefined
-    return res[0].max
+  ): Promise<number | undefined> {
+    return baseMinMax(this, 'max', column, criteria, options)
   }
+}
+
+async function baseCount <D extends types.ReturnDict> (
+  model: Model<D>,
+  column: keyof D,
+  criteria?: types.Criteria<D>,
+  options: types.AggregateOptions = {}
+): Promise<number> {
+  invariant(
+    column && isString(column),
+    `invalid column: expected string, got ${typeof column}`
+  )
+
+  options = types.validate(options, types.AggregateOptions)
+
+  const val = `${column} as count`
+  const method = options.distinct ? 'countDistinct' : 'count'
+  let query = model.ctx.knex(model.name)[method](val)
+  query = helpers.buildWhere(query, criteria)
+
+  if (options.group) query = query.groupBy(toArray(options.group))
+
+  const res = await helpers.runQuery(model.ctx, query, true)
+  if (!Array.isArray(res)) return 0
+  return res[0].count
+}
+
+async function baseMinMax <D extends types.ReturnDict> (
+  model: Model<D>,
+  method: 'min' | 'max',
+  column: keyof D,
+  criteria?: types.Criteria<D>,
+  options: types.AggregateOptions = {}
+) {
+  options = types.validate(options, types.AggregateOptions)
+
+  const val = `${column} as ${method}`
+  let query = model.ctx.knex(model.name)[method](val)
+  query = helpers.buildWhere(query, criteria)
+
+  if (options.group) query = query.groupBy(toArray(options.group))
+
+  const res = await helpers.runQuery(model.ctx, query, true)
+  if (!Array.isArray(res)) return undefined
+  return res[0][method]
 }
 
 async function baseGet <D extends types.ReturnDict, K extends keyof D> (

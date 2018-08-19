@@ -3,7 +3,7 @@ import { connect } from '../src'
 
 const db = connect(':memory:')
 
-const people = [
+const persons = [
   { name: 'Dale', age: 30 },
   { name: 'Lelu', age: 6 },
   { name: 'Gurlak', age: 302 }
@@ -15,7 +15,7 @@ test.before(async () => {
     age: Number
   })
 
-  return Promise.all(people.map(person => db.create('people', person)))
+  return Promise.all(persons.map(person => db.create('people', person)))
 })
 
 test.after.always(() => db.close())
@@ -43,4 +43,27 @@ test('allows for multiple where clauses', async t => {
   ])
 
   t.is(res, 1)
+})
+
+test('countIn() variant counts on the given column', async t => {
+  const db = connect(':memory:')
+
+  type Person = {
+    name: string,
+    // allow null in order to test that null values
+    // in the target column aren't counted
+    age: number | null
+  }
+
+  const people = await db.model<Person>('people', {
+    name: { type: String, primary: true },
+    age: Number
+  })
+
+  await Promise.all(persons.map(async person => people.create(person)))
+  await people.create({ name: '', age: null })
+
+  const res = await people.countIn('age')
+
+  t.is(res, persons.length)
 })

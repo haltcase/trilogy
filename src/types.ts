@@ -65,6 +65,8 @@ export interface LooseObject {
   [key: string]: any
 }
 
+export type ValueOf <D> = D[keyof D]
+
 export type TrilogyParams = [string, TrilogyOptions?]
 
 export type Criteria2 <D = LooseObject> = [StringKeys<D>, D[StringKeys<D>]]
@@ -88,7 +90,12 @@ export const Index = t.union([
   t.dictionary(t.string, t.union([t.string, t.array(t.string)]))
 ])
 
-export const GroupOrder = t.union([
+export const GroupClause = t.union([
+  t.string,
+  t.array(t.string)
+])
+
+export const OrderClause = t.union([
   t.string,
   t.tuple([t.string, t.string])
 ])
@@ -114,8 +121,8 @@ export const ModelOptions = t.partial({
 
 export const AggregateOptions = t.partial({
   distinct: t.boolean,
-  group: GroupOrder,
-  order: GroupOrder
+  group: GroupClause,
+  order: OrderClause
 })
 
 export const CreateOptions = t.partial({
@@ -124,7 +131,7 @@ export const CreateOptions = t.partial({
 
 export const FindOptions = t.partial({
   limit: t.number,
-  order: GroupOrder,
+  order: OrderClause,
   random: t.boolean,
   raw: t.boolean,
   skip: t.number
@@ -167,7 +174,8 @@ export const WhereClause = t.union([
 export const WhereMultiple = t.array(WhereClause)
 
 export type Index = t.TypeOf<typeof Index>
-export type Order = t.TypeOf<typeof GroupOrder>
+export type Order = t.TypeOf<typeof OrderClause>
+export type Group = t.TypeOf<typeof GroupClause>
 
 export type TrilogyOptions = t.TypeOf<typeof TrilogyOptions>
 export type ModelOptions = t.TypeOf<typeof ModelOptions>

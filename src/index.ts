@@ -315,7 +315,7 @@ export class Trilogy {
     const [table, column] = defaultTo(location, '').split('.', 2)
     const model = this.getModel(table)
     return column
-      ? model.count(column, criteria, options)
+      ? model.countIn(column, criteria, options)
       : model.count(criteria, options)
   }
 
