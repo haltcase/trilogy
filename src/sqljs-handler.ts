@@ -9,17 +9,17 @@ import { makeDirPath } from './util'
 
 export function readDatabase (instance: Trilogy): Database {
   const SQL = require('sql.js')
-  const { filename } = instance.options.connection
+  const name = instance.options.connection!.filename as string
 
-  if (filename === ':memory:') {
+  if (name === ':memory:') {
     return new SQL.Database()
   }
 
   let client
 
   try {
-    makeDirPath(dirname(filename))
-    const file = readFileSync(filename)
+    makeDirPath(dirname(name))
+    const file = readFileSync(name)
     client = new SQL.Database(file)
   } catch (e) {
     if (e.code === 'ENOENT') {
@@ -34,11 +34,11 @@ export function readDatabase (instance: Trilogy): Database {
 }
 
 export function writeDatabase (instance: Trilogy, db: Database) {
-  const { filename } = instance.options.connection
-  if (filename === ':memory:') return
+  const name = instance.options.connection!.filename as string
+  if (name === ':memory:') return
 
-  makeDirPath(dirname(filename))
-  writeFileSync(filename, db.export(), { mode: parseInt('0777', 8) })
+  makeDirPath(dirname(name))
+  writeFileSync(name, db.export(), { mode: parseInt('0777', 8) })
 }
 
 export function connect (instance: Trilogy): Pool<Database> {

@@ -40,12 +40,12 @@ export class Trilogy {
       types.validate(options, types.TrilogyOptions)
 
     if (path === ':memory:') {
-      obj.connection.filename = path
+      obj.connection!.filename = path
     } else {
-      obj.connection.filename = resolve(obj.dir, path)
+      obj.connection!.filename = resolve(obj.dir as string, path)
 
       // ensure the directory exists
-      makeDirPath(dirname(obj.connection.filename))
+      makeDirPath(dirname(obj.connection!.filename as string))
     }
 
     this.isNative = obj.client === 'sqlite3'
@@ -55,7 +55,7 @@ export class Trilogy {
 
     if (this.isNative) {
       if (path !== ':memory:') {
-        ensureExists(obj.connection.filename)
+        ensureExists(obj.connection!.filename as string)
       }
 
       this.knex = knex(({ ...config, connection: obj.connection } as knex.Config))
