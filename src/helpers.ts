@@ -148,8 +148,8 @@ export async function runQuery (
   return response
 }
 
-export async function findLastObject <D = types.LooseObject> (
-  model: Model,
+export async function findLastObject <D extends types.ReturnDict = types.LooseObject> (
+  model: Model<D>,
   object: types.LooseObject
 ): Promise<D | undefined> {
   const { key, hasIncrements } = findKey(model.schema)
@@ -173,7 +173,7 @@ export async function findLastObject <D = types.LooseObject> (
 
   const res = await runQuery(model.ctx, query, true)
   const out = model.ctx.isNative ? res : res[0]
-  return hasIncrements ? model.findOne({ [key]: out.seq }) : out
+  return hasIncrements ? model.findOne({ [key]: out.seq } as D) : out
 }
 
 function findKey (schema: types.Schema) {

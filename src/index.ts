@@ -72,13 +72,13 @@ export class Trilogy {
     return [...this._definitions.keys()]
   }
 
-  async model <D extends types.LooseObject = types.LooseObject> (
+  async model <D extends types.ReturnDict = types.LooseObject> (
     name: string,
-    schema: types.SchemaRaw,
+    schema: types.SchemaRaw<D>,
     options: types.ModelOptions = {}
   ): Promise<Model<D>> {
     if (this._definitions.has(name)) {
-      return this._definitions.get(name)
+      return this._definitions.get(name) as Model<D>
     }
 
     const model = new this.Model<D>(this, name, schema, options)
@@ -102,10 +102,9 @@ export class Trilogy {
     }
   }
 
-  getModel <D extends types.LooseObject = types.LooseObject> (name: string): Model<D> | never
-  getModel (name: string): Model | never {
+  getModel <D extends types.ReturnDict = types.LooseObject> (name: string): Model<D> | never {
     return invariant(
-      this._definitions.get(name),
+      this._definitions.get(name) as Model<D>,
       `no model defined by the name '${name}'`
     )
   }

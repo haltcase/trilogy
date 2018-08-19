@@ -3,7 +3,7 @@ import { mkdirSync, statSync } from 'fs'
 
 import * as types from './types'
 
-export function eachObj <T, K extends types.StringKeys<T>> (
+export function eachObj <T extends types.LooseObject, K extends types.StringKeys<T>> (
   collection: T,
   fn: (value: T[K], key: K, collection: T) => any
 ) {
@@ -15,7 +15,7 @@ export function eachObj <T, K extends types.StringKeys<T>> (
   }
 }
 
-export function mapObj <T, K extends types.StringKeys<T>, U> (
+export function mapObj <T extends types.LooseObject, K extends types.StringKeys<T>, U> (
   collection: T,
   fn: (value: T[K], key: K, collection: T) => U
 ): Record<K, U> {

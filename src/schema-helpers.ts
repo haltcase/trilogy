@@ -13,13 +13,16 @@ import * as knex from 'knex'
 import Model from './model'
 import * as types from './types'
 
-export function toKnexSchema (model: Model, options: types.ModelOptions) {
+export function toKnexSchema <D extends types.ReturnDict> (
+  model: Model<D>,
+  options: types.ModelOptions
+) {
   return (table: knex.TableBuilder) => {
     // every property of `model.schema` is a column
     eachObj(model.schema, (descriptor, name) => {
       // each column's value is either its type or a descriptor
       const type = getDataType(descriptor)
-      const partial = table[toKnexMethod(type)](name)
+      const partial = (table as any)[toKnexMethod(type)](name)
 
       if (isFunction(descriptor) || !isObject(descriptor)) return
 
@@ -50,13 +53,13 @@ export function toKnexSchema (model: Model, options: types.ModelOptions) {
     })
 
     for (const key of Object.keys(options)) {
-      const value = options[key]
+      const value = (options as any)[key]
       if (key === 'timestamps') {
         options.timestamps && table.timestamps(true, true)
       } else if (key === 'index') {
         createIndices(table, value)
       } else {
-        table[key](value)
+        (table as any)[key](value)
       }
     }
   }
@@ -94,16 +97,20 @@ export function castValue (value: any) {
   return value
 }
 
-export function normalizeSchema (schema: types.SchemaRaw): types.Schema {
-  const keys = Object.keys(schema)
+export function normalizeSchema <
+  D extends types.LooseObject,
+  T extends types.SchemaRaw<D> = types.SchemaRaw<D>,
+  O extends types.Schema<D> = types.Schema<D>
+> (schema: T): O {
+  const keys: (keyof T)[] = Object.keys(schema)
   invariant(keys.length > 0, 'model schemas cannot be empty')
 
-  const result = {}
+  const result = {} as O
   for (const key of keys) {
     const descriptor = schema[key]
     const type = typeof descriptor
 
-    result[key] = type === 'function' || type === 'string'
+    ;(result as any)[key] = type === 'function' || type === 'string'
       ? { type: descriptor }
       : descriptor
   }

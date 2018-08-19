@@ -1,7 +1,7 @@
 import { Trilogy } from '.'
 import * as helpers from './helpers'
 import { Cast, normalizeSchema } from './schema-helpers'
-import { invariant, isString, isObject, isNil } from './util'
+import { invariant, isString, isObject, isNil, defaultTo } from './util'
 
 import * as types from './types'
 
@@ -11,15 +11,15 @@ export type ModelParams = [Trilogy, string, types.SchemaRaw, types.ModelOptions?
 
 export default class Model <D extends types.ReturnDict = types.LooseObject> {
   cast: Cast<D>
-  schema: types.Schema
+  schema: types.Schema<D>
 
   constructor (
     public ctx: Trilogy,
     public name: string,
-    schema: types.SchemaRaw,
+    schema: types.SchemaRaw<D>,
     public options: types.ModelOptions
   ) {
-    this.schema = normalizeSchema(schema)
+    this.schema = normalizeSchema<D>(schema)
     this.cast = new Cast<D>(this)
   }
 
@@ -72,19 +72,19 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     }
 
     return response.map(object => {
-      return this.cast.fromDefinition(object, options) as D
+      return this.cast.fromDefinition(object, options)
     })
   }
 
   async findIn (
-    column: string,
+    column: keyof D,
     criteria?: types.Criteria<D>,
     options?: types.FindOptions
-  ): Promise<(D[keyof D])[]> {
+  ): Promise<types.ValueOf<D>[]> {
     const response = await this.find(criteria, options)
     return response.map(object => {
       return this.cast.fromColumnDefinition(
-        column,
+        column as string,
         object[column],
         options
       )
@@ -108,40 +108,38 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     const result: D = Array.isArray(response) ? response[0] : response
     if (isNil(result)) return undefined
 
-    return this.cast.fromDefinition(result, options) as D
+    return this.cast.fromDefinition(result, options)
   }
 
-  async findOneIn <T = types.ReturnType> (
-    column: string,
+  async findOneIn <K extends keyof D = keyof D, V = D[K]> (
+    column: K,
     criteria?: types.Criteria<D>,
     options: types.FindOptions = {}
   ): Promise<V | undefined> {
-    const response = await this.findOne(criteria, options)
-    return this.cast.fromColumnDefinition(
-      column,
-      response[column],
-      options
-    ) as T
+    return this.findOne(criteria, options)
+      .then(object => object != null ? object[column] as V : undefined)
   }
 
   async findOrCreate (
     criteria: types.CriteriaObj<D>,
-    creation: types.LooseObject = {},
+    creation: Partial<D> = {},
     options?: types.FindOptions
   ): Promise<D | undefined> {
     const existing = await this.findOne(criteria, options)
-    // must cast `criteria` to any as a workaround for
-    // not being able to spread a generic type, see:
+    // must cast `criteria` & `creation` to any as a workaround
+    // for not being able to spread a generic type, see:
     // https://github.com/Microsoft/TypeScript/issues/10727
-    return existing || this.create({ ...(criteria as any), ...creation })
+    return existing || this.create({ ...(criteria as any), ...(creation as any) })
   }
 
   update (
-    criteria: types.Criteria<D>,
-    data: types.LooseObject,
+    criteria: types.Criteria<D> = {},
+    data: Partial<D> = {},
     options: types.UpdateOptions = {}
   ): Promise<number> {
     options = types.validate(options, types.UpdateOptions)
+
+    if (Object.keys(data).length < 1) return Promise.resolve(0)
 
     const typedData = this.cast.toDefinition(data, options)
     const typedCriteria = this.cast.toDefinition(criteria, options)
@@ -167,24 +165,32 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     }
   }
 
-  get <T = types.ReturnType> (column: string, criteria?: types.Criteria<D>, defaultValue?: T) {
-    return baseGet(this, column, criteria, defaultValue)
+  get <K extends keyof D = keyof D, V = D[K]> (
+    column: K, criteria?: types.Criteria<D>, defaultValue?: V
+  ) {
+    return baseGet<D, K>(this, column, criteria, defaultValue)
   }
 
-  set <T> (column: string, criteria?: types.Criteria<D>, value?: T) {
-    return baseSet(this, column, criteria, value)
+  set <K extends keyof D = keyof D, V = D[K]> (
+    column: K, criteria?: types.Criteria<D>, value?: V
+  ) {
+    return baseSet<D, K>(this, column, criteria, value)
   }
 
-  getRaw <T> (column: string, criteria: types.Criteria<D>, defaultValue?: T) {
-    return baseGet(this, column, criteria, defaultValue, { raw: true })
+  getRaw <K extends keyof D = keyof D, V = D[K]> (
+    column: K, criteria: types.Criteria<D>, defaultValue?: V
+  ) {
+    return baseGet<D, K>(this, column, criteria, defaultValue, { raw: true })
   }
 
-  setRaw <T> (column: string, criteria?: types.Criteria<D>, value?: T) {
-    return baseSet(this, column, criteria, value, { raw: true })
+  setRaw <K extends keyof D = keyof D, V = D[K]> (
+    column: K, criteria?: types.Criteria<D>, value?: V
+  ) {
+    return baseSet<D, K>(this, column, criteria, value, { raw: true })
   }
 
   async incr (
-    column?: string,
+    column: keyof D,
     criteria?: types.Criteria<D>,
     amount?: number
   ): Promise<number> {
@@ -192,14 +198,14 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     if (Number.isNaN(cast)) amount = 1
     if (amount === 0) return 0
 
-    let query = this.ctx.knex(this.name).increment(column, amount)
+    let query = this.ctx.knex(this.name).increment(column as string, amount)
     query = helpers.buildWhere(query, criteria)
 
     return helpers.runQuery(this.ctx, query)
   }
 
   async decr (
-    column?: string,
+    column: keyof D,
     criteria?: types.Criteria<D>,
     amount?: number,
     allowNegative?: boolean
@@ -306,34 +312,30 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
   }
 }
 
-async function baseGet <T = types.ReturnType> (
-  model: Model,
-  column: string,
-  criteria: types.Criteria,
-  defaultValue: T,
+async function baseGet <D extends types.ReturnDict, K extends keyof D> (
+  model: Model<D>,
+  column: keyof D,
+  criteria: types.Criteria<D> | undefined,
+  defaultValue: D[K],
   options?: types.LooseObject
-): Promise<T> {
-  const data = await model.findOne(criteria, options)
-  if (!data || data[column] === undefined) {
-    return defaultValue
-  }
-
-  return data[column]
+): Promise<D[K] | undefined> {
+  const data = await model.findOneIn(column, criteria, options)
+  return defaultTo(data, defaultValue)
 }
 
-async function baseSet <T> (
-  model: Model,
-  column: string,
-  criteria: types.Criteria,
-  value: T,
+async function baseSet <D extends types.ReturnDict, K extends keyof D> (
+  model: Model<D>,
+  column: keyof D,
+  criteria: types.Criteria<D> | undefined,
+  value: D[K],
   options?: types.LooseObject
-) {
+): Promise<number> {
   invariant(
-    model.schema[column],
+    model.schema[column as string],
     `no column by the name '${column}' is defined in '${model.name}'`
   )
 
   return model.update(criteria, {
     [column]: value
-  }, options)
+  } as Partial<D>, options)
 }

@@ -16,7 +16,7 @@ export const raise: (
   validation: Left<t.ValidationError[], any> | Right<t.ValidationError[], any>
 ) => void = ThrowReporter.report
 
-export function validate <L> (value: L, type: t.Type<L>, defaultValue?: L): L {
+export function validate <L> (value: L, type: t.Type<L>, defaultValue: L = {} as L): L {
   const result = type.decode(value)
   return raise(result) || result.getOrElse(defaultValue)
 }
@@ -178,12 +178,12 @@ export type FindOptions = t.TypeOf<typeof FindOptions>
 export type ColumnKind = t.TypeOf<typeof ColumnKind>
 export type ColumnDescriptor = t.TypeOf<typeof ColumnDescriptor>
 
-export interface SchemaRaw {
-  [key: string]: ColumnKind | ColumnDescriptor
+export type SchemaRaw <D = LooseObject> = {
+  [P in keyof Partial<D>]: ColumnKind | ColumnDescriptor
 }
 
-export interface Schema {
-  [key: string]: ColumnDescriptor
+export type Schema <D = LooseObject> = {
+  [P in keyof Partial<D>]: ColumnDescriptor
 }
 
 export type SqlJsResponse = Array<{
