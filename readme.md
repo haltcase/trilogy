@@ -87,18 +87,18 @@ Here's a quick overview. It uses `async` & `await` but is easily usable with
 vanilla Promises.
 
 ```js
-import { create } from 'trilogy'
+import { connect } from 'trilogy'
 
 // defaults to using the `sqlite3` backend
-const db = create('./file.db')
+const db = connect('./file.db')
 
 // choose `sql.js` to avoid native compilation :)
-const db = create('./file.db', {
+const db = connect('./file.db', {
   client: 'sql.js'
 })
 
 // set the filename to ':memory:' for fast, in-memory storage
-const db = create(':memory:', {
+const db = connect(':memory:', {
   // it works for both clients above!
   client: 'sql.js'
 })

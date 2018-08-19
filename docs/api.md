@@ -1,7 +1,6 @@
-# create
-
-```js
-create(path, [options])
+# connect
+```ts
+connect(path, [options])
 ```
 
 Initialize a new datastore instance, creating a SQLite database file at
@@ -25,7 +24,7 @@ modules may differ.
   * `{string} path`:
     absolute or relative file path. If relative it is resolved against
     `process.cwd()`, or the `options.dir` property if it is provided.
-  * _optional_ `{object} options`:
+  * _optional_ `{TrilogyOptions} options`:
 
 | property  | type       | default         | description                                         |
 | --------- | :-------:  | :-------------: | --------------------------------------------------- |
@@ -39,17 +38,17 @@ modules may differ.
 
 > **Usage**
 
-```js
-import { create } from 'trilogy'
+```ts
+import { connect } from 'trilogy'
 
 // defaults to using `sqlite3`
-const db = create('./storage.db')
+const db = connect('./storage.db')
 ```
 
 With an options object:
 
-```js
-const db = create('./storage.db', {
+```ts
+const db = connect('./storage.db', {
   // use `sql.js` to avoid build issues with gyp
   client: 'sql.js',
 
@@ -64,14 +63,19 @@ const db = create('./storage.db', {
 
 > **Throws**
 
-if `path` is not provided.
+if `path` is not provided
 
 ## Trilogy (`Class`)
 
 ### model
-```js
-db.model(name, schema, [options])
+```ts
+model<D>(name, schema, [options])
 ```
+
+?> If you're using TypeScript, you should provide your own type as the
+   generic `D`, which will allow for much more powerful typechecking! If
+   you're using JavaScript you can safely ignore the additional `<D>`
+   syntax and think of `D` as being any old `object`.
 
 Define a new model with the provided `schema`, or return the existing model
 if one is already defined with `name`.
@@ -96,27 +100,27 @@ on Schema Building for the available attributes when creating column tables.
 > **Arguments**
 
   * `{string} name`: name of the model
-  * `{object} schema`: describes the schema of the table
-  * _optional_ `{object} options`:
+  * `{SchemaRaw} schema`: describes the schema of the table
+  * _optional_ `{ModelOptions} options`:
 
 |  property    | type            | default | description                      |
 | ------------ | :-------------: | :-----: | -------------------------------- |
 | `timestamps` | `boolean`       | -       | When `true`, adds `created_at` and `updated_at` properties, both defaulting to the current timestamp. |
-| `primary`    | `Array<string>` | -       | An Array of column names to specify as a composite primary key. |
-| `unique`     | `Array<string>` | -       | An Array of column names on which to apply unique constraints. |
-| `index`      | `string`, `Array<string>`, `Array<Array<string>>`, `object` | - | See ["advanced indexing"](/api#advanced-indexing) |
+| `primary`    | `string[]`      | -       | An array of column names to specify as a composite primary key. |
+| `unique`     | `string[]`      | -       | An array of column names on which to apply unique constraints. |
+| `index`      | `string`, `string[]`, `Array<string[]>`, `object` | - | See ["advanced indexing"](/api#advanced-indexing) |
 
 _Note: specifying a column as either `primary` or `unique` in both the column
-descriptor and the `options.primary` or `options.unique` Arrays will result
+descriptor and the `options.primary` or `options.unique` arrays will result
 in an error, as the constraint will have already been applied._
 
 > **Returns**
 
-`Promise<`[`Model`](/api#model-class)`>`
+`Promise<`[`Model`](/api#model-class)`<D>>`
 
 > **Usage**
 
-```js
+```ts
 await db.model('people', {
   name: String,
   age: Number,
@@ -139,15 +143,14 @@ await people.min('age', { /* ... */ })
 ```
 
 ### getModel
-```js
-db.getModel(name)
+```ts
+getModel<D>(name)
 ```
 
 Provides a way to synchronously retrieve a model. If that model doesn't
-exist a `TrilogyError` will be thrown, so you should only use this if
-you're sure it has been defined. Otherwise you should use methods like
-[`hasModel`](#hasmodel) or [`model`](#model), which returns existing
-definitions.
+exist an error will be thrown, so you should only use this if you're sure
+it has been defined. Or you can check first with [`hasModel`](#hasmodel)
+or use [`model`](#model), which returns existing definitions.
 
 > **Arguments**
 
@@ -159,9 +162,9 @@ definitions.
 
 > **Usage**
 
-```js
+```ts
 db.getModel('people')
-// TrilogyError: no model defined by the name 'people'
+// Error: no model defined by the name 'people'
 
 const people = await db.model('people', {
   name: String
@@ -180,8 +183,8 @@ people === alsoPeople
 if no model by the name of `name` has been created
 
 ### hasModel
-```js
-db.hasModel(name)
+```ts
+hasModel(name)
 ```
 
 First checks if the model's been defined with trilogy, then runs an existence
@@ -198,7 +201,7 @@ doesn't.
 
 > **Usage**
 
-```js
+```ts
 const exists = await db.hasModel('people')
 if (exists) {
   console.log('it exists!')
@@ -206,8 +209,8 @@ if (exists) {
 ```
 
 ### dropModel
-```js
-db.dropModel(name)
+```ts
+dropModel(name)
 ```
 
 Removes the specified model from trilogy's definition and the database.
@@ -223,14 +226,14 @@ Removes the specified model from trilogy's definition and the database.
 
 > **Usage**
 
-```js
+```ts
 await db.dropModel('people')
 // model & table dropped
 ```
 
 ### raw
-```js
-db.raw(query, needResponse)
+```ts
+raw(query, needResponse)
 ```
 
 Allows running any arbitrary query generated by trilogy's [`.knex`](/api#knex)
@@ -239,7 +242,7 @@ the number of affected rows will be returned ( if applicable ).
 
 > **Arguments**
 
-  * `{KnexQuery} query`: any knex query created with [`.knex`](/api#knex)
+  * `{knex.QueryBuilder | knex.Raw} query`: any knex query created with [`.knex`](/api#knex)
   * `{boolean} needResponse`: whether to return the result of the query
 
 > **Returns**
@@ -248,7 +251,7 @@ the number of affected rows will be returned ( if applicable ).
 
 > **Usage**
 
-```js
+```ts
 const query = db.knex('users')
   .innerJoin('accounts', function () {
     this.on('accounts.id', '=', 'users.account_id')
@@ -259,8 +262,8 @@ db.raw(query, true).then(result => {})
 ```
 
 ### close
-```js
-db.close()
+```ts
+close()
 ```
 
 Drains the connection pools and releases connections to any open database
@@ -277,10 +280,10 @@ None
 
 > **Usage**
 
-```js
-import { create } from 'trilogy'
+```ts
+import { connect } from 'trilogy'
 
-const db = create('./file.db')
+const db = connect('./file.db')
 
 db.find('title', ['release', '>', 2001])
   .then(titles => {
@@ -303,7 +306,7 @@ An array of all model names defined on the instance.
 
 > **Type**
 
-`Array<string>`
+`string[]`
 
 ### knex
 
@@ -338,10 +341,10 @@ For more advanced usage, see [knex's own documentation](http://knexjs.org/).
 
 > **Usage**
 
-```js
-import { create } from 'trilogy'
+```ts
+import { connect } from 'trilogy'
 
-const db = create('./file.db')
+const db = connect('./file.db')
 
 const query = db.knex('users').select('*')
 console.log(query.toString())
@@ -352,7 +355,7 @@ db.raw(query, true).then(users => {})
 
 More complex queries are possible this way:
 
-```js
+```ts
 const query = db.knex('users')
   .innerJoin('accounts', function () {
     this.on('accounts.id', '=', 'users.account_id')
@@ -364,7 +367,7 @@ db.raw(query, true).then(result => {})
 
 _Don't_ do the following, as it will cause query execution.
 
-```js
+```ts
 db.knex('users').select('*')
   .then(() => {})
 ```
@@ -375,9 +378,9 @@ Model instances are created using [`model()`](/api#model). All model instance
 methods are also accessible at the top level of a trilogy instance, meaning
 the following calls are equivalent:
 
-```js
+```ts
 // given this setup:
-const db = create('./storage.db')
+const db = connect('./storage.db')
 const users = await db.model('users', { /* some schema */ })
 
 // these are equivalent:
@@ -389,10 +392,56 @@ The function signatures remain the same except you provide the model name and,
 in some cases, the column name, as the first argument. Column names should be
 passed along with the table in dot-notation, ie. `'users.name'`.
 
+If you're using TypeScript, you should provide a type to the model constructor
+to make typechecking much more powerful:
+
+```ts
+const db = connect(':memory:')
+
+type Game = {
+  name: string,
+  players: number,
+  is_card: boolean,
+  is_dice: boolean
+}
+
+;(async () => {
+  // provide the `Game` type to `model()` here
+  const games = await db.model<Game>('games', {
+    name: String,
+    players: Number,
+    is_card: Boolean,
+    is_dice: Boolean
+  })
+
+  // this could fail at compile time if it didn't satisfy the provided type
+  await games.create({
+    name: 'Solitaire',
+    players: 1,
+    is_card: true,
+    is_dice: false
+  })
+
+  // type is inferred here as `Game[]`
+  const allGames = await games.find()
+
+  // you get suggestions and type checking here
+  console.log(allGames[0].players)
+  // -> 1
+})()
+```
+
+If you don't provide a type, a loose default is used that prevents strong
+type safety.
+
 ## Methods
 
+?> For TypeScript users, `Model` classes can be constructed with a generic type
+   that determines how their methods are typechecked. That type is represented as
+   a `D` in this documentation.
+
 ### create
-```js
+```ts
 model.create(object, [options])
 ```
 
@@ -403,8 +452,8 @@ this constraint.
 
 > **Arguments**
 
-  * _optional_ `{object} object`: the data to insert
-  * _optional_ `{object} options`
+  * `{D} object`: the data to insert
+  * _optional_ `{CreateOptions} options`
 
 | property | type      | default | description                               |
 | -------- | :-------: | :-----: | ----------------------------------------- |
@@ -412,11 +461,11 @@ this constraint.
 
 > **Returns**
 
-`Promise<object>`: the created object
+`Promise<D>`: the created object
 
 > **Usage**
 
-```js
+```ts
 players.create({
   id: 197397332,
   username: 'xX420_sniperXx',
@@ -430,23 +479,21 @@ players.create({
 ```
 
 ### find
-```js
-model.find([column], [criteria], [options])
+```ts
+model.find([criteria], [options])
 ```
 
-Find all objects matching `criteria`. If `column` is provided, the resulting
-array will contain only the `column` property of the found objects.
+Find all objects matching `criteria`.
 
 > **Arguments**
 
-  * _optional_ `{string} column`: if provided, only this column's value will be selected
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{object} options`:
+  * _optional_ `{FindOptions} options`:
 
 | property | type                        | default | description                                                                         |
 | -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
@@ -460,12 +507,11 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 
 > **Returns**
 
-`Promise<Array<object | any>>`: array of found objects, or `object[column]` if
-a column was provided
+`Promise<D[]>`: array of found objects
 
 > **Usage**
 
-```js
+```ts
 const todos = await db.model('todos', {
   name: String,
   body: String,
@@ -484,29 +530,29 @@ todos.find('name', ['priority', '<', 3]).then(found => {
 })
 ```
 
-### findOne
-```js
-model.findOne([column], [criteria], [options])
+### findIn
+```ts
+model.findIn(column, [criteria], [options])
 ```
 
-Find a single object. Returns either the object or, if `column` is
-provided, the value at `object[column]`.
+Find all objects matching `criteria` and extract the given column from each one.
 
 > **Arguments**
 
-  * _optional_ `{string} column`: if provided, only this column's value will be selected
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * `{string} column`: the column to select from matching objects
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{object} options`:
+  * _optional_ `{FindOptions} options`:
 
 | property | type                        | default | description                                                                         |
 | -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
 | `random` | `boolean`                   | `false` | Select a single random record.                                                      |
 | `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
+| `limit`  | `number`                    | -       | Limit the rows returned.                                                            |
 | `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
 | `raw`    | `boolean`                   | `false` | If `true`, will bypass getters & setters.                                           |
 
@@ -514,11 +560,11 @@ _Note: if `options.random` is provided, `options.order` is ignored._
 
 > **Returns**
 
-`Promise<object | any>`: the found object, or `object[column]` if a column was provided
+`Promise<(D[keyof D])[]>`: value at `column` from each matching object
 
 > **Usage**
 
-```js
+```ts
 const todos = await db.model('todos', {
   name: String,
   body: String,
@@ -531,14 +577,117 @@ await Promise.all([
   todos.create({ name: 'tests', body: 'totally works', priority: 3 })
 ])
 
-todos.findOne('body', { name: 'docs' }).then(found => {
+todos.findIn('name', ['priority', '<', 3]).then(found => {
   console.log(found)
+  // -> ['code', 'docs']
+})
+```
+
+### findOne
+```ts
+model.findOne([criteria], [options])
+```
+
+Find a single object.
+
+> **Arguments**
+
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{FindOptions} options`:
+
+| property | type                        | default | description                                                                         |
+| -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
+| `random` | `boolean`                   | `false` | Select a single random record.                                                      |
+| `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
+| `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
+| `raw`    | `boolean`                   | `false` | If `true`, will bypass getters & setters.                                           |
+
+_Note: if `options.random` is provided, `options.order` is ignored._
+
+> **Returns**
+
+`Promise<D>`: the found object
+
+> **Usage**
+
+```ts
+const todos = await db.model('todos', {
+  name: String,
+  body: String,
+  priority: Number
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+todos.findOne({ name: 'docs' }).then(found => {
+  console.log(found.body)
   // -> 'crap what did I create'
 })
 ```
 
+### findOneIn
+```ts
+model.findOneIn(column, [criteria], [options])
+```
+
+Find a single object.
+
+> **Arguments**
+
+  * `{string} column`: the column to select from the matching object
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{FindOptions} options`:
+
+| property | type                        | default | description                                                                         |
+| -------- | :-------------------------: | :-----: | ----------------------------------------------------------------------------------- |
+| `random` | `boolean`                   | `false` | Select a single random record.                                                      |
+| `order`  | `string`, `[string, string]` | -       | Specify a selection order. See [the knex docs](http://knexjs.org/#Builder-orderBy). |
+| `skip`   | `number`                    | -       | Skip (offset) a number of records.                                                  |
+| `raw`    | `boolean`                   | `false` | If `true`, will bypass getters & setters.                                           |
+
+_Note: if `options.random` is provided, `options.order` is ignored._
+
+> **Returns**
+
+`Promise<D[keyof D]>`: value at `column` of the found object
+
+> **Usage**
+
+```ts
+const todos = await db.model('todos', {
+  name: String,
+  body: String,
+  priority: Number
+})
+
+await Promise.all([
+  todos.create({ name: 'code', body: 'create the best thing', priority: 1 }),
+  todos.create({ name: 'docs', body: 'crap what did I create', priority: 2 }),
+  todos.create({ name: 'tests', body: 'totally works', priority: 3 })
+])
+
+todos.findOne('name', { priority: 1 }).then(found => {
+  console.log(found)
+  // -> 'code'
+})
+```
+
 ### findOrCreate
-```js
+```ts
 model.findOrCreate(criteria, creation, [options])
 ```
 
@@ -548,17 +697,17 @@ will be used, with the properties from `creation` taking precedence.
 
 > **Arguments**
 
-  * `{object} criteria`: criteria to search for
-  * `{object} creation`: data used to create the object if it doesn't exist
-  * _optional_ `{object} options`: same as [`findOne()`](/api#findOne)
+  * `{Criteria<D>} criteria`: criteria to search for
+  * `{Partial<D>} creation`: data used to create the object if it doesn't exist
+  * _optional_ `{FindOptions} options`: same as [`findOne()`](/api#findOne)
 
 > **Returns**
 
-`Promise<object>`: the found object, after creation if necessary
+`Promise<D>`: the found object, after creation if necessary
 
 > **Usage**
 
-```js
+```ts
 const people = await db.model('people', {
   name: { type: String, primary: true },
   age: Number,
@@ -572,22 +721,23 @@ people.findOrCreate({ name: 'Joe' }, { age: 13, adult: false }).then(person => {
 ```
 
 ### update
-```js
-model.update([criteria], data, [options])
+```ts
+model.update([criteria], [data], [options])
 ```
 
-Modify the properties of an existing object.
+Modify the properties of an existing object. While optional, if `data` contains
+no properties no update queries will be run.
 
 > **Arguments**
 
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * `{object} data`: the updates to be made
-  * _optional_ `{object} options`
+  * _optional_ `{Partial<D>} data`: the updates to be made
+  * _optional_ `{UpdateOptions} options`
 
 | property | type      | default | description                               |
 | -------- | :-------: | :-----: | ----------------------------------------- |
@@ -599,7 +749,7 @@ Modify the properties of an existing object.
 
 > **Usage**
 
-```js
+```ts
 const games = await db.model('games', {
   name: { type: String, primary: true },
   genre: String,
@@ -615,7 +765,7 @@ games.update({ name: 'Overwatch' }, { owned: true }).then(rowsAffected => {
 ```
 
 ### updateOrCreate
-```js
+```ts
 model.updateOrCreate(criteria, data, [options])
 ```
 
@@ -625,9 +775,9 @@ used, with the properties from `data` taking precedence.
 
 > **Arguments**
 
-  * `{object} criteria`: criteria to search for
-  * `{object} data`: updates to be made, or used for object creation
-  * _optional_ `{object} options`: same as [`update()`](/api#update)
+  * `{Criteria<D>} criteria`: criteria to search for
+  * `{Partial<D>} data`: updates to be made, or used for object creation
+  * _optional_ `{UpdateOptions & CreateOptions} options`: same as [`update()`](/api#update)
 
 > **Returns**
 
@@ -635,7 +785,7 @@ used, with the properties from `data` taking precedence.
 
 > **Usage**
 
-```js
+```ts
 const games = await db.model('games', {
   name: { type: String, primary: true },
   genre: String,
@@ -653,7 +803,7 @@ await games.findOne({ name: 'Ms. PacMan' })
 ```
 
 ### get
-```js
+```ts
 model.get(column, criteria, [defaultValue])
 ```
 
@@ -663,21 +813,21 @@ the value at `column` or, if it does not exist, the supplied `defaultValue`.
 > **Arguments**
 
   * `{string} column`: the property to retrieve
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{any} defaultValue`: returned if the result doesn't exist
+  * _optional_ `{D[keyof D]} defaultValue`: returned if the result doesn't exist
 
 > **Returns**
 
-`Promise<any>`
+`Promise<D[keyof D]>`
 
 > **Usage**
 
-```js
+```ts
 const todos = await db.model('todos', {
   name: String,
   body: String,
@@ -699,7 +849,7 @@ await todos.get('priority', { name: 'eat' }, 999)
 ```
 
 ### set
-```js
+```ts
 model.set(column, criteria, value)
 ```
 
@@ -709,13 +859,13 @@ the value at `column` to be `value` where `criteria` is met.
 > **Arguments**
 
   * `{string} column`: the column to update
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * `{any} value`: the new value
+  * `{D[keyof D]} value`: the new value
 
 > **Returns**
 
@@ -723,7 +873,7 @@ the value at `column` to be `value` where `criteria` is met.
 
 > **Usage**
 
-```js
+```ts
 const todos = await db.model('todos', {
   name: String,
   body: String,
@@ -744,7 +894,7 @@ await todos.set('body', ['priority', '>', 1], 'not important ;)')
 ```
 
 ### getRaw
-```js
+```ts
 model.getRaw(column, criteria, [defaultValue])
 ```
 
@@ -754,21 +904,21 @@ the raw database value.
 > **Arguments**
 
   * `{string} column`: the property to retrieve
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{any} defaultValue`: returned if the result doesn't exist
+  * _optional_ `{D[keyof D]} defaultValue`: returned if the result doesn't exist
 
 > **Returns**
 
-`Promise<any>`
+`Promise<D[keyof D]>`
 
 > **Usage**
 
-```js
+```ts
 const todos = await db.model('todos', {
   name: String,
   body: String,
@@ -799,7 +949,7 @@ await todos.get('priority', { name: 'code' })
 ```
 
 ### setRaw
-```js
+```ts
 model.setRaw(column, criteria, value)
 ```
 
@@ -809,13 +959,13 @@ updating the target value.
 > **Arguments**
 
   * `{string} column`: the column to update
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * `{any} value`: the new value
+  * `{D[keyof D]} value`: the new value
 
 > **Returns**
 
@@ -823,7 +973,7 @@ updating the target value.
 
 > **Usage**
 
-```js
+```ts
 const todos = await db.model('todos', {
   name: String,
   body: {
@@ -859,7 +1009,7 @@ await todos.set('body', ['priority', '>', 1], 'not important ;)')
 ```
 
 ### incr
-```js
+```ts
 model.incr(column, criteria, [amount = 1])
 ```
 
@@ -871,7 +1021,7 @@ to `1` if not provided.
   * `{string} column`: the target value
   * _optional_ `{number} amount`
     * _default_ = `1`
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
@@ -884,7 +1034,7 @@ to `1` if not provided.
 
 > **Usage**
 
-```js
+```ts
 // the amount defaults to 1, so these are equivalent
 people.increment('age', { name: 'Bob' }, 1)
 people.increment('age', { name: 'Bob' })
@@ -893,7 +1043,7 @@ people.increment('age', { name: 'Bob' })
 ```
 
 ### decr
-```js
+```ts
 model.decr(column, criteria, [amount = 1], [allowNegative = false])
 ```
 
@@ -906,7 +1056,7 @@ the final argument.
   * `{string} column`: the target value
   * _optional_ `{number} amount`
     * _default_ = `1`
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
@@ -921,7 +1071,7 @@ the final argument.
 
 > **Usage**
 
-```js
+```ts
 // the amount defaults to 1, so these are equivalent
 people.decrement('age', { name: 'Benjamin Button' }, 1)
 people.decrement('age', { name: 'Benjamin Button' })
@@ -932,7 +1082,7 @@ people.decrement('age', { name: 'Benjamin Button' }, true)
 ```
 
 ### remove
-```js
+```ts
 model.remove(criteria)
 ```
 
@@ -943,7 +1093,7 @@ to remove all rows.
 
 > **Arguments**
 
-  * `{object | Array} criteria`: criteria used to restrict selection
+  * `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
@@ -956,12 +1106,12 @@ to remove all rows.
 
 > **Usage**
 
-```js
+```ts
 users.remove({ expired: true })
 ```
 
 ### clear
-```js
+```ts
 model.clear()
 ```
 
@@ -972,27 +1122,26 @@ Removes all rows from the table.
 `Promise<number>`: the number of rows affected
 
 ### count
-```js
-model.count([column], [criteria], [options])
+```ts
+model.count([criteria], [options])
 ```
 
-Count the number of rows, matching `criteria` if specified.
+Count the number of rows in the table.
 
 > **Arguments**
 
-  * _optional_ `{string} column`: column to select on
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{object} options`:
+  * _optional_ `{AggregateOptions} options`:
 
 |  property   | type       | default | description                      |
 | ----------- | :--------: | :-----: | -------------------------------- |
 |  `distinct` | `boolean`  | `false` | Counts only unique values if `true`. |
-|  `group`    | `string`   | -       | Add a group clause to the query. |
+|  `group`    | `string`, `string[]` | - | Add a group clause to the query. |
 
 > **Returns**
 
@@ -1008,7 +1157,7 @@ Assuming we have this data in our `people` table:
 |  Dale  |  25   |
 |  Harry |  32   |
 
-```js
+```ts
 people.count()
 // -> 3
 
@@ -1023,13 +1172,51 @@ Now assume we've defined models `people`, `places`, `things`, & `ideas`.
 If we use `count()` with no arguments on the trilogy instance we can count
 the number of tables in the database:
 
-```js
+```ts
 db.count()
 // -> 4
 ```
 
+### countIn
+```ts
+model.countIn(column, [criteria], [options])
+```
+
+Count the number of rows in the table, selecting on `column` (meaning `NULL`
+values are not counted).
+
+> **Arguments**
+
+  * `{string} column`: column to select on
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
+    * Object syntax means 'where (key) is equal to (value)'
+    * Array syntax is one of:
+      * a length of 2, ie. a key / value pair (equal to)
+      * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
+      * a list containing any number of the above forms
+  * _optional_ `{AggregateOptions} options`: same as [`#count()`](/api#count)
+
+> **Returns**
+
+`Promise<number>`: the number of rows found, matching `criteria` if specified
+
+> **Usage**
+
+Assuming we have this data in our `people` table:
+
+|  name  |  age  |
+|:------:|:-----:|
+|  Bob   |  18   |
+|  Dale  |  25   |
+|  Harry |  32   |
+
+```ts
+people.countIn('age')
+// -> 3
+```
+
 ### min
-```js
+```ts
 model.min(column, [criteria], [options])
 ```
 
@@ -1038,18 +1225,18 @@ in `column` that match `criteria`.
 
 > **Arguments**
 
-  * _optional_ `{string} column`: column to compare
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * `{string} column`: column to compare
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{object} options`:
+  * _optional_ `{AggregateOptions} options`:
 
 | property | type     | default | description                      |
 | -------- | :------: | :-----: | -------------------------------- |
-| `group`  | `string` | -       | Add a group clause to the query. |
+| `group`  | `string`, `string[]` | - | Add a group clause to the query. |
 
 > **Returns**
 
@@ -1065,13 +1252,13 @@ Given this data in the `people` model:
 |  Dale  |  25   |
 |  Harry |  32   |
 
-```js
+```ts
 people.min('age')
 // -> 18
 ```
 
 ### max
-```js
+```ts
 model.max(column, [criteria], [options])
 ```
 
@@ -1080,18 +1267,18 @@ in `column` that match `criteria`.
 
 > **Arguments**
 
-  * _optional_ `{string} column`: column to compare
-  * _optional_ `{object | Array} criteria`: criteria used to restrict selection
+  * `{string} column`: column to compare
+  * _optional_ `{Criteria<D>} criteria`: criteria used to restrict selection
     * Object syntax means 'where (key) is equal to (value)'
     * Array syntax is one of:
       * a length of 2, ie. a key / value pair (equal to)
       * a length of 3, ie. `['age', '<', 65]` (allows other comparisons)
       * a list containing any number of the above forms
-  * _optional_ `{object} options`:
+  * _optional_ `{AggregateOptions} options`:
 
 | property | type     | default | description                      |
 | -------- | :------: | :-----: | -------------------------------- |
-| `group`  | `string` | -       | Add a group clause to the query. |
+| `group`  | `string`, `string[]` | - | Add a group clause to the query. |
 
 > **Returns**
 
@@ -1107,7 +1294,7 @@ Given this data in the `people` model:
 |  Dale  |  25   |
 |  Harry |  32   |
 
-```js
+```ts
 people.max('age')
 // -> 32
 ```
@@ -1138,9 +1325,9 @@ a 'column descriptor'. It's so named because it describes the column - its type,
 such as `String` or `Number`, and its attributes, like whether it is the primary
 key, is nullable, has a default value, etc.
 
-```js
+```ts
 db.model('cars', {
-  id: { type: 'increments' },
+  id: 'increments',
   make: { type: String, defaultTo: 'Ford' },
   model: { type: String, nullable: false },
   year: Number
@@ -1149,7 +1336,7 @@ db.model('cars', {
 
 The schema is the object passed as the second argument to `model()`.
 
-```js
+```ts
 {
   id: 'increments',
   make: { type: String, defaultTo: 'Ford' },
@@ -1163,7 +1350,7 @@ Each key of this object is the name of a column, so in the table
 
 Let's break down each descriptor.
 
-```js
+```ts
 {
   id: 'increments'
 ```
@@ -1177,7 +1364,7 @@ is the primary key of the table - the one that prevents duplicates.
 You can define other types, and other attributes, by providing an object
 instead of just the type. This is done with the next descriptor, `make`:
 
-```js
+```ts
   make: { type: String, defaultTo: 'Ford' },
 ```
 
@@ -1188,7 +1375,7 @@ This is stored as a `text` column in SQLite.
 We also use the `defaultTo` property to set a value that should be used
 when `make` isn't provided at creation time.
 
-```js
+```ts
   model: { type: String, nullable: false },
 ```
 
@@ -1196,7 +1383,7 @@ Next up is `model`, also a `String` type, but in this case we set
 the `nullable` property to false. This essentially means `model`
 is a required property.
 
-```js
+```ts
   year: Number
 }
 ```
@@ -1225,7 +1412,7 @@ Unsupported / unknown types are cast using `String` and stored as `text`.
 | attribute     | type       | description                                              |
 | ------------- | ---------- | -------------------------------------------------------- |
 | `primary`     | `boolean`  | Whether to set this column as the primary key.           |
-| `defaultTo`   | `any`    | Default value to use when absent.                        |
+| `defaultTo`   | `any`      | Default value to use when absent.                        |
 | `unique`      | `boolean`  | Whether the column is required to be unique.             |
 | `nullable`    | `boolean`  | Whether to allow null values.                            |
 | `notNullable` | `boolean`  | Works inversely to `nullable`.                           |
@@ -1244,7 +1431,7 @@ in the `options` object instead.
 
 Let's use this as our model's schema for all the following examples:
 
-```js
+```ts
 const schema = {
   brand: String,
   color: String,
@@ -1259,7 +1446,7 @@ const schema = {
 This is equivalent to specifying the index in the column descriptor,
 except the index name is automatically generated.
 
-```js
+```ts
 db.create('shoes', schema, { index: 'brand' })
 ```
 
@@ -1267,7 +1454,7 @@ db.create('shoes', schema, { index: 'brand' })
 
 Create a single index on all the specified columns.
 
-```js
+```ts
 db.create('shoes', schema, { index: ['brand', 'color']})
 ```
 
@@ -1275,7 +1462,7 @@ db.create('shoes', schema, { index: ['brand', 'color']})
 
 Create an index for each set of columns.
 
-```js
+```ts
 db.create('shoes', schema, {
   index: [
     ['brand', 'color'],
@@ -1290,7 +1477,7 @@ All other forms will automatically generate a unique index name of
 the format `index_column1[_column2[_column3...]]`. If you want the
 index to have a specific custom name, use an object instead.
 
-```js
+```ts
 db.create('shoes', schema, {
   index: {
     idx_brand: 'brand',
