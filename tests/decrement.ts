@@ -1,6 +1,8 @@
 import test from 'ava'
 import { connect } from '../src'
 
+import { Person } from './helpers/types'
+
 const db = connect(':memory:')
 
 const people = [
@@ -66,7 +68,7 @@ test.serial('does nothing when passed a zero value', async t => {
 })
 
 test('allows for multiple where clauses', async t => {
-  const people = await db.model('decrement_people', {
+  const people = await db.model<Person>('decrement_people', {
     age: Number,
     name: String
   })

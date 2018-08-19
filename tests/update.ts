@@ -1,6 +1,8 @@
 import test from 'ava'
 import { connect } from '../src'
 
+import { Person2 } from './helpers/types'
+
 const db = connect(':memory:')
 
 test.before(async () => {
@@ -38,7 +40,7 @@ test('handles model type definitons correctly', async t => {
 })
 
 test('allows for using multiple where clauses', async t => {
-  const people = await db.model('update_people', {
+  const people = await db.model<Person2>('update_people', {
     age: Number,
     gender: String
   })
