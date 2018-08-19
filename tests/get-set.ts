@@ -67,6 +67,6 @@ test('model.get() & model.set()', async t => {
   const actual = await people.get('age', { name: 'Dale' })
   t.is(actual, 30)
 
-  await people.set('name', { age: 30 }, 32)
+  await people.set('age', { name: 'Dale' }, 32)
   t.is(await people.get('age', { name: 'Dale' }), 32)
 })

@@ -165,25 +165,25 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     }
   }
 
-  get <K extends keyof D = keyof D, V = D[K]> (
+  get <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria?: types.Criteria<D>, defaultValue?: V
   ) {
     return baseGet<D, K>(this, column, criteria, defaultValue)
   }
 
-  set <K extends keyof D = keyof D, V = D[K]> (
+  set <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria?: types.Criteria<D>, value?: V
   ) {
     return baseSet<D, K>(this, column, criteria, value)
   }
 
-  getRaw <K extends keyof D = keyof D, V = D[K]> (
+  getRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria: types.Criteria<D>, defaultValue?: V
   ) {
     return baseGet<D, K>(this, column, criteria, defaultValue, { raw: true })
   }
 
-  setRaw <K extends keyof D = keyof D, V = D[K]> (
+  setRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria?: types.Criteria<D>, value?: V
   ) {
     return baseSet<D, K>(this, column, criteria, value, { raw: true })
@@ -320,7 +320,7 @@ async function baseMinMax <D extends types.ReturnDict> (
 
 async function baseGet <D extends types.ReturnDict, K extends keyof D> (
   model: Model<D>,
-  column: keyof D,
+  column: K,
   criteria: types.Criteria<D> | undefined,
   defaultValue: D[K],
   options?: types.LooseObject
@@ -331,7 +331,7 @@ async function baseGet <D extends types.ReturnDict, K extends keyof D> (
 
 async function baseSet <D extends types.ReturnDict, K extends keyof D> (
   model: Model<D>,
-  column: keyof D,
+  column: K,
   criteria: types.Criteria<D> | undefined,
   value: D[K],
   options?: types.LooseObject
