@@ -23,7 +23,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
     eachObj(model.schema, (descriptor, name) => {
       // each column's value is either its type or a descriptor
       const type = getDataType(descriptor)
-      const partial = (table as any)[toKnexMethod(type)](name)
+      const partial: types.ValueOf<knex.TableBuilder> = (table as any)[toKnexMethod(type)](name)
 
       if (isFunction(descriptor) || !isObject(descriptor)) return
 
@@ -46,9 +46,9 @@ export function toKnexSchema <D extends types.ReturnDict> (
         if (IGNORABLE_PROPS.includes(property)) return
 
         if (KNEX_NO_ARGS.includes(property)) {
-          props[property] && partial[property]()
+          props[property] && (partial as any)[property]()
         } else {
-          partial[property](value)
+          props[property] && (partial as any)[property](value)
         }
       })
     })
@@ -142,7 +142,7 @@ function getDataType (property: types.ColumnDescriptor): string | never {
   return invariant(false, `column type must be of type string`)
 }
 
-export function toKnexMethod (type: string): string {
+export function toKnexMethod (type: string): string | never {
   switch (type) {
     case 'string':
     case 'array':
@@ -155,8 +155,9 @@ export function toKnexMethod (type: string): string {
     case 'date':
       return 'dateTime'
     case 'increments':
+      return 'increments'
     default:
-      return type
+      return invariant(false, `invalid column type definition: ${type}`)
   }
 }
 

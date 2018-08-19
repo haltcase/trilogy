@@ -88,10 +88,11 @@ information.
 
 This schema controls the handling of values inserted into and retreived from
 the database, casting them as needed. For example, SQLite does not support a
-Boolean data type and instead stores them as integers. trilogy will
-transparently cast Booleans to integers when inserting them and back to
-Booleans when retreiving them. The same goes for all other
-[supported data types](/api#valid-column-types).
+boolean data type and instead stores them as integers. trilogy will
+transparently cast booleans to integers when inserting them and back to
+booleans when retreiving them. The same goes for all other
+[supported data types](/api#valid-column-types). Unknown column types will
+cause an error to be thrown.
 
 If any property of `schema` is not present in knex's methods it will be
 ignored. See [knex's documentation](http://knexjs.org/#Schema-Building)
@@ -1321,7 +1322,7 @@ properties representing their 'column'.
 ## column descriptor
 
 Each property of the object you pass to define the schema of a model is called
-a 'column descriptor'. It's so named because it describes the column - its type,
+a 'column descriptor'. It's so named because it describes the column &mdash; its type,
 such as `String` or `Number`, and its attributes, like whether it is the primary
 key, is nullable, has a default value, etc.
 
@@ -1359,7 +1360,7 @@ The `id` property is defined with `'increments'` as its type. This is a
 special type that's really a shortcut for the super long SQL
 `integer not null primary key autoincrement`. It declares `id` as a field
 that will automatically set itself to the last inserted row's id + 1, and
-is the primary key of the table - the one that prevents duplicates.
+is the primary key of the table &mdash; the one that prevents duplicates.
 
 You can define other types, and other attributes, by providing an object
 instead of just the type. This is done with the next descriptor, `make`:
@@ -1388,24 +1389,22 @@ is a required property.
 }
 ```
 
-And finally `year` - back to basics on this one. It's defined with the same
+And finally `year` &mdash; back to basics on this one. It's defined with the same
 shorthand as `id`, only this time it's a `Number`. This is stored as an
 `integer` column in SQLite.
 
 ### valid column types
 
-| type           | description                                                           |
-| -------------- | ----------------------------------------------------------------------|
-| `string`       | stored as `text`                                                      |
-| `number`       | stored as `integer`                                                   |
-| `boolean`      | stored as `integer`                                                   |
-| `Date`         | stored as `datetime`                                                  |
-| `Array`        | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
-| `object`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
-| `'json'`       | inserted as `text` using `JSON.stringify`, returned using `JSON.parse`|
-| `'increments'` | set as an auto-incrementing `integer` & primary key                   |
-
-Unsupported / unknown types are cast using `String` and stored as `text`.
+| type           | description                                                          |
+| -------------- | -------------------------------------------------------------------- |
+| `string`       | stored as `text`                                                     |
+| `number`       | stored as `integer`                                                  |
+| `boolean`      | stored as `integer`                                                  |
+| `date`         | stored as `datetime`                                                 |
+| `array`        | stored as `text` using `JSON.stringify`, returned using `JSON.parse` |
+| `object`       | stored as `text` using `JSON.stringify`, returned using `JSON.parse` |
+| `'json'`       | stored as `text` using `JSON.stringify`, returned using `JSON.parse` |
+| `'increments'` | set as an auto-incrementing `integer` & primary key                  |
 
 ### valid column attributes
 
