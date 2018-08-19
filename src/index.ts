@@ -234,7 +234,8 @@ export class Trilogy {
   get <T = types.ReturnType> (
     location: string,
     criteria: types.Criteria,
-    defaultValue?: T): Promise<T>
+    defaultValue?: T
+  ): Promise<T>
   get (
     location: string,
     criteria: types.Criteria,
