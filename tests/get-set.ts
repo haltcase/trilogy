@@ -1,6 +1,8 @@
 import test from 'ava'
 import { connect } from '../src'
 
+import { Person } from './helpers/types'
+
 const db = connect(':memory:')
 
 test.before(async () => {
@@ -46,4 +48,25 @@ test('set() - updates the target value', async t => {
 
   const actual = await db.get('one.second', { first: 'shoot' })
   t.is(actual, expected)
+})
+
+test('model.get() & model.set()', async t => {
+  const people = await db.model<Person>('get_set_people', {
+    name: String,
+    age: Number
+  })
+
+  const persons = [
+    { name: 'Dale', age: 30 },
+    { name: 'Lelu', age: 6 },
+    { name: 'Gurlak', age: 302 }
+  ]
+
+  await Promise.all(persons.map(p => people.create(p)))
+
+  const actual = await people.get('age', { name: 'Dale' })
+  t.is(actual, 30)
+
+  await people.set('name', { age: 30 }, 32)
+  t.is(await people.get('age', { name: 'Dale' }), 32)
 })
