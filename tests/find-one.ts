@@ -52,3 +52,26 @@ test('allows for multiple where clauses', async t => {
 
   t.deepEqual(found, { age: 51, gender: 'female' })
 })
+
+test('findOneIn() variant extracts & returns the specified column', async t => {
+  const people = await db.model<Person2>('findOne_people2', {
+    age: Number,
+    gender: String
+  })
+
+  const list = [
+    { age: 31, gender: 'male' },
+    { age: 41, gender: 'male' },
+    { age: 51, gender: 'female' },
+    { age: 49, gender: 'female' }
+  ]
+
+  await Promise.all(list.map(p => people.create(p)))
+
+  const found = await people.findOneIn('age', [
+    ['age', '>', 50],
+    { gender: 'female' }
+  ])
+
+  t.is(found, 51)
+})

@@ -73,3 +73,20 @@ test('2 element tuple works within multiple where clauses', async t => {
     { age: 20, gender: 'male' }
   ])
 })
+
+test('findIn() variant extracts the given column from all found objects', async t => {
+  const people = await db.model<Person2>('find_people3', {
+    age: Number,
+    gender: String
+  })
+
+  const list = [
+    { age: 20, gender: 'male' },
+    { age: 20, gender: 'female' }
+  ]
+
+  await Promise.all(list.map(p => people.create(p)))
+
+  const results = await people.findIn('gender')
+  t.deepEqual(results, ['male', 'female'])
+})
