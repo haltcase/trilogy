@@ -112,7 +112,7 @@ export function normalizeSchema (schema: types.SchemaRaw): types.Schema {
 }
 
 function getDataType (property: types.ColumnDescriptor): string | never {
-  let type: string | types.ColumnDescriptor = property
+  let type: string | types.ColumnDescriptor | undefined = property
 
   if (isFunction(property)) {
     type = property.name

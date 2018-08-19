@@ -151,7 +151,7 @@ export async function runQuery (
 export async function findLastObject <D = types.LooseObject> (
   model: Model,
   object: types.LooseObject
-): Promise<D | void> {
+): Promise<D | undefined> {
   const { key, hasIncrements } = findKey(model.schema)
 
   if (!key && !hasIncrements) {

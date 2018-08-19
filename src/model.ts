@@ -34,7 +34,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
   create (
     object: D,
     options: types.LooseObject = {}
-  ): Promise<D> {
+  ): Promise<D | undefined> {
     const insertion = this.cast.toDefinition(object, options)
 
     const query = this.ctx.knex.raw(
@@ -94,7 +94,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
   async findOne (
     criteria?: types.Criteria<D>,
     options: types.FindOptions = {}
-  ): Promise<D> {
+  ): Promise<D | undefined> {
     options = types.validate(options, types.FindOptions)
 
     const order = options.random ? 'random' : options.order
@@ -106,7 +106,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
     const response = await helpers.runQuery(this.ctx, query, true)
     const result: D = Array.isArray(response) ? response[0] : response
-    if (isNil(result)) return result
+    if (isNil(result)) return undefined
 
     return this.cast.fromDefinition(result, options) as D
   }
@@ -115,7 +115,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     column: string,
     criteria?: types.Criteria<D>,
     options: types.FindOptions = {}
-  ): Promise<T> {
+  ): Promise<V | undefined> {
     const response = await this.findOne(criteria, options)
     return this.cast.fromColumnDefinition(
       column,
@@ -128,7 +128,7 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
     criteria: types.CriteriaObj<D>,
     creation: types.LooseObject = {},
     options?: types.FindOptions
-  ): Promise<D> {
+  ): Promise<D | undefined> {
     const existing = await this.findOne(criteria, options)
     // must cast `criteria` to any as a workaround for
     // not being able to spread a generic type, see:

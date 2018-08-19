@@ -35,7 +35,9 @@ export const isString = (value: any): value is string => typeof value === 'strin
 export const isNumber = (value: any): value is number => typeof value === 'number'
 export const isNil = (value: any): value is undefined | null => value == null
 
-export const defaultTo = <T, V> (value: T, fallback: V) => isNil(value) ? fallback : value
+
+export const defaultTo = <T, V> (value: T | null | undefined, fallback: V) =>
+  isNil(value) ? fallback : value
 
 export type Falsy = false | null | undefined | 0 | ''
 
