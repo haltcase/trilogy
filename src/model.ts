@@ -46,7 +46,10 @@ export default class Model <D extends types.ReturnDict = types.LooseObject> {
 
     return helpers.runQuery(this.ctx, query)
       .then(() => helpers.findLastObject<D>(this, object))
-      .then(res => res || (res != null && this.findOne(object)))
+      .then(res => {
+        if (res) return res
+        return res == null ? undefined : this.findOne(object)
+      })
   }
 
   async find (
