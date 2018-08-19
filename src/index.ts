@@ -26,7 +26,7 @@ export class Trilogy {
   isNative: boolean
   knex: knex
   options: types.TrilogyOptions
-  pool: Pool<Database>
+  pool?: Pool<Database>
   verbose?: (query: string) => any
 
   Model = Model
@@ -140,7 +140,7 @@ export class Trilogy {
       // https://github.com/petkaantonov/bluebird/issues/1277
       return Promise.resolve(this.knex.destroy())
     } else {
-      return this.pool.drain()
+      return this.pool!.drain()
     }
   }
 

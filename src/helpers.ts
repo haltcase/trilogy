@@ -127,7 +127,7 @@ export async function runQuery (
   }
 
   // tslint:disable-next-line:await-promise
-  const db = await instance.pool.acquire()
+  const db = await instance.pool!.acquire()
   let response
 
   if (needResponse) {
@@ -144,7 +144,7 @@ export async function runQuery (
   }
 
   writeDatabase(instance, db)
-  instance.pool.release(db)
+  instance.pool!.release(db)
   return response
 }
 
