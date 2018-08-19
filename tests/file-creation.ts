@@ -4,7 +4,7 @@ import { join, basename } from 'path'
 
 import * as rimraf from 'rimraf'
 
-import { create } from '../src'
+import { connect, Trilogy } from '../src'
 
 const getPath = (name: any) =>
   join(__dirname, `${basename(`${__filename}-${name}`, '.ts')}.db`)
@@ -22,20 +22,20 @@ test.after.always('remove test database file', async () => {
 
 test('throws if no file path is provided', t => {
   // @ts-ignore
-  t.throws(() => create(), Error)
+  t.throws(() => connect(), Error)
 })
 
 test('native client creates a new file immediately', t => {
   t.false(existsSync(native))
 
-  dbNative = create(native)
+  dbNative = connect(native)
   t.true(existsSync(native))
 })
 
 test('sql.js client creates a new file immediately', t => {
   t.false(existsSync(js))
 
-  dbJS = create(js, { client: 'sql.js' })
+  dbJS = connect(js, { client: 'sql.js' })
   t.true(existsSync(js))
 })
 
@@ -43,6 +43,6 @@ test('in-memory database does not create a file', t => {
   const fakePath = join(process.cwd(), ':memory:')
   t.false(existsSync(fakePath))
 
-  create(':memory:')
+  connect(':memory:')
   t.false(existsSync(fakePath))
 })

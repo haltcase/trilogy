@@ -1,8 +1,8 @@
 import test from 'ava'
-import { create } from '../src'
+import { connect } from '../src'
 import { Person } from './helpers/types'
 
-const db = create(':memory:')
+const db = connect(':memory:')
 
 test.before(async () => {
   await db.model('people', {

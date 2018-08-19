@@ -1,9 +1,9 @@
 import test from 'ava'
-import { create } from '../src'
+import { connect } from '../src'
 
 import { Game } from './helpers/types'
 
-const db = create(':memory:')
+const db = connect(':memory:')
 
 const makeInput = (date: Date) => ({ name: 'Overwatch', last_played: date, genre: 'FPS' })
 

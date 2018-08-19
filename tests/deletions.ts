@@ -1,9 +1,9 @@
 import test from 'ava'
-import { create } from '../src'
+import { connect } from '../src'
 
 import { Person, Person3 } from './helpers/types'
 
-const db = create(':memory:')
+const db = connect(':memory:')
 
 const somePeople = [
   { name: 'Dale', age: 30 },

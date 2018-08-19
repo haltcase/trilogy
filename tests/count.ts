@@ -1,7 +1,7 @@
 import test from 'ava'
-import { create } from '../src'
+import { connect } from '../src'
 
-const db = create(':memory:')
+const db = connect(':memory:')
 
 const people = [
   { name: 'Dale', age: 30 },

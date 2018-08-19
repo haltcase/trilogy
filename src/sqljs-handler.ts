@@ -41,7 +41,7 @@ export function writeDatabase (instance: Trilogy, db: Database) {
   writeFileSync(name, db.export(), { mode: parseInt('0777', 8) })
 }
 
-export function connect (instance: Trilogy): Pool<Database> {
+export function pureConnect (instance: Trilogy): Pool<Database> {
   return createPool({
     create () {
       return Promise.resolve(readDatabase(instance))

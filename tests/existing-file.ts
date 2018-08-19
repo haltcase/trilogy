@@ -1,10 +1,10 @@
 import test from 'ava'
 import { join, basename } from 'path'
 
-import { create } from '../src'
+import { connect } from '../src'
 
 const filePath = join(__dirname, `${basename(__filename, '.ts')}.db`)
-const db = create(filePath)
+const db = connect(filePath)
 
 test.before('insert default data', async () => {
   await db.model('data', {

@@ -6,7 +6,7 @@ import * as knex from 'knex'
 import Model from './model'
 import { runQuery } from './helpers'
 import { toKnexSchema } from './schema-helpers'
-import { connect, readDatabase } from './sqljs-handler'
+import { pureConnect, readDatabase } from './sqljs-handler'
 import { invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
@@ -61,7 +61,7 @@ export class Trilogy {
       this.knex = knex(({ ...config, connection: obj.connection } as knex.Config))
     } else {
       this.knex = knex(config)
-      this.pool = connect(this)
+      this.pool = pureConnect(this)
       readDatabase(this)
     }
 
@@ -335,5 +335,5 @@ export { default as Model, ModelParams } from './model'
 export * from './types'
 export * from './plugins'
 
-export const create = (path: string, options?: types.TrilogyOptions) =>
+export const connect = (path: string, options?: types.TrilogyOptions) =>
   new Trilogy(path, options)
