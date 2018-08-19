@@ -46,7 +46,7 @@
     "lint": "tslint -p tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "docs": "docsify serve docs",
     "changelog": "changelog",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {
     "generic-pool": "^3.4.2",
