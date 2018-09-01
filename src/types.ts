@@ -60,14 +60,8 @@ export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
       : V
 
 export type StringKeys <D = LooseObject> = Extract<keyof D, string>
-
-export interface LooseObject {
-  [key: string]: any
-}
-
+export type LooseObject = Record<string, any>
 export type ValueOf <D> = D[keyof D]
-
-export type TrilogyParams = [string, TrilogyOptions?]
 
 export type Criteria2 <D = LooseObject> = [StringKeys<D>, D[StringKeys<D>]]
 export type Criteria3 <D = LooseObject> = [StringKeys<D>, string, D[StringKeys<D>]]
@@ -177,6 +171,8 @@ export type Index = t.TypeOf<typeof Index>
 export type Order = t.TypeOf<typeof OrderClause>
 export type Group = t.TypeOf<typeof GroupClause>
 
+export type TrilogyParams = [string, TrilogyOptions?]
+
 export type TrilogyOptions = t.TypeOf<typeof TrilogyOptions>
 export type ModelOptions = t.TypeOf<typeof ModelOptions>
 export type AggregateOptions = t.TypeOf<typeof AggregateOptions>
@@ -214,10 +210,10 @@ export type ReturnType =
   | Date
   | LooseObject
 
-export type ReturnDict = { [key: string]: ReturnType }
+export type ReturnDict = Record<string, ReturnType>
 
 export type CastToDefinition =
-  | { [key: string]: StorageType }
+  | Record<string, StorageType>
   | [string, StorageType]
   | [string, string, StorageType]
   | WhereMultiple
