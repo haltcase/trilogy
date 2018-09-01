@@ -33,7 +33,7 @@ It's not an ORM and isn't intended to be one &mdash; it doesn't have any relatio
   you can use it to build your own. No need to mess with ridiculous multi-line
   strings.
 
-* :electric_plug: **supports multiple swappable backends ( _plus in-memory storage_ )**
+* :nut_and_bolt: **supports multiple swappable backends ( _plus in-memory storage_ )**
 
   Both the native [`sqlite3`][sqlite3] module _and_ [`sql.js`][sqljs] (pure
   JavaScript!) are supported. There is also memory-only storage for fast,
@@ -47,7 +47,7 @@ It's not an ORM and isn't intended to be one &mdash; it doesn't have any relatio
 
   trilogy is written in and provides a first-class experience for TypeScript.
 
-* :cake: **extensible with plugins**
+* :electric_plug: **extensible with plugins**
 
   Out of the box, trilogy focuses on providing a simple, lightweight querying
   API, but it's also open to a system of plugins that can add functionality.
