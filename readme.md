@@ -41,7 +41,7 @@ It's not an ORM and isn't intended to be one &mdash; it doesn't have any relatio
   situations.
 
   You can even swap the backend after you've started, with no changes to the
-  rest of your code! :tada:
+  rest of your code!
 
 * :cop: **written in [TypeScript][typescript]**
 
