@@ -323,7 +323,7 @@ async function baseGet <D extends types.ReturnDict, K extends keyof D> (
   model: Model<D>,
   column: K,
   criteria: types.Criteria<D> | undefined,
-  defaultValue: D[K],
+  defaultValue?: D[K],
   options?: types.LooseObject
 ): Promise<D[K] | undefined> {
   const data = await model.findOneIn(column, criteria, options)
