@@ -288,8 +288,8 @@ async function baseCount <D extends types.ReturnDict> (
   options = types.validate(options, types.AggregateOptions)
 
   const val = `${column} as count`
-  const method = options.distinct ? 'countDistinct' : 'count'
-  let query = model.ctx.knex(model.name)[method](val)
+  const builder = model.ctx.knex(model.name)
+  let query = options.distinct ? builder.countDistinct(val) : builder.count(val)
   query = helpers.buildWhere(query, criteria)
 
   if (options.group) query = query.groupBy(toArray(options.group))
