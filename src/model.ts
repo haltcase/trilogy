@@ -334,7 +334,7 @@ async function baseSet <D extends types.ReturnDict, K extends keyof D> (
   model: Model<D>,
   column: K,
   criteria: types.Criteria<D> | undefined,
-  value: D[K],
+  value?: D[K],
   options?: types.LooseObject
 ): Promise<number> {
   invariant(
