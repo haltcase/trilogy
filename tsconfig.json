@@ -4,7 +4,7 @@
     "declaration": false,
     "downlevelIteration": true,
     "importHelpers": true,
-    "lib": ["es2015", "es2016"],
+    "lib": ["es2017"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitReturns": true,
@@ -12,7 +12,7 @@
     "outDir": "dist",
     "pretty": true,
     "strict": true,
-    "target": "es2015"
+    "target": "es2017"
   },
   "include": [
     "./src/**/*.ts"

@@ -28,7 +28,7 @@
     "typescript"
   ],
   "engines": {
-    "node": ">=6"
+    "node": ">=8.10"
   },
   "files": [
     "dist",
