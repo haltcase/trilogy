@@ -3,6 +3,9 @@
   "rules": {
     "no-empty": [true, "allow-empty-catch"],
     "strict-type-predicates": [false],
-    "max-line-length": [true, 100]
+    "max-line-length": [true, 100],
+    "deprecation": {
+      "severity": "warn"
+    }
   }
 }
