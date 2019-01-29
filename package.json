@@ -3,15 +3,8 @@
   "version": "2.0.0-rc.2",
   "description": "No-hassle SQLite with a document store style API.",
   "license": "MIT",
-  "author": {
-    "name": "Bo Lingen",
-    "email": "lingenbw@gmail.com",
-    "url": "https://github.com/citycide"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/citycide/trilogy"
-  },
+  "author": "Bo Lingen <lingenbw@gmail.com> (https://github.com/citycide)",
+  "repository": "https://github.com/citycide/trilogy",
   "homepage": "https://citycide.github.io/trilogy",
   "bugs": "https://github.com/citycide/trilogy/issues",
   "keywords": [
