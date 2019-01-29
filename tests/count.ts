@@ -15,7 +15,7 @@ test.before(async () => {
     age: Number
   })
 
-  return Promise.all(persons.map(person => db.create('people', person)))
+  await Promise.all(persons.map(person => db.create('people', person)))
 })
 
 test.after.always(() => db.close())

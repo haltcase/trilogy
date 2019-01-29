@@ -3,25 +3,27 @@ import { mkdirSync, statSync } from 'fs'
 
 import * as types from './types'
 
-export function eachObj <T extends types.LooseObject, K extends types.StringKeys<T>> (
+export function eachObj <T extends types.LooseObject> (
   collection: T,
-  fn: (value: T[K], key: K, collection: T) => any
+  fn: (value: T[keyof T], key: keyof T) => any
 ) {
   const keys = Object.keys(collection)
+
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i]
     const value = collection[key]
-    if (fn(value, key as K, collection) === false) break
+    if (fn(value, key) === false) break
   }
 }
 
-export function mapObj <T extends types.LooseObject, K extends types.StringKeys<T>, U> (
+export function mapObj <T extends types.LooseObject, R extends T> (
   collection: T,
-  fn: (value: T[K], key: K, collection: T) => U
-): Record<K, U> {
-  const result = {} as Record<K, U>
-  eachObj<T, K>(collection, (value, key, collection) => {
-    result[key] = fn(value, key, collection)
+  fn: (value: T[keyof T], key: keyof T) => R
+): R {
+  const result = {} as R
+
+  eachObj(collection, (value, key) => {
+    result[key as any] = fn(value, key)
   })
 
   return result
@@ -69,7 +71,7 @@ export function makeDirPath (path: string): boolean {
       return (
         target !== path &&
         makeDirPath(target) &&
-        (mkdirSync(path, mode) || true)
+        (Boolean(mkdirSync(path, mode)) || true)
       )
     }
 

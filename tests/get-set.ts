@@ -11,7 +11,7 @@ test.before(async () => {
     second: String
   })
 
-  return Promise.all([
+  await Promise.all([
     db.create('one', {
       first: 'fee',
       second: 'blah'

@@ -16,7 +16,7 @@ test.before(async () => {
     }
   })
 
-  return db.create('people', {
+  await db.create('people', {
     name: 'Joey Smith',
     age: 20
   })

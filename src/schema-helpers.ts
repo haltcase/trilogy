@@ -221,7 +221,7 @@ export class Cast <D extends types.ReturnDict> {
 
     if (isObject(object)) {
       return mapObj(object, (value, column) => {
-        return this.toColumnDefinition(column, value, options)
+        return this.toColumnDefinition(column, value, options) as any
       })
     }
 
@@ -230,8 +230,8 @@ export class Cast <D extends types.ReturnDict> {
 
   fromDefinition (object: types.LooseObject, options: { raw?: boolean }): D {
     return mapObj(object, (value, column) => {
-      return this.fromColumnDefinition(column, value, options)
-    }) as D
+      return this.fromColumnDefinition(column, value, options) as any
+    })
   }
 
   toColumnDefinition (

@@ -11,8 +11,8 @@ const tables = [
   { name: 'three', schema }
 ]
 
-test.before(() => {
-  return Promise.all(
+test.before(async () => {
+  await Promise.all(
     tables.map(table => db.model(table.name, table.schema))
   )
 })

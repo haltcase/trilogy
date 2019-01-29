@@ -43,11 +43,10 @@ export function buildOrder (
   }
 
   if (Array.isArray(order)) {
-    const { length } = order
-    if (length === 1 || length === 2) {
-      // typescript doesn't like this:
-      // return partial.orderBy(...args)
-      return partial.orderBy.apply(partial, order)
+    if (order.length === 1) {
+      return partial.orderBy(order[0])
+    } else if (order.length === 2) {
+      return partial.orderBy(order[0], order[1])
     }
   }
 
@@ -65,9 +64,12 @@ export function buildWhere (
     const i = where.length - 1
     const cast = where
     cast[i] = castValue(where[i])
-    // typescript doesn't like this:
-    // return partial.where(...cast)
-    return partial.where.apply(partial, cast)
+
+    if (cast.length === 2) {
+      return partial.where(...cast)
+    } else if (cast.length === 3) {
+      return partial.where(...cast)
+    }
   }
 
   if (!inner && isWhereMultiple(where)) {

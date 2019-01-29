@@ -30,7 +30,7 @@ test.before(async () => {
     })
   ])
 
-  return Promise.all([
+  await Promise.all([
     ...somePeople.map(person => people.create(person)),
     ...morePeople.map(person => others.create(person))
   ])
@@ -39,10 +39,10 @@ test.before(async () => {
 test.after.always(() => db.close())
 
 test.serial('removes an object from the specified model', async t => {
-  return Promise.all(somePeople.map(({ name }) => {
-    return db.remove('others', { name })
-      .then(() => db.findOne('others', { name }))
-      .then(res => t.falsy(res))
+  await Promise.all(somePeople.map(async ({ name }) => {
+    await db.remove('others', { name })
+    const res = await db.findOne('others', { name })
+    t.falsy(res)
   }))
 })
 

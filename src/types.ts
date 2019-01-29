@@ -10,15 +10,16 @@ import {
   QueryBuilder
 } from 'knex'
 
-import { Left, Right } from 'fp-ts/lib/Either'
+import { Either } from 'fp-ts/lib/Either'
 
 export const raise: (
-  validation: Left<t.ValidationError[], any> | Right<t.ValidationError[], any>
+  validation: Either<t.ValidationError[], any>
 ) => void = ThrowReporter.report
 
 export function validate <L> (value: L, type: t.Type<L>, defaultValue: L = {} as L): L {
   const result = type.decode(value)
-  return raise(result) || result.getOrElse(defaultValue)
+  raise(result)
+  return result.getOrElse(defaultValue)
 }
 
 // based on `withDefault` from io-ts tests: https://git.io/vNGS6

@@ -11,7 +11,7 @@ test.before(async () => {
     second: String
   })
 
-  return db.create('first', {
+  await db.create('first', {
     first: 'fee',
     second: 'blah'
   })

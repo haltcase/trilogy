@@ -13,7 +13,7 @@ test.before(async () => {
     second: String
   })
 
-  return Promise.all(
+  await Promise.all(
     arr.map(v => select.create({ first: v, second: 'blah' }))
   )
 })
