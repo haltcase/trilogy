@@ -1,19 +1,23 @@
-<a name="2.0.0-rc.2"></a>
-### [`2.0.0-rc.2`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.2) (2018-08-19)
+<a name="2.0.0-rc.3"></a>
+### [`2.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.3) (2019-01-29)
 
 v2.0.0 is a significant release. This is a release candidate available on npm
 under the `@next` tag. The highlights are:
 
 * rewritten in TypeScript
 * plugin support
-* Node 6 minimum version requirement
+* Node 8 minimum version requirement
 
 To try it out, use:
 
-```shell
+```console
+# using yarn
+yarn add trilogy@next
+yarn add trilogy@2.0.0-rc.3
+
+# using npm
 npm i trilogy@next
-# or
-npm i trilogy@2.0.0-rc.2
+npm i trilogy@2.0.0-rc.3
 ```
 
 #### codename: solid source
@@ -37,7 +41,7 @@ type Person = {
 }
 
 ;(async () => {
-  let people: trilogy.Model = await db.model<Person>('people', {
+  const people = await db.model<Person>('people', {
     name: String
   })
 
@@ -82,6 +86,8 @@ const plugin: Plugin<MyCustomPlugin> = (Base: PluginBase) => {
 const Base = mix([plugin])
 const db = new Base(':memory:')
 
+// or `const db = mix([plugin]).connect(':memory:')
+
 db.findAllAdmins('users', 'citycide')
   .then(admins => console.log(admins))
 // -> ['citycide', ...]
@@ -117,7 +123,7 @@ db.findAllAdmins('users', 'citycide')
 * **count:** `model.count` no longer has a signature allowing a column as the first parameter. This is now a separate method called `countIn`.
 * **schema-helpers:** using an unknown column type in a descriptor will now result in an error.
 
-Support for Node 4 has been dropped, meaning trilogy now requires >=6.
+Support for Node 4 and Node 6 has been dropped, meaning trilogy now requires >=8.
 
 trilogy no longer has a default export in order to better support TypeScript
 users. The recommended way to create a new instance has also changed (though
