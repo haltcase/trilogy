@@ -68,6 +68,10 @@ export class Trilogy {
     this._definitions = new Map()
   }
 
+  static connect (path: string, options: types.TrilogyOptions = {}) {
+    return new this(path, options)
+  }
+
   get models () {
     return [...this._definitions.keys()]
   }

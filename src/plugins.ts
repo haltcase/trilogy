@@ -1,11 +1,20 @@
 import { Trilogy } from '.'
 import { LooseObject, TrilogyParams } from './types'
 
-export type Constructor <T, X extends any[] = TrilogyParams> = new (...args: X) => T
+export type Newable <T, X extends any[] = TrilogyParams> = {
+  new (...args: X): T
+}
+
+export type Connector <T, X extends any[] = TrilogyParams> = {
+  connect (...args: X): T
+}
+
+export type Constructor <T> = Newable<T> & Connector<T>
+
 export type PluginBase = Constructor<Trilogy>
 
-export interface Plugin <T = LooseObject> {
-  (TrilogyBase: PluginBase): Constructor<Trilogy & T>
+export type Plugin <T = LooseObject> = {
+  (TrilogyBase: PluginBase): Newable<T & Trilogy>
 }
 
 // please for the love of all that is good in the cosmos:
