@@ -11,7 +11,8 @@
 
 ***trilogy*** is a simple and extensible Promise-based wrapper for SQLite databases.
 
-It's not an ORM and isn't intended to be one &mdash; it doesn't have any relationship features and instead focuses on providing a simple, clear API for query building.
+It's not an ORM and isn't intended to be one &mdash; it doesn't have any relationship
+features and instead focuses on providing a simple, clear API for query building.
 
 ---
 
@@ -63,18 +64,30 @@ It's not an ORM and isn't intended to be one &mdash; it doesn't have any relatio
 1. Install trilogy
 
    ```console
+   # using yarn
+   yarn add trilogy
+
+   # using npm
    npm i trilogy
    ```
 
 2. Install a backend
 
    ```console
+   # using yarn
+   yarn add sqlite3
+
+   # using npm
    npm i sqlite3
    ```
 
    _or_
 
    ```console
+   # using yarn
+   yarn add sql.js
+
+   # using npm
    npm i sql.js
    ```
 
@@ -106,10 +119,10 @@ const db = connect(':memory:', {
 ;(async function () {
   const games = await db.model('games', {
     name: { type: String },
-    genre: String,                           // type shorthand
+    genre: String,            // type shorthand
     released: Date,
     awards: Array,
-    id: 'increments'                         // special type, primary key
+    id: 'increments'          // special type, primary key
   })
 
   await games.create({
