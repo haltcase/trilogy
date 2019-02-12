@@ -1,5 +1,5 @@
 import { KNEX_NO_ARGS, COLUMN_TYPES, IGNORABLE_PROPS } from './constants'
-import { isWhereMultiple, isWhereTuple } from './helpers'
+import { isWhereMultiple, isWhereTuple, findKey, runQuery } from './helpers'
 import {
   eachObj,
   invariant,
@@ -21,6 +21,8 @@ export function toKnexSchema <D extends types.ReturnDict> (
   return (table: knex.TableBuilder) => {
     // every property of `model.schema` is a column
     eachObj(model.schema, (descriptor, name) => {
+      if (options.timestamps && ['created_at', 'updated_at'].includes(name as string)) return
+
       // each column's value is either its type or a descriptor
       const type = getDataType(descriptor)
       const partial: types.ValueOf<knex.TableBuilder> = (table as any)[toKnexMethod(type)](name)
@@ -43,9 +45,9 @@ export function toKnexSchema <D extends types.ReturnDict> (
       }
 
       eachObj(props, (value, property) => {
-        if (IGNORABLE_PROPS.includes(property)) return
+        if (IGNORABLE_PROPS.has(property)) return
 
-        if (KNEX_NO_ARGS.includes(property)) {
+        if (KNEX_NO_ARGS.has(property)) {
           props[property] && (partial as any)[property]()
         } else {
           props[property] && (partial as any)[property](value)
@@ -55,8 +57,8 @@ export function toKnexSchema <D extends types.ReturnDict> (
 
     for (const key of Object.keys(options)) {
       const value = (options as any)[key]
-      if (key === 'timestamps') {
-        options.timestamps && table.timestamps(true, true)
+      if (key === 'timestamps'&& options.timestamps) {
+        table.timestamps(false, true)
       } else if (key === 'index') {
         createIndices(table, value)
       } else {
@@ -82,6 +84,73 @@ function createIndices (table: knex.TableBuilder, value: types.Index) {
   }
 }
 
+export enum TriggerEvent {
+  Insert = 'insert',
+  Update = 'update',
+  Delete = 'delete'
+}
+
+export async function createTrigger (
+  model: Model<any>,
+  event: TriggerEvent
+): Promise<[types.Query, () => Promise<any[]>]> {
+  const keys = Object.keys(model.schema)
+  const tableName = `${model.name}_temp`
+  const triggerName = `on_${event}_${model.name}`
+  const fieldPrefix = event === TriggerEvent.Delete ? 'OLD.' : 'NEW.'
+  const fieldReferences = keys.map(k => fieldPrefix + k).join(', ')
+
+  await Promise.all([
+    runQuery(model.ctx, model.ctx.knex.raw(`
+      create temp table if not exists ${tableName} (
+        ${keys.join(', ')}
+      )
+    `), { model }),
+    runQuery(model.ctx, model.ctx.knex.raw(`
+      create temp trigger if not exists ${triggerName}
+        after ${event} on ${model.name}
+        begin
+          insert into ${tableName} select ${fieldReferences};
+        end
+    `), { model })
+  ])
+
+  let query = model.ctx.knex(tableName)
+  if (event === TriggerEvent.Insert) {
+    query = query.first()
+  }
+
+  const cleanup = () => {
+    return Promise.all([
+      model.ctx.knex.raw(`drop table if exists ${tableName}`),
+      model.ctx.knex.raw(`drop trigger if exists ${triggerName}`)
+    ].map(query => runQuery(model.ctx, query, { model })))
+  }
+
+  return [query, cleanup]
+}
+
+export function createTimestampTrigger (model: Model<any>, column = 'updated_at') {
+  const { key, hasIncrements } = findKey(model.schema)
+
+  if (!key && !hasIncrements) {
+    // there's no way to uniquely identify the updated record
+    return Promise.resolve()
+  }
+
+  const query = model.ctx.knex.raw(`
+    create trigger if not exists on_update_${model.name}_timestamp
+      after update on ${model.name}
+      begin
+        update ${model.name}
+          set ${column} = current_timestamp
+          where ${key} = old.${key};
+      end
+  `)
+
+  return runQuery(model.ctx, query, { model })
+}
+
 export function castValue (value: any) {
   const type = typeof value
   if (type === 'number' || type === 'string') {
@@ -101,7 +170,7 @@ export function normalizeSchema <
   D extends types.LooseObject,
   T extends types.SchemaRaw<D> = types.SchemaRaw<D>,
   O extends types.Schema<D> = types.Schema<D>
-> (schema: T): O {
+> (schema: T, options: types.ModelOptions): O {
   const keys: (keyof T)[] = Object.keys(schema)
   invariant(keys.length > 0, 'model schemas cannot be empty')
 
@@ -113,6 +182,11 @@ export function normalizeSchema <
     ;(result as any)[key] = type === 'function' || type === 'string'
       ? { type: descriptor }
       : descriptor
+  }
+
+  if (options.timestamps) {
+    result.created_at = { type: Date }
+    result.updated_at = { type: Date }
   }
 
   return result
@@ -132,7 +206,7 @@ function getDataType (property: types.ColumnDescriptor): string | never {
   if (isString(type)) {
     const lower = type.toLowerCase()
 
-    if (!COLUMN_TYPES.includes(lower)) {
+    if (!COLUMN_TYPES.has(lower)) {
       return 'string'
     }
 
@@ -262,6 +336,7 @@ export class Cast <D extends types.ReturnDict> {
   ): D[keyof D] {
     const definition = this.model.schema[column]
     const type = getDataType(definition)
+
     const cast = value !== null ? toReturnType(type, value) : value
 
     if (!options.raw && isFunction(definition.get)) {

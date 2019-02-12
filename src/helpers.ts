@@ -5,7 +5,7 @@ import * as util from './util'
 import * as knex from 'knex'
 
 import { Trilogy } from '.'
-import Model from './model'
+import { Hook } from './hooks'
 import * as types from './types'
 
 const HAS_TABLE_SUBSTRING = `from sqlite_master where type = 'table'`
@@ -108,10 +108,34 @@ export function isValidWhere (where: any): where is types.WhereClause {
   )
 }
 
-export async function runQuery (
+export function normalizeCriteria <D> (
+  where: types.Criteria<D>
+): types.CriteriaNormalized<D> {
+  if (isWhereTuple(where)) {
+    if (where.length === 2) {
+      return {
+        [where[0]]: where[1]
+      } as types.CriteriaObj<D>
+    } else {
+      return where as types.Criteria3
+    }
+  }
+
+  if (isWhereMultiple(where)) {
+    return where.map(normalizeCriteria) as types.CriteriaListNormalized<D>
+  }
+
+  if (util.isObject(where)) {
+    return where
+  }
+
+  return where
+}
+
+export async function runQuery <D extends types.ReturnDict = types.LooseObject> (
   instance: Trilogy,
   query: types.Query,
-  needResponse?: boolean
+  options: types.QueryOptions<D> = {}
 ): Promise<any> {
   const asString = query.toString()
   const action = getQueryAction(asString)
@@ -119,8 +143,12 @@ export async function runQuery (
     instance.verbose(asString)
   }
 
+  if (options.model) {
+    await options.model._callHook(Hook.OnQuery, asString)
+  }
+
   if (instance.isNative) {
-    if (needResponse) return query
+    if (options.needResponse) return query
 
     // tslint:disable-next-line:await-promise
     const res = await query
@@ -132,7 +160,7 @@ export async function runQuery (
   const db = await instance.pool!.acquire()
   let response
 
-  if (needResponse) {
+  if (options.needResponse) {
     response = parseResponse(db.exec(asString))
     if (asString.toLowerCase().includes(HAS_TABLE_SUBSTRING)) {
       response = !!response.length
@@ -150,35 +178,7 @@ export async function runQuery (
   return response
 }
 
-export async function findLastObject <D extends types.ReturnDict = types.LooseObject> (
-  model: Model<D>,
-  object: types.LooseObject
-): Promise<D | undefined> {
-  const { key, hasIncrements } = findKey(model.schema)
-
-  if (!key && !hasIncrements) {
-    // if there is no unique identifier like a primary key, we try to use
-    // sqlite's `last_insert_rowid()` function to find the last object
-    // https://www.sqlite.org/c3ref/last_insert_rowid.html
-
-    const idQuery = model.ctx.knex.raw('select last_insert_rowid() as rowid')
-    const [{ rowid }] = await runQuery(model.ctx, idQuery, true)
-    if (typeof rowid !== 'number') return undefined
-
-    const query = model.ctx.knex(model.name).first().where({ rowid })
-    return runQuery(model.ctx, query, true)
-  }
-
-  const query = hasIncrements
-    ? model.ctx.knex('sqlite_sequence').first('seq').where({ name: model.name })
-    : model.ctx.knex(model.name).first().where({ [key]: object[key] })
-
-  const res = await runQuery(model.ctx, query, true)
-  const out = model.ctx.isNative ? res : res[0]
-  return hasIncrements ? model.findOne({ [key]: out.seq } as D) : out
-}
-
-function findKey (schema: types.Schema) {
+export function findKey (schema: types.Schema) {
   let key = ''
   let hasIncrements = false
 

@@ -48,10 +48,11 @@ features and instead focuses on providing a simple, clear API for query building
 
   trilogy is written in and provides a first-class experience for TypeScript.
 
-* :electric_plug: **extensible with plugins**
+* :electric_plug: **lifecycle hooks**
 
-  Out of the box, trilogy focuses on providing a simple, lightweight querying
-  API, but it's also open to a system of plugins that can add functionality.
+  Any number of hooks (aka subscribers or listeners) can be attached at several
+  points in the lifecycle &mdash; for example `onQuery`, `beforeCreate`, `afterUpdate`.
+  These are useful for debugging and extensibility.
 
 * :revolving_hearts: **perfect for [Electron][electron] & [NW.js][nwjs]**
 

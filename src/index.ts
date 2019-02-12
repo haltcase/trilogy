@@ -5,12 +5,13 @@ import * as knex from 'knex'
 
 import Model from './model'
 import { runQuery } from './helpers'
-import { toKnexSchema } from './schema-helpers'
+import { toKnexSchema, createTimestampTrigger } from './schema-helpers'
 import { pureConnect, readDatabase } from './sqljs-handler'
 import { defaultTo, invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
 import { Database } from 'sql.js'
+import * as hooks from './hooks'
 import * as types from './types'
 
 // @ts-ignore: throwaway reference to satisfy compiler
@@ -28,8 +29,6 @@ export class Trilogy {
   options: types.TrilogyOptions
   pool?: Pool<Database>
   verbose?: (query: string) => any
-
-  Model = Model
 
   private _definitions: Map<string, Model<any>>
 
@@ -68,10 +67,6 @@ export class Trilogy {
     this._definitions = new Map()
   }
 
-  static connect (path: string, options: types.TrilogyOptions = {}) {
-    return new this(path, options)
-  }
-
   get models () {
     return [...this._definitions.keys()]
   }
@@ -85,7 +80,7 @@ export class Trilogy {
       return this._definitions.get(name) as Model<D>
     }
 
-    const model = new this.Model<D>(this, name, schema, options)
+    const model = new Model<D>(this, name, schema, options)
     this._definitions.set(name, model)
 
     const opts = toKnexSchema(
@@ -97,13 +92,17 @@ export class Trilogy {
 
     if (this.isNative) {
       // tslint:disable-next-line:await-promise
-      const exists = await check
-      return exists ? model : query.then(() => model)
+      if (!await check) {
+        await query
+      }
     } else {
-      const exists = await runQuery(this, check, true)
-      if (exists) return model
-      return runQuery(this, query).then(() => model)
+      if (!await runQuery(this, check, { needResponse: true })) {
+        await runQuery(this, query)
+      }
     }
+
+    createTimestampTrigger(model)
+    return model
   }
 
   getModel <D extends types.ReturnDict = types.LooseObject> (name: string): Model<D> | never {
@@ -119,7 +118,7 @@ export class Trilogy {
     }
 
     const query = this.knex.schema.hasTable(name)
-    return runQuery(this, query, true)
+    return runQuery(this, query, { needResponse: true })
   }
 
   async dropModel (name: string): Promise<boolean> {
@@ -128,13 +127,13 @@ export class Trilogy {
     }
 
     const query = this.knex.schema.dropTableIfExists(name)
-    await runQuery(this, query, true)
+    await runQuery(this, query, { needResponse: true })
     this._definitions.delete(name)
     return true
   }
 
   raw (query: knex.QueryBuilder | knex.Raw, needResponse?: boolean) {
-    return runQuery(this, query, needResponse)
+    return runQuery(this, query, { needResponse })
   }
 
   close () {
@@ -312,7 +311,7 @@ export class Trilogy {
         .where({ type: 'table' })
         .count('* as count')
 
-      return runQuery(this, query, true)
+      return runQuery(this, query, { needResponse: true })
         .then(([{ count }]) => count)
     }
 
@@ -334,11 +333,202 @@ export class Trilogy {
     const model = this.getModel(table)
     return model.max(column, criteria, options)
   }
+
+  onQuery (callback: hooks.OnQueryCallback): types.Fn<[], boolean>[]
+  onQuery (scope: string, callback: hooks.OnQueryCallback): types.Fn<[], boolean>
+  onQuery (
+    ...args: [hooks.OnQueryCallback] | [string, hooks.OnQueryCallback]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all queries run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel(location).onQuery(fn)
+    } else {
+      // all queries run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach(model => {
+        unsubs[++i] = model.onQuery(fn)
+      })
+
+      return unsubs
+    }
+  }
+
+  beforeCreate <D extends types.ReturnDict = types.LooseObject> (
+    callback: hooks.BeforeCreateCallback<D>
+  ): types.Fn<[], boolean>[]
+  beforeCreate <D extends types.ReturnDict = types.LooseObject> (
+    scope: string, callback: hooks.BeforeCreateCallback<D>
+  ): types.Fn<[], boolean>
+  beforeCreate <D extends types.ReturnDict = types.LooseObject> (
+    ...args: [hooks.BeforeCreateCallback<D>] | [string, hooks.BeforeCreateCallback<D>]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all creations run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel<D>(location).beforeCreate(fn)
+    } else {
+      // all creations run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach(model => {
+        unsubs[++i] = model.beforeCreate(fn)
+      })
+
+      return unsubs
+    }
+  }
+
+  afterCreate <D extends types.ReturnDict = types.LooseObject> (
+    callback: hooks.AfterCreateCallback<D>
+  ): types.Fn<[], boolean>[]
+  afterCreate <D extends types.ReturnDict = types.LooseObject> (
+    scope: string, callback: hooks.AfterCreateCallback<D>
+  ): types.Fn<[], boolean>
+  afterCreate <D extends types.ReturnDict = types.LooseObject> (
+    ...args: [hooks.AfterCreateCallback<D>] | [string, hooks.AfterCreateCallback<D>]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all creations run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel<D>(location).afterCreate(fn)
+    } else {
+      // all creations run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach(model => {
+        unsubs[++i] = model.afterCreate(fn)
+      })
+
+      return unsubs
+    }
+  }
+
+  beforeUpdate <D extends types.ReturnDict = types.LooseObject> (
+    callback: hooks.BeforeUpdateCallback<D>
+  ): types.Fn<[], boolean>[]
+  beforeUpdate <D extends types.ReturnDict = types.LooseObject> (
+    scope: string, callback: hooks.BeforeUpdateCallback<D>
+  ): types.Fn<[], boolean>
+  beforeUpdate <D extends types.ReturnDict = types.LooseObject> (
+    ...args: [hooks.BeforeUpdateCallback<D>] | [string, hooks.BeforeUpdateCallback<D>]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all updates run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel<D>(location).beforeUpdate(fn)
+    } else {
+      // all updates run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach((model: Model<D>) => {
+        unsubs[++i] = model.beforeUpdate(fn)
+      })
+
+      return unsubs
+    }
+  }
+
+  afterUpdate <D extends types.ReturnDict = types.LooseObject> (
+    callback: hooks.AfterUpdateCallback<D>
+  ): types.Fn<[], boolean>[]
+  afterUpdate <D extends types.ReturnDict = types.LooseObject> (
+    scope: string, callback: hooks.AfterUpdateCallback<D>
+  ): types.Fn<[], boolean>
+  afterUpdate <D extends types.ReturnDict = types.LooseObject> (
+    ...args: [hooks.AfterUpdateCallback<D>] | [string, hooks.AfterUpdateCallback<D>]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all updates run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel<D>(location).afterUpdate(fn)
+    } else {
+      // all updates run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach(model => {
+        unsubs[++i] = model.afterUpdate(fn)
+      })
+
+      return unsubs
+    }
+  }
+
+  beforeRemove <D extends types.ReturnDict = types.LooseObject> (
+    callback: hooks.BeforeRemoveCallback<D>
+  ): types.Fn<[], boolean>[]
+  beforeRemove <D extends types.ReturnDict = types.LooseObject> (
+    scope: string, callback: hooks.BeforeRemoveCallback<D>
+  ): types.Fn<[], boolean>
+  beforeRemove <D extends types.ReturnDict = types.LooseObject> (
+    ...args: [hooks.BeforeRemoveCallback<D>] | [string, hooks.BeforeRemoveCallback<D>]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all removals run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel<D>(location).beforeRemove(fn)
+    } else {
+      // all removals run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach((model: Model<D>) => {
+        unsubs[++i] = model.beforeRemove(fn)
+      })
+
+      return unsubs
+    }
+  }
+
+  afterRemove <D extends types.ReturnDict = types.LooseObject> (
+    callback: hooks.AfterRemoveCallback<D>
+  ): types.Fn<[], boolean>[]
+  afterRemove <D extends types.ReturnDict = types.LooseObject> (
+    scope: string, callback: hooks.AfterRemoveCallback<D>
+  ): types.Fn<[], boolean>
+  afterRemove <D extends types.ReturnDict = types.LooseObject> (
+    ...args: [hooks.AfterRemoveCallback<D>] | [string, hooks.AfterRemoveCallback<D>]
+  ): types.Fn<[], boolean>[] | (types.Fn<[], boolean>) {
+    if (args.length === 2) {
+      // all removals run on the model identified by `scope`
+      const [location, fn] = args
+      return this.getModel<D>(location).afterRemove(fn)
+    } else {
+      // all removals run across all defined models
+      const [fn] = args
+      const unsubs: types.Fn<[], boolean>[] =
+        Array.from(new Array(this._definitions.size))
+
+      let i = -1
+      this._definitions.forEach(model => {
+        unsubs[++i] = model.afterRemove(fn)
+      })
+
+      return unsubs
+    }
+  }
 }
 
-export { default as Model, ModelParams } from './model'
+export { default as Model } from './model'
 export * from './types'
-export * from './plugins'
 
 export const connect = (path: string, options?: types.TrilogyOptions) =>
   new Trilogy(path, options)

@@ -1,3 +1,5 @@
+import Model from './model'
+
 import * as t from 'io-ts'
 import { ThrowReporter } from 'io-ts/lib/ThrowReporter'
 
@@ -39,6 +41,8 @@ export function withDefault <T extends t.Mixed> (
   )
 }
 
+export type Fn <T extends any[], R = any> = (...args: T) => R
+
 export interface Thenable <T> {
   then <U> (
     onFulfilled?: (value: T) => U | Thenable<U>,
@@ -51,6 +55,11 @@ export type Query =
   | QueryBuilder
   | SchemaBuilder
   | Thenable<any>
+
+export type QueryOptions <D extends ReturnDict = LooseObject> = {
+  model?: Model<D>,
+  needResponse?: boolean
+}
 
 export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
   ? [string, string, V]
@@ -73,11 +82,21 @@ export type CriteriaBase <D = LooseObject> =
   | Criteria3<DistinctArrayTuple<D>>
   | Partial<D>
 
+export type CriteriaBaseNormalized <D = LooseObject> =
+  | Criteria3<DistinctArrayTuple<D>>
+  | Partial<D>
+
 export type CriteriaList <D = LooseObject> = CriteriaBase<DistinctArrayTuple<D>>[]
 
-export type Criteria<D = LooseObject> =
+export type CriteriaListNormalized <D = LooseObject> = CriteriaBaseNormalized<DistinctArrayTuple<D>>[]
+
+export type Criteria <D = LooseObject> =
   | CriteriaBase<D>
   | CriteriaList<D>
+
+export type CriteriaNormalized <D = LooseObject> =
+  | CriteriaBaseNormalized<D>
+  | CriteriaListNormalized<D>
 
 export const Index = t.union([
   t.string,
@@ -140,7 +159,7 @@ export const ColumnKind = t.refinement(
   t.union([t.string, t.Function]),
   value => {
     const type = isFunction(value) ? value.name : String(value)
-    return COLUMN_TYPES.includes(type.toLowerCase())
+    return COLUMN_TYPES.has(type.toLowerCase())
   }
 )
 
@@ -156,9 +175,12 @@ export const ColumnDescriptor = t.partial({
   set: t.Function
 })
 
+export const WhereTupleEqual = t.tuple([t.string, t.any])
+export const WhereTupleOperator = t.tuple([t.string, t.string, t.any])
+
 export const WhereTuple = t.union([
-  t.tuple([t.string, t.any]),
-  t.tuple([t.string, t.string, t.any])
+  WhereTupleEqual,
+  WhereTupleOperator
 ])
 
 export const WhereClause = t.union([
@@ -171,8 +193,6 @@ export const WhereMultiple = t.array(WhereClause)
 export type Index = t.TypeOf<typeof Index>
 export type Order = t.TypeOf<typeof OrderClause>
 export type Group = t.TypeOf<typeof GroupClause>
-
-export type TrilogyParams = [string, TrilogyOptions?]
 
 export type TrilogyOptions = t.TypeOf<typeof TrilogyOptions>
 export type ModelOptions = t.TypeOf<typeof ModelOptions>
@@ -196,6 +216,8 @@ export type SqlJsResponse = Array<{
   values: any[]
 }>
 
+export type WhereTupleEqual = t.TypeOf<typeof WhereTupleEqual>
+export type WhereTupleOperator = t.TypeOf<typeof WhereTupleOperator>
 export type WhereTuple = t.TypeOf<typeof WhereTuple>
 export type WhereClause = t.TypeOf<typeof WhereClause>
 export type WhereMultiple = WhereClause[]
