@@ -273,13 +273,13 @@ export class Trilogy {
     return model.setRaw(column, criteria, value)
   }
 
-  incr (location: string, criteria: types.Criteria, amount?: number) {
+  increment (location: string, criteria: types.Criteria, amount?: number) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
-    return model.incr(column, criteria, amount)
+    return model.increment(column, criteria, amount)
   }
 
-  decr (
+  decrement (
     location: string,
     criteria: types.Criteria,
     amount?: number,
@@ -287,7 +287,7 @@ export class Trilogy {
   ) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
-    return model.decr(column, criteria, amount, allowNegative)
+    return model.decrement(column, criteria, amount, allowNegative)
   }
 
   remove (location: string, criteria: types.Criteria) {

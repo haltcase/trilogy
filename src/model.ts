@@ -216,7 +216,7 @@ export default class Model <
     return baseSet<D, K>(this, column, criteria, value, { raw: true })
   }
 
-  async incr (
+  async increment (
     column: keyof D,
     criteria?: types.Criteria<D>,
     amount?: number
@@ -249,7 +249,7 @@ export default class Model <
     return updated
   }
 
-  async decr (
+  async decrement (
     column: keyof D,
     criteria?: types.Criteria<D>,
     amount?: number,
