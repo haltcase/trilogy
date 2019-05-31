@@ -7,7 +7,7 @@ node_js:
   - '4'
 
 before_install:
-  - if [[ `npm -v` == 2* ]]; then npm i -g npm@latest; fi
+  - if [[ `npm -v` == 2* ]]; then npm i -g npm@3; fi
 
 notifications:
   email: false
