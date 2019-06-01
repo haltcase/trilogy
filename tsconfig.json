@@ -4,7 +4,7 @@
     "declaration": false,
     "downlevelIteration": true,
     "importHelpers": true,
-    "lib": ["es2017", "es2018.promise"],
+    "lib": ["es2017", "es2018.promise", "webworker"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitReturns": true,

@@ -10,7 +10,7 @@ import { pureConnect, readDatabase } from './sqljs-handler'
 import { defaultTo, invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
-import { Database } from 'sql.js'
+import { SqlJs } from 'sql.js/module'
 import * as hooks from './hooks'
 import * as types from './types'
 
@@ -27,7 +27,7 @@ export class Trilogy {
   isNative: boolean
   knex: knex
   options: types.TrilogyOptions
-  pool?: Pool<Database>
+  pool?: Pool<SqlJs.Database>
   verbose?: (query: string) => any
 
   private _definitions: Map<string, Model<any>>

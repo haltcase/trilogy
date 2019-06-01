@@ -2,14 +2,17 @@ import { dirname } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
 
 import { createPool, Pool } from 'generic-pool'
-import { Database } from 'sql.js'
 
 import { Trilogy } from '.'
 import { makeDirPath } from './util'
 
-export function readDatabase (instance: Trilogy): Database {
-  const SQL = require('sql.js')
+import { SqlJs } from 'sql.js/module'
+
+export async function readDatabase (instance: Trilogy): Promise<SqlJs.Database> {
   const name = instance.options.connection!.filename as string
+
+  const init = require('sql.js')
+  const SQL = await init()
 
   if (name === ':memory:') {
     return new SQL.Database()
@@ -33,7 +36,7 @@ export function readDatabase (instance: Trilogy): Database {
   return client
 }
 
-export function writeDatabase (instance: Trilogy, db: Database) {
+export function writeDatabase (instance: Trilogy, db: SqlJs.Database) {
   const name = instance.options.connection!.filename as string
   if (name === ':memory:') return
 
@@ -41,13 +44,13 @@ export function writeDatabase (instance: Trilogy, db: Database) {
   writeFileSync(name, db.export(), { mode: parseInt('0777', 8) })
 }
 
-export function pureConnect (instance: Trilogy): Pool<Database> {
+export function pureConnect (instance: Trilogy): Pool<SqlJs.Database> {
   return createPool({
     create () {
-      return Promise.resolve(readDatabase(instance))
+      return readDatabase(instance)
     },
 
-    destroy (client: Database): Promise<undefined> {
+    destroy (client: SqlJs.Database): Promise<undefined> {
       client.close()
       return Promise.resolve(undefined)
     }
