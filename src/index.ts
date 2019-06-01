@@ -6,7 +6,7 @@ import * as knex from 'knex'
 import Model from './model'
 import { runQuery } from './helpers'
 import { toKnexSchema, createTimestampTrigger } from './schema-helpers'
-import { pureConnect, readDatabase } from './sqljs-handler'
+import { pureConnect } from './sqljs-handler'
 import { defaultTo, invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
@@ -52,16 +52,15 @@ export class Trilogy {
 
     const config = { client: 'sqlite3', useNullAsDefault: true }
 
-    if (this.isNative) {
-      if (path !== ':memory:') {
-        ensureExists(obj.connection!.filename)
-      }
+    if (path !== ':memory:') {
+      ensureExists(obj.connection!.filename)
+    }
 
+    if (this.isNative) {
       this.knex = knex(({ ...config, connection: obj.connection } as knex.Config))
     } else {
       this.knex = knex(config)
       this.pool = pureConnect(this)
-      readDatabase(this)
     }
 
     this._definitions = new Map()
