@@ -2,8 +2,12 @@ import { Trilogy } from '.'
 import { Hooks, Hook } from './hooks'
 
 import * as helpers from './helpers'
-import { Cast, normalizeSchema, createTrigger, TriggerEvent } from './schema-helpers'
-import { invariant, isEmpty, isString, isObject, isNil, toArray, defaultTo, firstOrValue } from './util'
+import {
+  Cast, normalizeSchema, createTrigger, TriggerEvent
+} from './schema-helpers'
+import {
+  invariant, isEmpty, isString, isObject, isNil, toArray, defaultTo, firstOrValue
+} from './util'
 
 import * as types from './types'
 
