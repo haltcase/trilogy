@@ -102,12 +102,12 @@ export async function createTrigger (
 
   await Promise.all([
     runQuery(model.ctx, model.ctx.knex.raw(`
-      create temp table if not exists ${tableName} (
+      create table if not exists ${tableName} (
         ${keys.join(', ')}
       )
     `), { model }),
     runQuery(model.ctx, model.ctx.knex.raw(`
-      create temp trigger if not exists ${triggerName}
+      create trigger if not exists ${triggerName}
         after ${event} on ${model.name}
         begin
           insert into ${tableName} select ${fieldReferences};
