@@ -8,20 +8,20 @@ const db = connect(':memory:')
 const arr = ['fee', 'fi', 'fo', 'fum']
 
 test.before(async () => {
-  const select = await db.model<FirstSecond>('select', {
+  const keepers = await db.model<FirstSecond>('keepers', {
     first: String,
     second: String
   })
 
   await Promise.all(
-    arr.map(v => select.create({ first: v, second: 'blah' }))
+    arr.map(v => keepers.create({ first: v, second: 'blah' }))
   )
 })
 
 test.after.always(() => db.close())
 
 test('retrieves rows as arrays of objects', async t => {
-  const res = await db.find('select')
+  const res = await db.find('keepers')
 
   t.true(Array.isArray(res))
   res.forEach((obj, i) => t.is(obj.first, arr[i]))

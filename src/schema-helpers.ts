@@ -57,7 +57,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
 
     for (const key of Object.keys(options)) {
       const value = (options as any)[key]
-      if (key === 'timestamps'&& options.timestamps) {
+      if (key === 'timestamps' && options.timestamps) {
         table.timestamps(false, true)
       } else if (key === 'index') {
         createIndices(table, value)
@@ -97,7 +97,7 @@ export async function createTrigger (
   const keys = Object.keys(model.schema)
   const tableName = `${model.name}_temp`
   const triggerName = `on_${event}_${model.name}`
-  const fieldPrefix = event === TriggerEvent.Delete ? 'OLD.' : 'NEW.'
+  const fieldPrefix = event === TriggerEvent.Delete ? 'old.' : 'new.'
   const fieldReferences = keys.map(k => fieldPrefix + k).join(', ')
 
   await Promise.all([
@@ -117,7 +117,8 @@ export async function createTrigger (
 
   let query = model.ctx.knex(tableName)
   if (event === TriggerEvent.Insert) {
-    query = query.first()
+    // tslint:disable-next-line:semicolon
+    ;(query as any) = query.first()
   }
 
   const cleanup = () => {
@@ -185,8 +186,9 @@ export function normalizeSchema <
   }
 
   if (options.timestamps) {
-    result.created_at = { type: Date }
-    result.updated_at = { type: Date }
+    // tslint:disable-next-line:semicolon
+    ;(result as any).created_at = { type: Date }
+    ;(result as any).updated_at = { type: Date }
   }
 
   return result
@@ -278,7 +280,7 @@ export class Cast <D extends types.ReturnDict> {
   constructor (private model: Model<D>) {}
 
   toDefinition (
-    object: types.LooseObject | types.WhereTuple | types.WhereMultiple,
+    object: types.LooseObject | types.Criteria2 | types.CriteriaList,
     options: { raw?: boolean }
   ): types.CastToDefinition {
     if (isWhereTuple(object)) {
@@ -290,7 +292,7 @@ export class Cast <D extends types.ReturnDict> {
     }
 
     if (isWhereMultiple(object)) {
-      return object.map(clause => this.toDefinition(clause, options)) as types.WhereMultiple
+      return object.map(clause => this.toDefinition(clause, options))
     }
 
     if (isObject(object)) {

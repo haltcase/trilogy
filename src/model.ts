@@ -3,7 +3,7 @@ import { Hooks, Hook } from './hooks'
 
 import * as helpers from './helpers'
 import { Cast, normalizeSchema, createTrigger, TriggerEvent } from './schema-helpers'
-import { invariant, isString, isObject, isNil, toArray, defaultTo, firstOrValue } from './util'
+import { invariant, isEmpty, isString, isObject, isNil, toArray, defaultTo, firstOrValue } from './util'
 
 import * as types from './types'
 
@@ -48,10 +48,12 @@ export default class Model <
     })
     await cleanup()
 
-    const created = this.cast.fromDefinition(
-      firstOrValue(result),
-      options
-    )
+    const created = !isEmpty(result)
+      ? this.cast.fromDefinition(
+          firstOrValue(result),
+          options
+        )
+      : undefined
 
     await this._callHook(Hook.AfterCreate, created, options)
     return created
@@ -138,8 +140,8 @@ export default class Model <
     creation: Partial<D> = {},
     options?: types.FindOptions
   ): Promise<D | undefined> {
-    return defaultTo(
-      await this.findOne(criteria, options),
+    return (
+      await this.findOne(criteria, options) ||
       this.create({ ...criteria, ...creation } as D)
     )
   }

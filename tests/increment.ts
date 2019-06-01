@@ -24,7 +24,7 @@ test.serial('increments by 1 when no amount is provided', async t => {
   const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age += 1
-      return db.incr('people.age', { name })
+      return db.increment('people.age', { name })
         .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
@@ -37,7 +37,7 @@ test.serial('increments by a specified amount', async t => {
   const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age += 4
-      return db.incr('people.age', { name }, 4)
+      return db.increment('people.age', { name }, 4)
         .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
@@ -51,8 +51,8 @@ test.serial('does nothing when passed a zero value', async t => {
   const original = await db.get('people.age', { name: 'Lelu' })
   t.is(original, 10)
 
-  const affected = await db.incr('people.age', { name: 'Lelu' }, 0)
-  t.is(affected, 0)
+  const affected = await db.increment('people.age', { name: 'Lelu' }, 0)
+  t.is(affected.length, 0)
 
   const final = await db.get('people.age', { name: 'Lelu' })
   t.is(final, 10)
@@ -73,7 +73,7 @@ test('allows for multiple where clauses', async t => {
 
   await Promise.all(list.map(p => people.create(p)))
 
-  await people.incr('age', [
+  await people.increment('age', [
     ['age', '>', 45],
     { name: 'Jill' }
   ])

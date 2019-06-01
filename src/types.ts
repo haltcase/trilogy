@@ -80,15 +80,17 @@ export type CriteriaObj <D = LooseObject> = Partial<D>
 export type CriteriaBase <D = LooseObject> =
   | Criteria2<DistinctArrayTuple<D>>
   | Criteria3<DistinctArrayTuple<D>>
-  | Partial<D>
+  | CriteriaObj<D>
 
 export type CriteriaBaseNormalized <D = LooseObject> =
   | Criteria3<DistinctArrayTuple<D>>
-  | Partial<D>
+  | CriteriaObj<D>
 
-export type CriteriaList <D = LooseObject> = CriteriaBase<DistinctArrayTuple<D>>[]
+export type CriteriaList <D = LooseObject> =
+  CriteriaBase<DistinctArrayTuple<D>>[]
 
-export type CriteriaListNormalized <D = LooseObject> = CriteriaBaseNormalized<DistinctArrayTuple<D>>[]
+export type CriteriaListNormalized <D = LooseObject> =
+  CriteriaBaseNormalized<DistinctArrayTuple<D>>[]
 
 export type Criteria <D = LooseObject> =
   | CriteriaBase<D>
@@ -164,7 +166,7 @@ export const ColumnKind = t.refinement(
 )
 
 export const ColumnDescriptor = t.partial({
-  defaultTo: t.any,
+  defaultTo: t.unknown,
   index: t.string,
   notNullable: t.boolean,
   nullable: t.boolean,
@@ -174,21 +176,6 @@ export const ColumnDescriptor = t.partial({
   get: t.Function,
   set: t.Function
 })
-
-export const WhereTupleEqual = t.tuple([t.string, t.any])
-export const WhereTupleOperator = t.tuple([t.string, t.string, t.any])
-
-export const WhereTuple = t.union([
-  WhereTupleEqual,
-  WhereTupleOperator
-])
-
-export const WhereClause = t.union([
-  WhereTuple,
-  t.Dictionary
-])
-
-export const WhereMultiple = t.array(WhereClause)
 
 export type Index = t.TypeOf<typeof Index>
 export type Order = t.TypeOf<typeof OrderClause>
@@ -216,12 +203,6 @@ export type SqlJsResponse = Array<{
   values: any[]
 }>
 
-export type WhereTupleEqual = t.TypeOf<typeof WhereTupleEqual>
-export type WhereTupleOperator = t.TypeOf<typeof WhereTupleOperator>
-export type WhereTuple = t.TypeOf<typeof WhereTuple>
-export type WhereClause = t.TypeOf<typeof WhereClause>
-export type WhereMultiple = WhereClause[]
-
 export type StorageType = string | number | Date | null | undefined
 export type ReturnType =
   | string
@@ -239,5 +220,5 @@ export type CastToDefinition =
   | Record<string, StorageType>
   | [string, StorageType]
   | [string, string, StorageType]
-  | WhereMultiple
+  | CriteriaList
   | never

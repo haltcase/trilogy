@@ -176,10 +176,14 @@ export class Hooks <D> {
         await (
           fn as BeforeRemoveCallback<T>
         )(normalizeCriteria(arg as Criteria<T>), options || {})
+      } else if (hook === Hook.BeforeCreate || hook === Hook.AfterCreate) {
+        await (
+          fn as BeforeCreateCallback<T> | AfterCreateCallback<T>
+        )(arg as T, options || {})
       } else {
         await (
-          fn as BeforeCreateCallback<T> | AfterCreateCallback<T> | AfterUpdateCallback<T> | AfterRemoveCallback<T>
-        )(arg, options || {})
+          fn as AfterUpdateCallback<T> | AfterRemoveCallback<T>
+        )(arg as T[], options || {})
       }
     }
 

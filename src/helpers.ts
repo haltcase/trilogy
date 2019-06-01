@@ -31,10 +31,10 @@ export function parseResponse (
   return results
 }
 
-export function buildOrder (
-  partial: knex.QueryBuilder,
+export function buildOrder <T = any, U = any> (
+  partial: knex.QueryBuilder<T, U>,
   order: string | [string] | [string, string]
-): knex.QueryBuilder {
+): knex.QueryBuilder<T, U> {
   if (util.isString(order)) {
     if (order === 'random') {
       return partial.orderByRaw('RANDOM()')
@@ -53,11 +53,11 @@ export function buildOrder (
   return partial
 }
 
-export function buildWhere (
-  partial: knex.QueryBuilder,
-  where: types.WhereClause | types.WhereMultiple | undefined,
+export function buildWhere <T = any, U = any> (
+  partial: knex.QueryBuilder<T, U>,
+  where: types.CriteriaBase | types.CriteriaList | undefined,
   inner?: boolean
-): knex.QueryBuilder {
+): knex.QueryBuilder<T, U> {
   if (where === undefined) return partial
 
   if (isWhereTuple(where)) {
@@ -73,7 +73,7 @@ export function buildWhere (
   }
 
   if (!inner && isWhereMultiple(where)) {
-    return where.reduce<knex.QueryBuilder>((accumulator, clause) => {
+    return where.reduce<knex.QueryBuilder<T, U>>((accumulator, clause) => {
       return buildWhere(accumulator, clause, true)
     }, partial)
   }
@@ -85,7 +85,9 @@ export function buildWhere (
   return util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
-export function isWhereTuple (where: any): where is types.WhereTuple {
+export function isWhereTuple (
+  where: any
+): where is types.Criteria2 | types.Criteria3 {
   return (
     Array.isArray(where) &&
     (where.length === 2 || where.length === 3) &&
@@ -93,14 +95,14 @@ export function isWhereTuple (where: any): where is types.WhereTuple {
   )
 }
 
-export function isWhereMultiple (where: any): where is types.WhereMultiple {
+export function isWhereMultiple (where: any): where is types.CriteriaList {
   return (
     Array.isArray(where) &&
     where.every(item => isWhereTuple(item) || util.isObject(item))
   )
 }
 
-export function isValidWhere (where: any): where is types.WhereClause {
+export function isValidWhere (where: any): where is types.CriteriaBase {
   return (
     isWhereTuple(where) ||
     util.isObject(where) ||
@@ -109,27 +111,40 @@ export function isValidWhere (where: any): where is types.WhereClause {
 }
 
 export function normalizeCriteria <D> (
+  where: types.CriteriaObj<D> | types.Criteria2<D>
+): types.CriteriaObj<D>
+export function normalizeCriteria <D> (
+  where: types.Criteria3<D>
+): types.Criteria3<D>
+export function normalizeCriteria <D> (
+  where: types.CriteriaList<D>
+): types.CriteriaListNormalized<D>
+export function normalizeCriteria <D> (
+  where: types.CriteriaBase<D>
+): types.CriteriaBaseNormalized<D>
+export function normalizeCriteria <D> (
   where: types.Criteria<D>
-): types.CriteriaNormalized<D> {
+): types.CriteriaNormalized<D>
+export function normalizeCriteria <D> (
+  where: unknown
+): unknown {
   if (isWhereTuple(where)) {
-    if (where.length === 2) {
-      return {
-        [where[0]]: where[1]
-      } as types.CriteriaObj<D>
-    } else {
-      return where as types.Criteria3
-    }
+    return (
+      where.length === 2
+        ? { [where[0]]: where[1] }
+        : where
+    )
   }
 
   if (isWhereMultiple(where)) {
-    return where.map(normalizeCriteria) as types.CriteriaListNormalized<D>
+    return where.map(rule => normalizeCriteria(rule))
   }
 
   if (util.isObject(where)) {
     return where
   }
 
-  return where
+  return util.invariant(false, `invalid criteria: ${where}`)
 }
 
 export async function runQuery <D extends types.ReturnDict = types.LooseObject> (

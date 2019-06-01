@@ -42,28 +42,27 @@
     "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {
-    "generic-pool": "^3.5.0",
-    "io-ts": "^1.7.1",
-    "knex": "^0.16.3",
+    "generic-pool": "^3.7.1",
+    "io-ts": "^1.8.6",
+    "knex": "^0.17.0",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "@citycide/changelog": "^1.0.0",
-    "@types/generic-pool": "^3.1.7",
+    "@citycide/changelog": "^1.1.0",
+    "@types/generic-pool": "^3.1.9",
     "@types/node": "^10.12.24",
     "@types/rimraf": "^2.0.2",
     "@types/sql.js": "^0.0.29",
-    "@vuepress/plugin-back-to-top": "^1.0.0-alpha.0",
-    "ava": "^1.2.1",
+    "ava": "^1.4.1",
     "cpy-cli": "^2.0.0",
     "docsify-cli": "^4.3.0",
     "rimraf": "^2.6.3",
     "sql.js": "^0.5.0",
-    "sqlite3": "^4.0.6",
-    "ts-node": "^8.0.2",
-    "tslint": "^5.12.1",
+    "sqlite3": "^4.0.8",
+    "ts-node": "^8.2.0",
+    "tslint": "^5.17.0",
     "tslint-config-standard": "^8.0.1",
-    "typescript": "^3.3.3"
+    "typescript": "^3.5.1",
   },
   "ava": {
     "compileEnhancements": false,

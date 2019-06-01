@@ -23,7 +23,8 @@ export function mapObj <T extends types.LooseObject, R extends T> (
   const result = {} as R
 
   eachObj(collection, (value, key) => {
-    result[key as any] = fn(value, key)
+    // tslint:disable-next-line:semicolon
+    ;(result[key] as R) = fn(value, key)
   })
 
   return result
@@ -36,6 +37,14 @@ export const isFunction = (value: any): value is Function => typeof value === 'f
 export const isString = (value: any): value is string => typeof value === 'string'
 export const isNumber = (value: any): value is number => typeof value === 'number'
 export const isNil = (value: any): value is undefined | null => value == null
+
+export const isEmpty = (value: any): boolean => {
+  if (isNil(value)) return true
+  if (Array.isArray(value)) return value.length === 0
+  if (isObject(value)) return Object.keys(value).length === 0
+
+  return false
+}
 
 export const toArray = <T> (value: T | T[]): NonNullable<T>[] =>
   Array.isArray(value)

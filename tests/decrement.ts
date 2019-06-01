@@ -26,7 +26,7 @@ test.serial('decrements by 1 when no amount is provided', async t => {
   const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age -= 1
-      return db.decr('people.age', { name })
+      return db.decrement('people.age', { name })
         .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
@@ -39,7 +39,7 @@ test.serial('decrements by a specified amount', async t => {
   const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age -= 4
-      return db.decr('people.age', { name }, 4)
+      return db.decrement('people.age', { name }, 4)
         .then(() => db.get<number>('people.age', { name }))
         .then(val => [age, val])
     })
@@ -50,19 +50,19 @@ test.serial('decrements by a specified amount', async t => {
 
 test.serial('does not allow negative values when allowNegative is falsy', async t => {
   await db.create('people', { name: 'Benjamin Button', age: 100 })
-  await db.decr('people.age', { name: 'Benjamin Button' }, 200)
+  await db.decrement('people.age', { name: 'Benjamin Button' }, 200)
   const res = await db.get<number>('people.age', { name: 'Benjamin Button' })
   t.is(res, 0)
 })
 
 test.serial('allows negative values when allowNegative is truthy', async t => {
-  await db.decr('people.age', { name: 'Lelu' }, 2, true)
+  await db.decrement('people.age', { name: 'Lelu' }, 2, true)
   const res = await db.get('people.age', { name: 'Lelu' })
   t.is(res, -1)
 })
 
 test.serial('does nothing when passed a zero value', async t => {
-  await db.decr('people.age', { name: 'Lelu' }, 0, true)
+  await db.decrement('people.age', { name: 'Lelu' }, 0, true)
   const res = await db.get('people.age', { name: 'Lelu' })
   t.is(res, -1)
 })
@@ -82,7 +82,7 @@ test('allows for multiple where clauses', async t => {
 
   await Promise.all(list.map(p => people.create(p)))
 
-  await people.decr('age', [
+  await people.decrement('age', [
     ['age', '>', 45],
     { name: 'Jill' }
   ])

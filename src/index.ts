@@ -44,7 +44,7 @@ export class Trilogy {
       obj.connection!.filename = resolve(obj.dir as string, path)
 
       // ensure the directory exists
-      makeDirPath(dirname(obj.connection!.filename as string))
+      makeDirPath(dirname(obj.connection!.filename))
     }
 
     this.isNative = obj.client === 'sqlite3'
@@ -54,7 +54,7 @@ export class Trilogy {
 
     if (this.isNative) {
       if (path !== ':memory:') {
-        ensureExists(obj.connection!.filename as string)
+        ensureExists(obj.connection!.filename)
       }
 
       this.knex = knex(({ ...config, connection: obj.connection } as knex.Config))
@@ -93,6 +93,7 @@ export class Trilogy {
     if (this.isNative) {
       // tslint:disable-next-line:await-promise
       if (!await check) {
+        // tslint:disable-next-line:await-promise
         await query
       }
     } else {
@@ -101,6 +102,7 @@ export class Trilogy {
       }
     }
 
+    // tslint:disable-next-line:no-floating-promises
     createTimestampTrigger(model)
     return model
   }

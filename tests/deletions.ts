@@ -79,7 +79,7 @@ test('allows for multiple where clauses', async t => {
     { favoriteColor: 'red' }
   ])
 
-  t.is(removed, 2)
+  t.is(removed.length, 2)
 
   const remaining = await people.find()
 

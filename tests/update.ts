@@ -64,7 +64,7 @@ test('allows for using multiple where clauses', async t => {
     { gender: 'male' }
   ])
 
-  t.is(affected, 2)
+  t.is(affected.length, 2)
   t.is(results.length, 3)
   t.deepEqual(results, [
     { age: 51, gender: 'male' },
