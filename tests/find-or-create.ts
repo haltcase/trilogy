@@ -23,14 +23,16 @@ test('creates missing objects or returns an existing one', async t => {
   }
 
   const fresh = await games.findOrCreate(first)
+
   t.is(await games.count({ genre: 'FPS' }), 1)
 
   const existing1 = await games.findOrCreate({ name: 'Overwatch' })
   const existing2 = await games.findOrCreate(first)
+
   t.deepEqual(fresh, existing1)
   t.deepEqual(fresh, existing2)
   t.is(await games.count({ genre: 'FPS' }), 1)
 
-  t.is(fresh!.last_played, existing1!.last_played)
-  t.is(fresh!.last_played, existing2!.last_played)
+  t.is(fresh!.last_played.toISOString(), existing1!.last_played.toISOString())
+  t.is(fresh!.last_played.toISOString(), existing2!.last_played.toISOString())
 })

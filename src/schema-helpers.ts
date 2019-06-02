@@ -250,7 +250,7 @@ export function toInputType (type: string, value: any): types.StorageType | neve
     case 'increments':
       return Number(value)
     case 'date':
-      return new Date(value)
+      return (value as Date).toISOString()
     default:
       return invariant(false, `invalid type on insert to database: ${type}`)
   }

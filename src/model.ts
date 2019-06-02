@@ -71,7 +71,10 @@ export default class Model <
 
     const order = options.random ? 'random' : options.order
     let query = this.ctx.knex(this.name).select()
-    query = helpers.buildWhere(query, criteria)
+    query = helpers.buildWhere(query, this.cast.toDefinition(
+      criteria || {},
+      { raw: true, ...options }
+    ))
 
     if (order) query = helpers.buildOrder(query, order)
     if (options.limit) query = query.limit(options.limit)
@@ -114,7 +117,10 @@ export default class Model <
 
     const order = options.random ? 'random' : options.order
     let query = this.ctx.knex(this.name).first()
-    query = helpers.buildWhere(query, criteria)
+    query = helpers.buildWhere(query, this.cast.toDefinition(
+      criteria || {},
+      { raw: true, ...options }
+    ))
 
     if (order) query = helpers.buildOrder(query, order)
     if (options.skip) query = query.offset(options.skip)
@@ -373,7 +379,10 @@ async function baseCount <D extends types.ReturnDict> (
   const val = `${column} as count`
   const builder = model.ctx.knex(model.name)
   let query = options.distinct ? builder.countDistinct(val) : builder.count(val)
-  query = helpers.buildWhere(query, criteria)
+  query = helpers.buildWhere(query, model.cast.toDefinition(
+    criteria || {},
+    { raw: true, ...options }
+  ))
 
   if (options.group) query = query.groupBy(toArray(options.group))
 
@@ -393,7 +402,10 @@ async function baseMinMax <D extends types.ReturnDict> (
 
   const val = `${column} as ${method}`
   let query = model.ctx.knex(model.name)[method](val)
-  query = helpers.buildWhere(query, criteria)
+  query = helpers.buildWhere(query, model.cast.toDefinition(
+    criteria || {},
+    { raw: true, ...options }
+  ))
 
   if (options.group) query = query.groupBy(toArray(options.group))
 
