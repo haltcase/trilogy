@@ -46,9 +46,11 @@ export default class Model <
     )
 
     await helpers.runQuery(this.ctx, query, { model: this })
+
     const result = await helpers.runQuery(this.ctx, returning, {
       model: this,
-      needResponse: true
+      needResponse: true,
+      internal: true
     })
     await cleanup()
 
@@ -175,9 +177,11 @@ export default class Model <
     query = helpers.buildWhere(query, typedCriteria)
 
     await helpers.runQuery(this.ctx, query, { model: this })
+
     const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
       model: this,
-      needResponse: true
+      needResponse: true,
+      internal: true
     })
 
     const updated = updatedRaw.map(object => {
@@ -245,11 +249,13 @@ export default class Model <
     query = helpers.buildWhere(query, criteria)
 
     const affected = await helpers.runQuery(this.ctx, query, { model: this })
+
     if (affected === 0) return []
 
     const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
       model: this,
-      needResponse: true
+      needResponse: true,
+      internal: true
     })
 
     const updated = updatedRaw.map(object => {
@@ -283,11 +289,13 @@ export default class Model <
     query = helpers.buildWhere(query, criteria)
 
     const affected = await helpers.runQuery(this.ctx, query, { model: this })
+
     if (affected === 0) return []
 
     const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
       model: this,
-      needResponse: true
+      needResponse: true,
+      internal: true
     })
 
     const updated = updatedRaw.map(object => {
@@ -312,12 +320,14 @@ export default class Model <
     let query = this.ctx.knex(this.name).del()
     query = helpers.buildWhere(query, criteria)
 
-    const deleteCount = await helpers.runQuery(this.ctx, query)
+    const deleteCount = await helpers.runQuery(this.ctx, query, { model: this })
+
     if (deleteCount === 0) return []
 
     const deleted = await helpers.runQuery(this.ctx, returning, {
       model: this,
-      needResponse: true
+      needResponse: true,
+      internal: true
     })
 
     await cleanup()
@@ -386,7 +396,10 @@ async function baseCount <D extends types.ReturnDict> (
 
   if (options.group) query = query.groupBy(toArray(options.group))
 
-  const res = await helpers.runQuery(model.ctx, query, { model, needResponse: true })
+  const res = await helpers.runQuery(model.ctx, query, {
+    model,
+    needResponse: true
+  })
   if (!Array.isArray(res)) return 0
   return res[0].count
 }
@@ -409,7 +422,10 @@ async function baseMinMax <D extends types.ReturnDict> (
 
   if (options.group) query = query.groupBy(toArray(options.group))
 
-  const res = await helpers.runQuery(model.ctx, query, { model, needResponse: true })
+  const res = await helpers.runQuery(model.ctx, query, {
+    model,
+    needResponse: true
+  })
   if (!Array.isArray(res)) return undefined
   return res[0][method]
 }

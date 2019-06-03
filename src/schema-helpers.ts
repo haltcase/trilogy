@@ -95,7 +95,7 @@ export async function createTrigger (
   event: TriggerEvent
 ): Promise<[types.Query, () => Promise<any[]>]> {
   const keys = Object.keys(model.schema)
-  const tableName = `${model.name}_temp`
+  const tableName = `${model.name}_returning_temp`
   const triggerName = `on_${event}_${model.name}`
   const fieldPrefix = event === TriggerEvent.Delete ? 'old.' : 'new.'
   const fieldReferences = keys.map(k => fieldPrefix + k).join(', ')
@@ -105,14 +105,14 @@ export async function createTrigger (
       create table if not exists ${tableName} (
         ${keys.join(', ')}
       )
-    `), { model }),
+    `), { model, internal: true }),
     runQuery(model.ctx, model.ctx.knex.raw(`
       create trigger if not exists ${triggerName}
         after ${event} on ${model.name}
         begin
           insert into ${tableName} select ${fieldReferences};
         end
-    `), { model })
+    `), { model, internal: true })
   ])
 
   let query = model.ctx.knex(tableName)
@@ -125,7 +125,7 @@ export async function createTrigger (
     return Promise.all([
       model.ctx.knex.raw(`drop table if exists ${tableName}`),
       model.ctx.knex.raw(`drop trigger if exists ${triggerName}`)
-    ].map(query => runQuery(model.ctx, query, { model })))
+    ].map(query => runQuery(model.ctx, query, { model, internal: true })))
   }
 
   return [query, cleanup]
@@ -149,7 +149,7 @@ export function createTimestampTrigger (model: Model<any>, column = 'updated_at'
       end
   `)
 
-  return runQuery(model.ctx, query, { model })
+  return runQuery(model.ctx, query, { model, internal: true })
 }
 
 export function castValue (value: any) {

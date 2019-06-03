@@ -23,3 +23,8 @@ export type Game = {
   last_played: Date,
   genre: string
 }
+
+export type User = {
+  name: string,
+  rank: number
+}

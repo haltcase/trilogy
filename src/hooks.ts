@@ -11,6 +11,12 @@ import {
 
 export type HookOptions = CreateOptions | UpdateOptions | {}
 
+export type OnQueryOptions = {
+  includeInternal?: boolean
+}
+
+export type OnQueryContext = [string, boolean]
+
 export type OnQueryCallback = Fn<[string]>
 export type BeforeCreateCallback <D> = Fn<[D | Partial<D>, CreateOptions]>
 export type AfterCreateCallback <D> = Fn<[D, CreateOptions]>
@@ -20,6 +26,7 @@ export type BeforeRemoveCallback <D> = Fn<[CriteriaNormalized<D>, {}]>
 export type AfterRemoveCallback <D> = Fn<[D[], {}]>
 
 export type HookCallback <D> =
+  | OnQueryCallback
   | BeforeCreateCallback<D>
   | AfterCreateCallback<D>
   | BeforeUpdateCallback<D>
@@ -41,6 +48,8 @@ export enum Hook {
 
 export class Hooks <D> {
   private _onQuery = new Set<OnQueryCallback>()
+  private _onQueryAll = new Set<OnQueryCallback>()
+
   private _beforeCreate = new Set<BeforeCreateCallback<D>>()
   private _afterCreate = new Set<AfterCreateCallback<D>>()
   private _beforeUpdate = new Set<BeforeUpdateCallback<D>>()
@@ -48,14 +57,21 @@ export class Hooks <D> {
   private _beforeRemove = new Set<BeforeRemoveCallback<D>>()
   private _afterRemove = new Set<AfterRemoveCallback<D>>()
 
-  onQuery (fn: OnQueryCallback) {
+  onQuery (fn: OnQueryCallback, options: OnQueryOptions = {}) {
     invariant(
       typeof fn === 'function',
       'hook callbacks must be of type function'
     )
 
-    this._onQuery.add(fn)
-    return () => this._onQuery.delete(fn)
+    if (options.includeInternal) {
+      this._onQuery.add(fn)
+      this._onQueryAll.add(fn)
+      return () =>
+        this._onQueryAll.delete(fn) && this._onQuery.delete(fn)
+    } else {
+      this._onQuery.add(fn)
+      return () => this._onQuery.delete(fn)
+    }
   }
 
   beforeCreate (fn: BeforeCreateCallback<D>) {
@@ -119,7 +135,7 @@ export class Hooks <D> {
   }
 
   async _callHook <T = D> (
-    hook: Hook.OnQuery, arg: string
+    hook: Hook.OnQuery, arg: OnQueryContext
   ): Promise<HookResult>
   async _callHook <T = D> (
     hook: Hook.BeforeCreate, arg: T | Partial<T>, options?: CreateOptions
@@ -142,16 +158,17 @@ export class Hooks <D> {
 
   async _callHook <T = D> (
     hook: Hook,
-    arg: T | Partial<T> | [T | Partial<T>, Criteria<T>] | Criteria<T> | string,
+    arg: T | Partial<T> | [T | Partial<T>, Criteria<T>] | Criteria<T> | OnQueryContext,
     options?: HookOptions
   ): Promise<HookResult> {
     const result: HookResult = {}
 
-    if (typeof arg === 'string') {
-      invariant(hook === Hook.OnQuery)
+    if (hook === Hook.OnQuery) {
+      const [query, internal] = arg as OnQueryContext
+      const fns = internal ? this._onQueryAll : this._onQuery
 
-      for (const fn of this._onQuery) {
-        await fn(arg)
+      for (const fn of fns) {
+        await (fn as OnQueryCallback)(query)
       }
 
       return result

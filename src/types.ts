@@ -58,7 +58,8 @@ export type Query =
 
 export type QueryOptions <D extends ReturnDict = LooseObject> = {
   model?: Model<D>,
-  needResponse?: boolean
+  needResponse?: boolean,
+  internal?: boolean
 }
 
 export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]

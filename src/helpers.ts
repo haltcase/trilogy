@@ -5,7 +5,7 @@ import * as util from './util'
 import * as knex from 'knex'
 
 import { Trilogy } from '.'
-import { Hook } from './hooks'
+import { Hook, OnQueryContext } from './hooks'
 import * as types from './types'
 
 const HAS_TABLE_SUBSTRING = `from sqlite_master where type = 'table'`
@@ -159,7 +159,10 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
   }
 
   if (options.model) {
-    await options.model._callHook(Hook.OnQuery, asString)
+    await options.model._callHook(
+      Hook.OnQuery,
+      [asString, options.internal] as OnQueryContext
+    )
   }
 
   if (instance.isNative) {
