@@ -126,7 +126,6 @@ export const TrilogyOptions = t.partial({
     filename: t.string
   }), {}),
   dir: withDefault(t.string, process.cwd),
-  verbose: withDefault(t.Function, () => t.identity)
 })
 
 export const ModelOptions = t.partial({

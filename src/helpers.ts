@@ -154,9 +154,6 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
 ): Promise<any> {
   const asString = query.toString()
   const action = getQueryAction(asString)
-  if (util.isFunction(instance.verbose)) {
-    instance.verbose(asString)
-  }
 
   if (options.model) {
     await options.model._callHook(

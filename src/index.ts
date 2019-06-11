@@ -48,7 +48,6 @@ export class Trilogy {
     }
 
     this.isNative = obj.client === 'sqlite3'
-    this.verbose = (obj.verbose as (query: string) => any)
 
     const config = { client: 'sqlite3', useNullAsDefault: true }
 
