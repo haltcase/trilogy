@@ -1,5 +1,5 @@
 import test from 'ava'
-import { connect } from '../src'
+import { connect, EventCancellation } from '../src'
 
 import { User } from './helpers/types'
 
@@ -229,4 +229,71 @@ test('hooks.afterRemove: receives criteria for objects to be removed', async t =
   unsub()
 
   await db.close()
+})
+
+test('hooks.beforeCreate: creation can be canceled', async t => {
+  const db = connect(':memory:')
+
+  const numbers = await db.model('numbers', {
+    number: Number
+  })
+
+  // casually preventing any objects from being created
+  const unsub = numbers.beforeCreate(() => EventCancellation)
+
+  await Promise.all(
+    [1, 2, 3, 4, 5, 6].map(n => numbers.create({ number: n }))
+  )
+
+  unsub()
+
+  t.is(await numbers.count(), 0)
+})
+
+test('hooks.beforeUpdate: updates can be canceled', async t => {
+  const db = connect(':memory:')
+
+  const numbers = await db.model('numbers', {
+    number: Number
+  })
+
+  const ns = [1, 2, 3, 4, 5, 6]
+
+  await Promise.all(ns.map(n => numbers.create({ number: n })))
+
+  // casually preventing any objects from being updated
+  const unsub = numbers.beforeUpdate(() => EventCancellation)
+
+  const updates = await Promise.all(
+    ns.map(n => numbers.update({ number: n }, { number: n * 2 }))
+  )
+
+  unsub()
+
+  t.deepEqual(updates, [[], [], [], [], [], []])
+  t.deepEqual((await numbers.find()).sort(), ns.map(n => ({ number: n })))
+})
+
+test('hooks.beforeRemove: removals can be canceled', async t => {
+  const db = connect(':memory:')
+
+  const numbers = await db.model('numbers', {
+    number: Number
+  })
+
+  const ns = [1, 2, 3, 4, 5, 6]
+
+  await Promise.all(ns.map(n => numbers.create({ number: n })))
+
+  // casually preventing any objects from being removed
+  const unsub = numbers.beforeRemove(() => EventCancellation)
+
+  const removals = await Promise.all(
+    ns.map(n => numbers.remove({ number: n }))
+  )
+
+  unsub()
+
+  t.deepEqual(removals, [[], [], [], [], [], []])
+  t.deepEqual((await numbers.find()).sort(), ns.map(n => ({ number: n })))
 })

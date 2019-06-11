@@ -34,7 +34,9 @@ export type HookCallback <D> =
   | BeforeRemoveCallback<D>
   | AfterRemoveCallback<D>
 
-export type HookResult = {}
+export type HookResult = {
+  prevented: boolean
+}
 
 export enum Hook {
   OnQuery = 'ON_QUERY',
@@ -45,6 +47,8 @@ export enum Hook {
   BeforeRemove = 'BEFORE_REMOVE',
   AfterRemove = 'AFTER_REMOVE'
 }
+
+export const EventCancellation = Symbol('trilogy.EventCancellation')
 
 export class Hooks <D> {
   private _onQuery = new Set<OnQueryCallback>()
@@ -161,14 +165,18 @@ export class Hooks <D> {
     arg: T | Partial<T> | [T | Partial<T>, Criteria<T>] | Criteria<T> | OnQueryContext,
     options?: HookOptions
   ): Promise<HookResult> {
-    const result: HookResult = {}
+    const result: HookResult = {
+      prevented: false
+    }
 
     if (hook === Hook.OnQuery) {
       const [query, internal] = arg as OnQueryContext
       const fns = internal ? this._onQueryAll : this._onQuery
 
       for (const fn of fns) {
-        await (fn as OnQueryCallback)(query)
+        if (await (fn as OnQueryCallback)(query) === EventCancellation) {
+          result.prevented = true
+        }
       }
 
       return result
@@ -184,23 +192,29 @@ export class Hooks <D> {
     } as Record<Hook, Set<HookCallback<T>>>)[hook]
 
     for (const fn of fns) {
+      let thisResult: unknown
+
       if (hook === Hook.BeforeUpdate) {
         const [data, criteria] = arg as [T | Partial<T>, Criteria<T>]
-        await (
+        thisResult = await (
           fn as BeforeUpdateCallback<T>
         )(data, normalizeCriteria(criteria), options || {})
       } else if (hook === Hook.BeforeRemove) {
-        await (
+        thisResult = await (
           fn as BeforeRemoveCallback<T>
         )(normalizeCriteria(arg as Criteria<T>), options || {})
       } else if (hook === Hook.BeforeCreate || hook === Hook.AfterCreate) {
-        await (
+        thisResult = await (
           fn as BeforeCreateCallback<T> | AfterCreateCallback<T>
         )(arg as T, options || {})
       } else {
-        await (
+        thisResult = await (
           fn as AfterUpdateCallback<T> | AfterRemoveCallback<T>
         )(arg as T[], options || {})
+      }
+
+      if (thisResult === EventCancellation) {
+        result.prevented = true
       }
     }
 

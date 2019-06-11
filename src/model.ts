@@ -32,7 +32,11 @@ export default class Model <
     object: D,
     options: types.CreateOptions = {}
   ): Promise<D | undefined> {
-    await this._callHook(Hook.BeforeCreate, object, options)
+    const { prevented } =
+      await this._callHook(Hook.BeforeCreate, object, options)
+
+    if (prevented) return
+
     const insertion = this.cast.toDefinition(object, options)
 
     const [returning, cleanup] =
@@ -167,9 +171,14 @@ export default class Model <
 
     if (Object.keys(data).length < 1) return []
 
-    const [returning, cleanup] = await createTrigger(this, TriggerEvent.Update)
+    const [returning, cleanup] =
+      await createTrigger(this, TriggerEvent.Update)
 
-    await this._callHook(Hook.BeforeUpdate, [data, criteria], options)
+    const { prevented } =
+      await this._callHook(Hook.BeforeUpdate, [data, criteria], options)
+
+    if (prevented) return []
+
     const typedData = this.cast.toDefinition(data, options)
     const typedCriteria = this.cast.toDefinition(criteria, options)
 
@@ -237,7 +246,10 @@ export default class Model <
     criteria?: types.Criteria<D>,
     amount?: number
   ): Promise<D[]> {
-    await this._callHook(Hook.BeforeUpdate, [{}, criteria] as [Partial<D>, types.Criteria<D>])
+    const { prevented } =
+      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<D>])
+
+    if (prevented) return []
 
     const cast = Number(amount)
     if (Number.isNaN(cast)) amount = 1
@@ -273,7 +285,10 @@ export default class Model <
     amount?: number,
     allowNegative?: boolean
   ): Promise<D[]> {
-    await this._callHook(Hook.BeforeUpdate, [{}, criteria] as [Partial<D>, types.Criteria<D>])
+    const { prevented } =
+      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<D>])
+
+    if (prevented) return []
 
     const cast = Number(amount)
     if (Number.isNaN(cast)) amount = 1
@@ -308,7 +323,10 @@ export default class Model <
   }
 
   async remove (criteria: types.Criteria<D>): Promise<D[]> {
-    await this._callHook(Hook.BeforeRemove, criteria)
+    const { prevented } =
+      await this._callHook(Hook.BeforeRemove, criteria)
+
+    if (prevented) return []
 
     if (
       !helpers.isValidWhere(criteria) ||

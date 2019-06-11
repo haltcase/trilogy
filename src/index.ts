@@ -524,6 +524,7 @@ export class Trilogy {
   }
 }
 
+export { EventCancellation } from './hooks'
 export { default as Model } from './model'
 export * from './types'
 
