@@ -1,12 +1,12 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/citycide/trilogy/master/media/logo.svg?sanitize=true" width="420" alt="trilogy">
   <br>
-  <a href="https://www.npmjs.com/package/trilogy"><img src="https://img.shields.io/npm/v/trilogy.svg?style=flat-square" alt="Version"></a>
-  <a href="https://www.npmjs.com/package/trilogy"><img src="https://img.shields.io/npm/l/trilogy.svg?style=flat-square" alt="License"></a>
-  <a href="https://travis-ci.org/citycide/trilogy"><img src="https://img.shields.io/travis/citycide/trilogy.svg?style=flat-square" alt="Travis CI"></a>
-  <a href="http://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html"><img src ="https://img.shields.io/badge/written%20in-TypeScript-294E80.svg?style=flat-square" alt="Written in TypeScript"></a>
-  <a href="https://standardjs.com"><img src="https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square" alt="JavaScript Standard Style"></a>
-  <a href="https://gitter.im/citycide/trilogy"><img src="https://img.shields.io/gitter/room/citycide/trilogy.svg?style=flat-square" alt="Gitter"></a>
+  <a href="https://www.npmjs.com/package/trilogy"><img src="https://flat.badgen.net/npm/v/trilogy" alt="Version"></a>
+  <a href="https://www.npmjs.com/package/trilogy"><img src="https://flat.badgen.net/npm/license/trilogy" alt="License"></a>
+  <a href="https://travis-ci.org/citycide/trilogy"><img src="https://flat.badgen.net/travis/citycide/trilogy" alt="Travis CI"></a>
+  <a href="http://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html"><img src ="https://flat.badgen.net/badge/written%20in/TypeScript/294E80" alt="Written in TypeScript"></a>
+  <a href="https://standardjs.com"><img src="https://flat.badgen.net/badge/code%20style/standard/green" alt="JavaScript Standard Style"></a>
+  <a href="https://gitter.im/citycide/trilogy"><img src="https://flat.badgen.net/badge/chat/on%20gitter/green" alt="Gitter"></a>
 </p>
 
 ***trilogy*** is a simple and extensible Promise-based wrapper for SQLite databases.
