@@ -1,5 +1,5 @@
 <a name="2.0.0-rc.3"></a>
-### [`2.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.3) (2019-01-29)
+## [`2.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.3) (2019-01-29)
 
 v2.0.0 is a significant release. This is a release candidate available on npm
 under the `@next` tag. The highlights are:
@@ -144,7 +144,7 @@ const db = connect(':memory:')
 ---
 
 <a name="1.4.5"></a>
-### [`1.4.5`](https://github.com/citycide/trilogy/compare/v1.4.4...v1.4.5) (2018-04-24)
+## [`1.4.5`](https://github.com/citycide/trilogy/compare/v1.4.4...v1.4.5) (2018-04-24)
 
 
 No changes since `1.4.4` - this release restores the v1 release line to the `latest` tag,
@@ -154,7 +154,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.4"></a>
-### [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
+## [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
 
 
 ###### BUG FIXES
@@ -165,7 +165,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.3"></a>
-### [`1.4.3`](https://github.com/citycide/trilogy/compare/v1.4.2...v1.4.3) (2018-01-09)
+## [`1.4.3`](https://github.com/citycide/trilogy/compare/v1.4.2...v1.4.3) (2018-01-09)
 
 
 ###### BUG FIXES
@@ -176,7 +176,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.2"></a>
-### [`1.4.2`](https://github.com/citycide/trilogy/compare/v1.4.1...v1.4.2) (2017-12-08)
+## [`1.4.2`](https://github.com/citycide/trilogy/compare/v1.4.1...v1.4.2) (2017-12-08)
 
 
 ###### BUG FIXES
@@ -192,7 +192,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.1"></a>
-### [`1.4.1`](https://github.com/citycide/trilogy/compare/v1.4.0...v1.4.1) (2017-11-16)
+## [`1.4.1`](https://github.com/citycide/trilogy/compare/v1.4.0...v1.4.1) (2017-11-16)
 
 Small patch for TypeScript users to correctly export types.
 
@@ -203,7 +203,7 @@ Small patch for TypeScript users to correctly export types.
 ---
 
 <a name="1.4.0"></a>
-### [`1.4.0`](https://github.com/citycide/trilogy/compare/v1.3.0...v1.4.0) (2017-11-04)
+## [`1.4.0`](https://github.com/citycide/trilogy/compare/v1.3.0...v1.4.0) (2017-11-04)
 
 
 ###### FEATURES
@@ -213,7 +213,7 @@ Small patch for TypeScript users to correctly export types.
 ---
 
 <a name="1.3.0"></a>
-### [`1.3.0`](https://github.com/citycide/trilogy/compare/v1.2.1...v1.3.0) (2017-08-24)
+## [`1.3.0`](https://github.com/citycide/trilogy/compare/v1.2.1...v1.3.0) (2017-08-24)
 
 This release brings a pair of exciting features!
 
@@ -279,7 +279,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.2.1"></a>
-### [`1.2.1`](https://github.com/citycide/trilogy/compare/v1.2.0...v1.2.1) (2017-07-25)
+## [`1.2.1`](https://github.com/citycide/trilogy/compare/v1.2.0...v1.2.1) (2017-07-25)
 
 
 ###### BUG FIXES
@@ -290,7 +290,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.2.0"></a>
-### [`1.2.0`](https://github.com/citycide/trilogy/compare/v1.1.0...v1.2.0) (2017-06-09)
+## [`1.2.0`](https://github.com/citycide/trilogy/compare/v1.1.0...v1.2.0) (2017-06-09)
 
 
 ###### FEATURES
@@ -302,7 +302,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.1.0"></a>
-### [`1.1.0`](https://github.com/citycide/trilogy/compare/v1.0.0...v1.1.0) (2017-03-23)
+## [`1.1.0`](https://github.com/citycide/trilogy/compare/v1.0.0...v1.1.0) (2017-03-23)
 
 
 ###### BUG FIXES
@@ -317,7 +317,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.0.0"></a>
-### [`1.0.0`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.5...v1.0.0) (2017-03-16)
+## [`1.0.0`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.5...v1.0.0) (2017-03-16)
 
 We've officially arrived at **1.0.0**!
 
@@ -333,7 +333,7 @@ Thanks for the help getting here!
 ---
 
 <a name="1.0.0-rc.5"></a>
-### [`1.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2017-02-26)
+## [`1.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2017-02-26)
 
 This is probably the last release candidate before 1.0.0!
 
@@ -348,7 +348,7 @@ I feel like I've said that before.
 ---
 
 <a name="1.0.0-rc.4"></a>
-### [`1.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2017-02-24)
+## [`1.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2017-02-24)
 
 This is probably the last release candidate before 1.0.0!
 
@@ -361,7 +361,7 @@ This is probably the last release candidate before 1.0.0!
 ---
 
 <a name="1.0.0-rc.3"></a>
-### [`1.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2017-02-04)
+## [`1.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2017-02-04)
 
 This release contains a breaking change regarding the return value of `create()`.
 You can follow the discussion leading up to this change in
@@ -394,7 +394,7 @@ Many thanks to [**@jonataswalker**](https://github.com/jonataswalker) who put in
 ---
 
 <a name="1.0.0-rc.2"></a>
-### [`1.0.0-rc.2`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2017-01-17)
+## [`1.0.0-rc.2`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2017-01-17)
 
 
 ###### BUG FIXES
@@ -404,7 +404,7 @@ Many thanks to [**@jonataswalker**](https://github.com/jonataswalker) who put in
 ---
 
 <a name="1.0.0-rc.1"></a>
-### [`1.0.0-rc.1`](https://github.com/citycide/trilogy/compare/v0.11.1...v1.0.0-rc.1) (2017-01-13)
+## [`1.0.0-rc.1`](https://github.com/citycide/trilogy/compare/v0.11.1...v1.0.0-rc.1) (2017-01-13)
 
 :raised_hands: Welcome to the very first official release candidate of Trilogy! :raised_hands:
 
@@ -423,7 +423,7 @@ There have not been significant changes since v0.11.1.
 ---
 
 <a name="0.11.1"></a>
-### [`0.11.1`](https://github.com/citycide/trilogy/compare/v0.10.0...v0.11.1) (2017-01-10)
+## [`0.11.1`](https://github.com/citycide/trilogy/compare/v0.10.0...v0.11.1) (2017-01-10)
 
 This is a small feature patch on top of v0.11.0 adding `model()` options
 that include the ability to set compound primary keys, multiple unique
@@ -466,7 +466,7 @@ and useful migration tips.
 ---
 
 <a name="0.10.0"></a>
-### [`0.10.0`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.10.0) (2016-12-17)
+## [`0.10.0`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.10.0) (2016-12-17)
 
 
 ###### BUG FIXES
@@ -489,4 +489,4 @@ and useful migration tips.
 ---
 
 <a name="0.9.2"></a>
-### [`0.9.2`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.9.2) (2016-09-14)
+## [`0.9.2`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.9.2) (2016-09-14)
