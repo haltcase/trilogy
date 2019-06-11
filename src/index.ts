@@ -524,7 +524,19 @@ export class Trilogy {
   }
 }
 
-export { EventCancellation } from './hooks'
+export {
+  EventCancellation,
+  OnQueryOptions,
+  OnQueryCallback,
+  BeforeCreateCallback,
+  AfterCreateCallback,
+  BeforeUpdateCallback,
+  AfterUpdateCallback,
+  BeforeRemoveCallback,
+  AfterRemoveCallback,
+  HookCallback
+} from './hooks'
+
 export { default as Model } from './model'
 export * from './types'
 
