@@ -9,7 +9,7 @@ import { makeDirPath } from './util'
 import { SqlJs } from 'sql.js/module'
 
 export async function readDatabase (instance: Trilogy): Promise<SqlJs.Database> {
-  const name = instance.options.connection!.filename as string
+  const name = instance.options.connection.filename
 
   const init = require('sql.js')
   const SQL = await init()
@@ -37,7 +37,7 @@ export async function readDatabase (instance: Trilogy): Promise<SqlJs.Database> 
 }
 
 export function writeDatabase (instance: Trilogy, db: SqlJs.Database) {
-  const name = instance.options.connection!.filename as string
+  const name = instance.options.connection.filename
   if (name === ':memory:') return
 
   makeDirPath(dirname(name))

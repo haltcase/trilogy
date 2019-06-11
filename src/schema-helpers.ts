@@ -29,12 +29,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
 
       if (isFunction(descriptor) || !isObject(descriptor)) return
 
-      const props =
-        types.validate<types.ColumnDescriptor>(
-          descriptor,
-          types.ColumnDescriptor,
-          {}
-        )
+      const props = types.ColumnDescriptor.check(descriptor)
 
       if ('nullable' in props) {
         if ('notNullable' in props) {
@@ -78,9 +73,9 @@ function createIndices (table: knex.TableBuilder, value: types.Index) {
 
     value.forEach(columns => table.index(columns as string[]))
   } else if (isObject(value)) {
-    eachObj(value, (columns, indexName) => {
+    for (const [indexName, columns] of Object.entries(value)) {
       table.index(toArray(columns), indexName)
-    })
+    }
   }
 }
 

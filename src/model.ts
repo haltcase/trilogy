@@ -69,7 +69,7 @@ export default class Model <
     criteria?: types.Criteria<D>,
     options: types.FindOptions = {}
   ): Promise<D[]> {
-    options = types.validate(options, types.FindOptions)
+    types.FindOptions.check(options)
 
     const order = options.random ? 'random' : options.order
     let query = this.ctx.knex(this.name).select()
@@ -115,7 +115,7 @@ export default class Model <
     criteria?: types.Criteria<D>,
     options: types.FindOptions = {}
   ): Promise<D | undefined> {
-    options = types.validate(options, types.FindOptions)
+    types.FindOptions.check(options)
 
     const order = options.random ? 'random' : options.order
     let query = this.ctx.knex(this.name).first()
@@ -163,7 +163,7 @@ export default class Model <
     data: Partial<D> = {},
     options: types.UpdateOptions = {}
   ): Promise<D[]> {
-    options = types.validate(options, types.UpdateOptions)
+    types.UpdateOptions.check(options)
 
     if (Object.keys(data).length < 1) return []
 
@@ -384,7 +384,7 @@ async function baseCount <D extends types.ReturnDict> (
     `invalid column: expected string, got ${typeof column}`
   )
 
-  options = types.validate(options, types.AggregateOptions)
+  types.AggregateOptions.check(options)
 
   const val = `${column} as count`
   const builder = model.ctx.knex(model.name)
@@ -411,7 +411,7 @@ async function baseMinMax <D extends types.ReturnDict> (
   criteria?: types.Criteria<D>,
   options: types.AggregateOptions = {}
 ) {
-  options = types.validate(options, types.AggregateOptions)
+  types.AggregateOptions.check(options)
 
   const val = `${column} as ${method}`
   let query = model.ctx.knex(model.name)[method](val)

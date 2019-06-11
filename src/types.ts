@@ -1,7 +1,6 @@
 import Model from './model'
 
-import * as t from 'io-ts'
-import { ThrowReporter } from 'io-ts/lib/ThrowReporter'
+import * as t from 'runtypes'
 
 import { COLUMN_TYPES } from './constants'
 import { isFunction } from './util'
@@ -11,35 +10,6 @@ import {
   SchemaBuilder,
   QueryBuilder
 } from 'knex'
-
-import { Either } from 'fp-ts/lib/Either'
-
-export const raise: (
-  validation: Either<t.ValidationError[], any>
-) => void = ThrowReporter.report
-
-export function validate <L> (value: L, type: t.Type<L>, defaultValue: L = {} as L): L {
-  const result = type.decode(value)
-  raise(result)
-  return result.getOrElse(defaultValue)
-}
-
-// based on `withDefault` from io-ts tests: https://git.io/vNGS6
-export function withDefault <T extends t.Mixed> (
-  type: T,
-  defaultValue: (() => t.TypeOf<T>) | t.TypeOf<T>
-): t.Type<t.TypeOf<T>, t.TypeOf<T>> {
-  const value = isFunction(defaultValue)
-    ? defaultValue()
-    : defaultValue
-
-  return new t.Type(
-    `withDefault(${type.name}, ${JSON.stringify(value)})`,
-    type.is,
-    (v, c) => type.validate(v != null ? v : value, c),
-    type.encode
-  )
-}
 
 export type Fn <T extends any[], R = any> = (...args: T) => R
 
@@ -74,6 +44,10 @@ export type StringKeys <D = LooseObject> = Extract<keyof D, string>
 export type LooseObject = Record<string, any>
 export type ValueOf <D> = D[keyof D]
 
+export type Defined <T> = {
+  [P in keyof T]: Exclude<T[P], undefined>
+}
+
 export type Criteria2 <D = LooseObject> = [StringKeys<D>, D[StringKeys<D>]]
 export type Criteria3 <D = LooseObject> = [StringKeys<D>, string, D[StringKeys<D>]]
 export type CriteriaObj <D = LooseObject> = Partial<D>
@@ -101,94 +75,85 @@ export type CriteriaNormalized <D = LooseObject> =
   | CriteriaBaseNormalized<D>
   | CriteriaListNormalized<D>
 
-export const Index = t.union([
-  t.string,
-  t.array(t.union([t.string, t.array(t.string)])),
-  t.dictionary(t.string, t.union([t.string, t.array(t.string)]))
-])
+export const Index = t.Union(
+  t.String,
+  t.Array(t.Union(t.String, t.Array(t.String))),
+  t.Dictionary(t.Union(t.String, t.Array(t.String)))
+)
 
-export const GroupClause = t.union([
-  t.string,
-  t.array(t.string)
-])
+export const GroupClause = t.Union(
+  t.String,
+  t.Array(t.String)
+)
 
-export const OrderClause = t.union([
-  t.string,
-  t.tuple([t.string, t.string])
-])
+export const OrderClause = t.Union(
+  t.String,
+  t.Tuple(t.String, t.String)
+)
 
-export const TrilogyOptions = t.partial({
-  client: withDefault(
-    t.union([t.literal('sqlite3'), t.literal('sql.js')]),
-    'sqlite3'
-  ),
-  connection: withDefault(t.partial({
-    filename: t.string
-  }), {}),
-  dir: withDefault(t.string, process.cwd),
+export const TrilogyOptions = t.Partial({
+  client: t.Union(t.Literal('sqlite3'), t.Literal('sql.js')),
+  dir: t.String
 })
 
-export const ModelOptions = t.partial({
+export const ModelOptions = t.Partial({
   index: Index,
-  primary: t.array(t.string),
-  unique: t.array(t.string),
-  timestamps: t.boolean
+  primary: t.Array(t.String),
+  unique: t.Array(t.String),
+  timestamps: t.Boolean
 })
 
-export const AggregateOptions = t.partial({
-  distinct: t.boolean,
+export const AggregateOptions = t.Partial({
+  distinct: t.Boolean,
   group: GroupClause,
   order: OrderClause
 })
 
-export const CreateOptions = t.partial({
-  raw: t.boolean
+export const CreateOptions = t.Partial({
+  raw: t.Boolean
 })
 
-export const FindOptions = t.partial({
-  limit: t.number,
+export const FindOptions = t.Partial({
+  limit: t.Number,
   order: OrderClause,
-  random: t.boolean,
-  raw: t.boolean,
-  skip: t.number
+  random: t.Boolean,
+  raw: t.Boolean,
+  skip: t.Number
 })
 
-export const UpdateOptions = t.partial({
-  raw: t.boolean
+export const UpdateOptions = t.Partial({
+  raw: t.Boolean
 })
 
-export const ColumnKind = t.refinement(
-  t.union([t.string, t.Function]),
-  value => {
-    const type = isFunction(value) ? value.name : String(value)
-    return COLUMN_TYPES.has(type.toLowerCase())
-  }
-)
+export const ColumnKind = t.Union(t.String, t.Function).withConstraint(value => {
+  const type = isFunction(value) ? value.name : String(value)
+  return COLUMN_TYPES.has(type.toLowerCase())
+}, { name: 'ColumnKind' })
 
-export const ColumnDescriptor = t.partial({
-  defaultTo: t.unknown,
-  index: t.string,
-  notNullable: t.boolean,
-  nullable: t.boolean,
-  primary: t.boolean,
-  unique: t.boolean,
+export const ColumnDescriptor = t.Partial({
+  defaultTo: t.Unknown,
+  index: t.String,
+  notNullable: t.Boolean,
+  nullable: t.Boolean,
+  primary: t.Boolean,
+  unique: t.Boolean,
   type: ColumnKind,
   get: t.Function,
   set: t.Function
 })
 
-export type Index = t.TypeOf<typeof Index>
-export type Order = t.TypeOf<typeof OrderClause>
-export type Group = t.TypeOf<typeof GroupClause>
+export type Index = t.Static<typeof Index>
+export type Order = t.Static<typeof OrderClause>
+export type Group = t.Static<typeof GroupClause>
 
-export type TrilogyOptions = t.TypeOf<typeof TrilogyOptions>
-export type ModelOptions = t.TypeOf<typeof ModelOptions>
-export type AggregateOptions = t.TypeOf<typeof AggregateOptions>
-export type CreateOptions = t.TypeOf<typeof CreateOptions>
-export type UpdateOptions = t.TypeOf<typeof UpdateOptions>
-export type FindOptions = t.TypeOf<typeof FindOptions>
-export type ColumnKind = t.TypeOf<typeof ColumnKind>
-export type ColumnDescriptor = t.TypeOf<typeof ColumnDescriptor>
+export type TrilogyOptions = t.Static<typeof TrilogyOptions>
+export type ModelOptions = t.Static<typeof ModelOptions>
+export type AggregateOptions = t.Static<typeof AggregateOptions>
+export type CreateOptions = t.Static<typeof CreateOptions>
+export type UpdateOptions = t.Static<typeof UpdateOptions>
+export type FindOptions = t.Static<typeof FindOptions>
+export type ColumnKind = t.Static<typeof ColumnKind>
+export type ColumnDescriptor = t.Static<typeof ColumnDescriptor>
 
 export type SchemaRaw <D = LooseObject> = {
   [P in keyof Partial<D>]: ColumnKind | ColumnDescriptor

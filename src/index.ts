@@ -14,9 +14,6 @@ import { SqlJs } from 'sql.js/module'
 import * as hooks from './hooks'
 import * as types from './types'
 
-// @ts-ignore: throwaway reference to satisfy compiler
-import * as t from 'io-ts'
-
 const ensureExists = (atPath: string) => {
   try {
     closeSync(openSync(atPath, 'wx'))
@@ -26,34 +23,41 @@ const ensureExists = (atPath: string) => {
 export class Trilogy {
   isNative: boolean
   knex: knex
-  options: types.TrilogyOptions
+  options: types.Defined<types.TrilogyOptions> & {
+    connection: { filename: string }
+  }
   pool?: Pool<SqlJs.Database>
-  verbose?: (query: string) => any
 
   private _definitions: Map<string, Model<any>>
 
   constructor (path: string, options: types.TrilogyOptions = {}) {
     invariant(path, 'trilogy constructor must be provided a file path')
 
-    const obj = this.options =
-      types.validate(options, types.TrilogyOptions)
+    const obj = this.options = {
+      ...types.TrilogyOptions.check(options),
+      ...{
+        client: 'sqlite3',
+        connection: { filename: path },
+        dir: process.cwd()
+      }
+    }
 
     if (path === ':memory:') {
-      obj.connection!.filename = path
+      obj.connection.filename = path
     } else {
-      obj.connection!.filename = resolve(obj.dir as string, path)
+      obj.connection.filename = resolve(obj.dir, path)
 
       // ensure the directory exists
-      makeDirPath(dirname(obj.connection!.filename))
+      makeDirPath(dirname(obj.connection.filename))
     }
 
     this.isNative = obj.client === 'sqlite3'
 
-    const config = { client: 'sqlite3', useNullAsDefault: true }
-
     if (path !== ':memory:') {
-      ensureExists(obj.connection!.filename)
+      ensureExists(obj.connection.filename)
     }
+
+    const config = { client: 'sqlite3', useNullAsDefault: true }
 
     if (this.isNative) {
       this.knex = knex(({ ...config, connection: obj.connection } as knex.Config))
@@ -83,7 +87,7 @@ export class Trilogy {
 
     const opts = toKnexSchema(
       model,
-      types.validate(options, types.ModelOptions, {})
+      types.ModelOptions.check(options)
     )
     const check = this.knex.schema.hasTable(name)
     const query = this.knex.schema.createTable(name, opts)
