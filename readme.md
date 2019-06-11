@@ -9,10 +9,15 @@
   <a href="https://gitter.im/citycide/trilogy"><img src="https://flat.badgen.net/badge/chat/on%20gitter/green" alt="Gitter"></a>
 </p>
 
-***trilogy*** is a simple and extensible Promise-based wrapper for SQLite databases.
+***trilogy*** is a simple Promise-based wrapper for SQLite databases.
+It supports both the native C++ [`sqlite3`][sqlite3] driver and the pure
+JavaScript [`sql.js`][sqljs] backend &mdash; compile natively for speed
+when you need it, or use `sql.js` headache-free in cross-platform environments
+and [Electron][electron] apps.
 
-It's not an ORM and isn't intended to be one &mdash; it doesn't have any relationship
-features and instead focuses on providing a simple, clear API for query building.
+It's not an ORM and isn't intended to be one &mdash; it doesn't have any
+relationship features. Instead it focuses on providing a simple, clear API
+that's influenced more by [Mongoose][mongoose] than by SQL.
 
 ---
 
@@ -164,6 +169,7 @@ See [license](license)
 
 [sqlite3]: https://github.com/mapbox/sqlite3
 [sqljs]: https://github.com/kripken/sql.js
+[mongoose]: https://mongoosejs.com/
 [knex]: https://github.com/tgriesser/knex
 [electron]: https://github.com/electron/electron
 [nwjs]: https://github.com/nwjs/nw.js
