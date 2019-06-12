@@ -388,6 +388,9 @@ export class Trilogy {
     defaultValue?: any
   ): Promise<any> {
     const [table, column] = location.split('.', 2)
+
+    invariant(column, 'property name is required, ex: `get("users.rank")`')
+
     const model = this.getModel(table)
     return model.get(column, criteria, defaultValue)
   }
@@ -402,6 +405,9 @@ export class Trilogy {
    */
   set <T> (location: string, criteria: types.Criteria, value: T) {
     const [table, column] = location.split('.', 2)
+
+    invariant(column, 'property name is required, ex: `set("users.rank")`')
+
     const model = this.getModel(table)
     return model.set(column, criteria, value)
   }
@@ -421,6 +427,9 @@ export class Trilogy {
     defaultValue?: any
   ): Promise<any> {
     const [table, column] = location.split('.', 2)
+
+    invariant(column, 'property name is required, ex: `getRaw("users.rank")`')
+
     const model = this.getModel(table)
     return model.getRaw(column, criteria, defaultValue)
   }
@@ -434,6 +443,9 @@ export class Trilogy {
    */
   setRaw <T> (location: string, criteria: types.Criteria, value: T) {
     const [table, column] = location.split('.', 2)
+
+    invariant(column, 'property name is required, ex: `setRaw("users.rank")`')
+
     const model = this.getModel(table)
     return model.setRaw(column, criteria, value)
   }
@@ -536,6 +548,9 @@ export class Trilogy {
    */
   min (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
     const [table, column] = location.split('.', 2)
+
+    invariant(column, 'property name is required, ex: `min("users.rank")`')
+
     const model = this.getModel(table)
     return model.min(column, criteria, options)
   }
@@ -550,6 +565,9 @@ export class Trilogy {
    */
   max (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
     const [table, column] = location.split('.', 2)
+
+    invariant(column, 'property name is required, ex: `max("users.rank")`')
+
     const model = this.getModel(table)
     return model.max(column, criteria, options)
   }
