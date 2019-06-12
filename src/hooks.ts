@@ -50,6 +50,9 @@ export enum Hook {
 
 export const EventCancellation = Symbol('trilogy.EventCancellation')
 
+/**
+ * Base implementation of lifecycle hooks inherited by all model instances.
+ */
 export class Hooks <D> {
   private _onQuery = new Set<OnQueryCallback>()
   private _onQueryAll = new Set<OnQueryCallback>()
@@ -61,6 +64,15 @@ export class Hooks <D> {
   private _beforeRemove = new Set<BeforeRemoveCallback<D>>()
   private _afterRemove = new Set<AfterRemoveCallback<D>>()
 
+  /**
+   * The `onQuery` hook is called each time a query is run on the database,
+   * and receives the query in string form.
+   *
+   * @param fn Function called when the hook is triggered
+   * @param [options]
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   onQuery (fn: OnQueryCallback, options: OnQueryOptions = {}) {
     invariant(
       typeof fn === 'function',
@@ -78,6 +90,20 @@ export class Hooks <D> {
     }
   }
 
+  /**
+   * Before an object is created, the beforeCreate hook is called with the
+   * object.
+   *
+   * @remarks
+   * This hook occurs before casting, so if a subscriber to this hook
+   * modifies the incoming object those changes will be subject to casting.
+   * It's also possible to prevent the object from being created entirely
+   * by returning the EventCancellation symbol from a subscriber callback.
+   *
+   * @param fn Function called when the hook is triggered
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   beforeCreate (fn: BeforeCreateCallback<D>) {
     invariant(
       typeof fn === 'function',
@@ -88,6 +114,14 @@ export class Hooks <D> {
     return () => this._beforeCreate.delete(fn)
   }
 
+  /**
+   * When an object is created, that object is returned to you and the
+   * `afterCreate` hook is called with it.
+   *
+   * @param fn Function called when the hook is triggered
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   afterCreate (fn: AfterCreateCallback<D>) {
     invariant(
       typeof fn === 'function',
@@ -98,6 +132,19 @@ export class Hooks <D> {
     return () => this._afterCreate.delete(fn)
   }
 
+  /**
+   * Prior to an object being updated the `beforeUpdate` hook is called with the
+   * update delta, or the incoming changes to be made, as well as the criteria.
+   *
+   * @remarks
+   * Casting occurs after this hook. A subscriber could choose to cancel the
+   * update by returning the EventCancellation symbol or alter the selection
+   * criteria.
+   *
+   * @param fn Function called when the hook is triggered
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   beforeUpdate (fn: BeforeUpdateCallback<D>) {
     invariant(
       typeof fn === 'function',
@@ -108,6 +155,14 @@ export class Hooks <D> {
     return () => this._beforeUpdate.delete(fn)
   }
 
+  /**
+   * Subscribers to the `afterUpdate` hook receive modified objects after they
+   * are updated.
+   *
+   * @param fn Function called when the hook is triggered
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   afterUpdate (fn: AfterUpdateCallback<D>) {
     invariant(
       typeof fn === 'function',
@@ -118,6 +173,19 @@ export class Hooks <D> {
     return () => this._afterUpdate.delete(fn)
   }
 
+  /**
+   * Before object removal, the criteria for selecting those objects is passed
+   * to the `beforeRemove` hook.
+   *
+   * @remarks
+   * Casting occurs after this hook. Subscribers can modify the selection
+   * criteria or prevent the removal entirely by returning the `EventCancellation`
+   * symbol.
+   *
+   * @param fn Function called when the hook is triggered
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   beforeRemove (fn: BeforeRemoveCallback<D>) {
     invariant(
       typeof fn === 'function',
@@ -128,6 +196,13 @@ export class Hooks <D> {
     return () => this._beforeRemove.delete(fn)
   }
 
+  /**
+   * A list of any removed objects is passed to the `afterRemove` hook.
+   *
+   * @param fn Function called when the hook is triggered
+   *
+   * @returns Unsubscribe function that removes the subscriber when called
+   */
   afterRemove (fn: AfterRemoveCallback<D>) {
     invariant(
       typeof fn === 'function',
@@ -138,6 +213,11 @@ export class Hooks <D> {
     return () => this._afterRemove.delete(fn)
   }
 
+  /**
+   * The main handler of all hooks.
+   *
+   * @internal
+   */
   async _callHook <T = D> (
     hook: Hook.OnQuery, arg: OnQueryContext
   ): Promise<HookResult>
