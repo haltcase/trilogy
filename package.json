@@ -37,7 +37,10 @@
     "build:es": "tsc -m es2015 --outDir es",
     "test": "ava",
     "lint": "tslint -p tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
-    "docs": "docsify serve docs",
+    "docs:dev": "vuepress dev docsrc",
+    "predocs:build": "rimraf docs",
+    "docs:build": "vuepress build docsrc",
+    "postdocs:build": "cpy \"docsrc/{.nojekyll,CNAME}\" docs",
     "changelog": "changelog",
     "prepublishOnly": "npm test && npm run build"
   },
@@ -53,16 +56,17 @@
     "@types/node": "^8.10.49",
     "@types/rimraf": "^2.0.2",
     "@types/sql.js": "^1.0.1",
+    "@vuepress/plugin-back-to-top": "^1.0.0-alpha.0",
     "ava": "^2.1.0",
     "cpy-cli": "^2.0.0",
-    "docsify-cli": "^4.3.0",
     "rimraf": "^2.6.3",
     "sql.js": "^1.0.0",
     "sqlite3": "^4.0.8",
     "ts-node": "^8.2.0",
     "tslint": "^5.17.0",
     "tslint-config-standard": "^8.0.1",
-    "typescript": "^3.5.1"
+    "typescript": "^3.5.1",
+    "vuepress": "^1.0.1"
   },
   "ava": {
     "compileEnhancements": false,

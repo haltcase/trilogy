@@ -1,114 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>trilogy</title>
-  <meta name="description" content="trilogy - 100% pure JS SQLite, built on Knex & SQL.js">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//unpkg.com/docsify/themes/buble.css">
-  <style>
-    body {
-      background-color: #f9f9f9;
-    }
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>trilogy</title>
+    <meta name="description" content="No-hassle SQLite with a document store style API">
+    
+    
+    <link rel="preload" href="/assets/css/0.styles.4cca5458.css" as="style"><link rel="preload" href="/assets/js/app.15e1cc19.js" as="script"><link rel="preload" href="/assets/js/2.201cfc91.js" as="script"><link rel="preload" href="/assets/js/10.0b98cba6.js" as="script"><link rel="prefetch" href="/assets/js/11.d62fc7cc.js"><link rel="prefetch" href="/assets/js/12.b510cb2e.js"><link rel="prefetch" href="/assets/js/13.ad240a66.js"><link rel="prefetch" href="/assets/js/14.08227984.js"><link rel="prefetch" href="/assets/js/15.de714257.js"><link rel="prefetch" href="/assets/js/3.679e5475.js"><link rel="prefetch" href="/assets/js/4.ac0a95b4.js"><link rel="prefetch" href="/assets/js/5.1f05c0b9.js"><link rel="prefetch" href="/assets/js/6.52c79154.js"><link rel="prefetch" href="/assets/js/7.257c3475.js"><link rel="prefetch" href="/assets/js/8.5ec360f6.js"><link rel="prefetch" href="/assets/js/9.09c97a5f.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.4cca5458.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container no-sidebar"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-exact-active router-link-active"><!----> <span class="site-name">trilogy</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/" class="nav-link router-link-exact-active router-link-active">home</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">learn</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/guide/" class="nav-link">Guide</a></li><li class="dropdown-item"><!----> <a href="/reference/api.html" class="nav-link">API</a></li><li class="dropdown-item"><!----> <a href="/reference/backends.html" class="nav-link">Backends</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">contribute</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/citycide/trilogy/issues" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Issues
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><!----> <a href="https://github.com/citycide/trilogy/pulls" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Pull Requests
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><h4></h4> <ul class="dropdown-subitem-wrapper"><li class="dropdown-subitem"><a href="https://github.com/citycide/trilogy/blob/next/.github/contributing.md#contributor-guide" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Contributor Guide
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-subitem"><a href="https://github.com/citycide/trilogy/blob/next/.github/code_of_conduct.md#contributor-covenant-code-of-conduct" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Code of Conduct
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li></ul></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">about</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/about/changelog.html" class="nav-link">Changelog</a></li><li class="dropdown-item"><!----> <a href="/about/license.html" class="nav-link">License</a></li></ul></div></div> <a href="https://github.com/citycide/trilogy" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/" class="nav-link router-link-exact-active router-link-active">home</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">learn</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/guide/" class="nav-link">Guide</a></li><li class="dropdown-item"><!----> <a href="/reference/api.html" class="nav-link">API</a></li><li class="dropdown-item"><!----> <a href="/reference/backends.html" class="nav-link">Backends</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">contribute</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/citycide/trilogy/issues" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Issues
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><!----> <a href="https://github.com/citycide/trilogy/pulls" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Pull Requests
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-item"><h4></h4> <ul class="dropdown-subitem-wrapper"><li class="dropdown-subitem"><a href="https://github.com/citycide/trilogy/blob/next/.github/contributing.md#contributor-guide" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Contributor Guide
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li><li class="dropdown-subitem"><a href="https://github.com/citycide/trilogy/blob/next/.github/code_of_conduct.md#contributor-covenant-code-of-conduct" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Code of Conduct
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></li></ul></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">about</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/about/changelog.html" class="nav-link">Changelog</a></li><li class="dropdown-item"><!----> <a href="/about/license.html" class="nav-link">License</a></li></ul></div></div> <a href="https://github.com/citycide/trilogy" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></nav>  <!----> </aside> <main aria-labelledby="main-title" class="home"><header class="hero"><img src="https://raw.githubusercontent.com/citycide/trilogy/master/media/logo.svg?sanitize=true" alt="hero"> <h1 id="main-title"> </h1> <p class="description">
+      this time the SQL really is better than the original
+    </p> <p class="action"><a href="/guide/" class="nav-link action-button">Get Started →</a></p></header> <!----> <div class="theme-default-content custom content__default"><p><br><br></p> <p align="center"><a href="https://www.npmjs.com/package/trilogy"><img src="https://flat.badgen.net/npm/v/trilogy" alt="Version"></a> <a href="https://www.npmjs.com/package/trilogy"><img src="https://flat.badgen.net/npm/license/trilogy" alt="License"></a> <a href="https://travis-ci.org/citycide/trilogy"><img src="https://flat.badgen.net/travis/citycide/trilogy" alt="Travis CI"></a> <a href="http://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html"><img src="https://flat.badgen.net/badge/written%20in/TypeScript/294E80" alt="Written in TypeScript"></a> <a href="https://standardjs.com"><img src="https://flat.badgen.net/badge/code%20style/standard/green" alt="JavaScript Standard Style"></a> <a href="https://gitter.im/citycide/trilogy"><img src="https://flat.badgen.net/badge/chat/on%20gitter/green" alt="Gitter"></a></p> <p><br><br></p> <p><em><strong>trilogy</strong></em> is a simple Promise-based wrapper for SQLite databases.
+It supports both the native C++ <a href="https://github.com/mapbox/sqlite3" target="_blank" rel="noopener noreferrer"><code>sqlite3</code><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> driver and the pure
+JavaScript <a href="https://github.com/kripken/sql.js" target="_blank" rel="noopener noreferrer"><code>sql.js</code><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> backend — compile natively for speed
+when you need it, or use <code>sql.js</code> headache-free in cross-platform environments
+and <a href="https://github.com/electron/electron" target="_blank" rel="noopener noreferrer">Electron<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> apps.</p> <p>It's not an ORM and isn't intended to be one — it doesn't have any
+relationship features. Instead it focuses on providing a simple, clear API
+that's influenced more by <a href="https://mongoosejs.com/" target="_blank" rel="noopener noreferrer">Mongoose<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> than by SQL.</p> <hr> <p align="center"><a href="#features">features</a>
+  ⋅
+  <a href="#quick-start">quick start</a></p> <hr> <h2 id="features"><a href="#features" aria-hidden="true" class="header-anchor">#</a> features</h2> <ul><li><p>🔗 <strong>automatically casts data between JavaScript &amp; SQLite types</strong></p> <p>Define schemas with types like <code>String</code>, <code>Date</code>, or <code>'increments'</code> —
+trilogy will handle all the type-casting involved to map accurately
+between JavaScript and the underlying SQLite database.</p></li> <li><p>🔋 <strong>powered by the <a href="https://github.com/tgriesser/knex" target="_blank" rel="noopener noreferrer">knex<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> query builder</strong></p> <p>trilogy uses knex internally to build its queries, but it's also exposed so
+you can use it to build your own. No need to mess with ridiculous multi-line
+strings.</p></li> <li><p>🔩 <strong>supports multiple swappable backends ( <em>plus in-memory storage</em> )</strong></p> <p>Both the native <a href="https://github.com/mapbox/sqlite3" target="_blank" rel="noopener noreferrer"><code>sqlite3</code><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> module <em>and</em> <a href="https://github.com/kripken/sql.js" target="_blank" rel="noopener noreferrer"><code>sql.js</code><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> (pure
+JavaScript!) are supported. There is also memory-only storage for fast,
+unpersisted data handling, which is great for tests and performance critical
+situations.</p> <p>You can even swap the backend after you've started, with no changes to the
+rest of your code!</p> <p><a href="/reference/backends.html"><em><strong>learn more</strong></em></a></p></li> <li><p>👮 <strong>written in <a href="https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html" target="_blank" rel="noopener noreferrer">TypeScript<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></strong></p> <p>trilogy is written in and provides a first-class experience for TypeScript.</p></li> <li><p>🔌 <strong>lifecycle hooks</strong></p> <p>Any number of hooks (aka subscribers or listeners) can be attached at several
+points in the lifecycle — for example <code>onQuery</code>, <code>beforeCreate</code>, <code>afterUpdate</code>.
+These are useful for debugging and extensibility.</p></li> <li><p>💞 <strong>perfect for <a href="https://github.com/electron/electron" target="_blank" rel="noopener noreferrer">Electron<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> &amp; <a href="https://github.com/nwjs/nw.js" target="_blank" rel="noopener noreferrer">NW.js<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></strong></p> <p>Compiling the <code>sqlite3</code> module for all the platforms you target with Electron
+or NW.js isn't always easy, so you can easily use trilogy with the <code>sql.js</code>
+backend, which doesn't need to be compiled at all!</p></li></ul> <h2 id="quick-start"><a href="#quick-start" aria-hidden="true" class="header-anchor">#</a> quick start</h2> <div class="language-sh extra-class"><pre class="language-sh"><code>yarn add trilogy sqlite3 <span class="token comment"># or sql.js</span>
+</code></pre></div><div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">import</span> <span class="token punctuation">{</span> connect <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'trilogy'</span>
 
-    table {
-      border-spacing: .5rem;
-    }
+<span class="token keyword">const</span> db <span class="token operator">=</span> <span class="token function">connect</span><span class="token punctuation">(</span><span class="token string">':memory:'</span><span class="token punctuation">)</span>
 
-    .cover-main img[alt="trilogy logo"] {
-      margin-top: -3%;
-      width: 420px;
-    }
+<span class="token punctuation">;</span><span class="token punctuation">(</span><span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> games <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">model</span><span class="token punctuation">(</span><span class="token string">'games'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    name<span class="token punctuation">:</span> <span class="token punctuation">{</span> type<span class="token punctuation">:</span> String <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    genre<span class="token punctuation">:</span> String<span class="token punctuation">,</span>            <span class="token comment">// type shorthand</span>
+    released<span class="token punctuation">:</span> Date<span class="token punctuation">,</span>
+    awards<span class="token punctuation">:</span> Array<span class="token punctuation">,</span>
+    id<span class="token punctuation">:</span> <span class="token string">'increments'</span>          <span class="token comment">// special type, primary key</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
 
-    .cover-main p > a {
-      margin-top: 5%;
-    }
+  <span class="token keyword">await</span> games<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+    name<span class="token punctuation">:</span> <span class="token string">'Overwatch'</span><span class="token punctuation">,</span>
+    genre<span class="token punctuation">:</span> <span class="token string">'FPS'</span><span class="token punctuation">,</span>
+    released<span class="token punctuation">:</span> <span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token string">'May 23, 2016'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    awards<span class="token punctuation">:</span> <span class="token punctuation">[</span>
+      <span class="token string">'Game of the Year'</span><span class="token punctuation">,</span>
+      <span class="token string">'Best Multiplayer Game'</span><span class="token punctuation">,</span>
+      <span class="token string">'Best ESports Game'</span>
+    <span class="token punctuation">]</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
 
-    .sidebar .active a {
-      color: #0074D9;
-    }
+  <span class="token keyword">const</span> overwatch <span class="token operator">=</span> <span class="token keyword">await</span> games<span class="token punctuation">.</span><span class="token function">findOne</span><span class="token punctuation">(</span><span class="token punctuation">{</span> name<span class="token punctuation">:</span> <span class="token string">'Overwatch'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span>
 
-    .markdown-section h3 {
-      margin: 1.2em 0 1.2em;
-    }
-
-    .markdown-section pre {
-      border-left: 0;
-    }
-
-    .markdown-section code,
-    .markdown-section pre > code {
-      font-family: "Operator Mono", "Fira Code", "Ubuntu Mono",
-                   "Droid Sans Mono", "Liberation Mono", "Source Code Pro",
-                   Menlo, Consolas, Inconsolata, Courier, monospace;
-      font-size: 14px;
-      background-color: #e8e8e8;
-      border-radius: 0;
-    }
-  </style>
-</head>
-<body>
-  <nav>
-    <a href="#/">home</a>
-    <a href="#/api">documentation</a>
-    <a href="#/changelog">changelog</a>
-  </nav>
-  <div id="app"></div>
-</body>
-
-<script>
-  const baseURL = 'https://raw.githubusercontent.com/citycide/trilogy/master'
-  window.$docsify = {
-    alias: {
-      // '.*?/readme': `${baseURL}/readme`,
-      '.*?/changelog': `${baseURL}/changelog`,
-      '.*?/license': `${baseURL}/license`,
-      '.*?/(?:\.github/)?contributing': `${baseURL}/.github/contributing`,
-      '.*?/(?:\.github/)?code_of_conduct': `${baseURL}/.github/code_of_conduct`
-    },
-    auto2top: true,
-    coverpage: 'cover.md',
-    // homepage: `${baseURL}/readme.md`,
-    homepage: 'readme.md',
-    loadSidebar: true,
-    mergeNavbar: true,
-    maxLevel: 4,
-    name: 'trilogy',
-    repo: 'https://github.com/citycide/trilogy',
-    subMaxLevel: 3,
-    search: {
-      noData: {
-        '/': 'no results'
-      },
-      paths: 'auto',
-      placeholder: {
-        '/': 'search...'
-      }
-    },
-    formatUpdated: '{MM}/{DD} {HH}:{mm}',
-    plugins: [
-      (hook, vm) => {
-        hook.beforeEach(html => {
-          const { file } = vm.route
-          const base = 'https://github.com/citycide/trilogy/blob/master'
-
-          let tail
-          if (file.indexOf('githubusercontent') > 0) {
-            const i = file.indexOf('master')
-            tail = file.slice(i + 6)
-          } else {
-            tail = `/docs/${file}`
-          }
-
-          const url = base + tail
-          const edit = `[:pencil2:](${url}) [edit this page](${url})\n`
-          return `${html}\n----\n${edit}`
-        })
-      }
-    ]
-  }
-</script>
-<script src="//unpkg.com/docsify/lib/docsify.js"></script>
-<script src="//unpkg.com/prismjs/components/prism-typescript.min.js"></script>
-<script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>overwatch<span class="token punctuation">.</span>awards<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+  <span class="token comment">// -&gt; 'Best Multiplayer Game'</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre></div><p>Looking for a more <a href="/guide/">thorough guide</a>?</p></div> <div class="footer">
+    MIT Licensed | Copyright © 2016-present Bo Lingen
+  </div></main></div><div class="global-ui"><!----></div></div>
+    <script src="/assets/js/app.15e1cc19.js" defer></script><script src="/assets/js/2.201cfc91.js" defer></script><script src="/assets/js/10.0b98cba6.js" defer></script>
+  </body>
 </html>
