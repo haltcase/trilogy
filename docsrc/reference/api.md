@@ -406,7 +406,6 @@ These model instance methods don't exist on database instances:
 * [findIn](#findin) &mdash; use `find` with `'table.column'` dot-notation
 * [findOneIn](#findonein) &mdash; use `findOne` with `'table.column'` dot-notation
 * [countIn](#countin) &mdash; use `count` with `'table.column'` dot-notation
-
 :::
 
 The function signatures remain the same except you provide the model name and,
@@ -1366,7 +1365,22 @@ people.max('age')
 ```
 :::
 
-## onQuery Hook
+## Hooks
+
+Every `Model` instance inherits this set of lifecycle hooks. In addition
+hooks can be managed at the database level, in which case the signature
+changes to also accept an optional model name to attach the subsciber to.
+
+```ts
+// subscribe to the `beforeCreate` hook on 'users':
+users.beforeCreate(user => {})
+db.beforeCreate('users', user => {})
+
+// subscribe to the `beforeCreate` hook on all models:
+db.beforeCreate(user => {})
+```
+
+### onQuery Hook
 ```ts
 onQuery (fn: OnQueryCallback, options: OnQueryOptions = {}): () => boolean
 ```
@@ -1411,7 +1425,7 @@ unsub()
 ```
 :::
 
-## beforeCreate Hook
+### beforeCreate Hook
 ```ts
 beforeCreate(fn: BeforeCreateCallback): () => boolean
 ```
@@ -1446,7 +1460,7 @@ unsub()
 ```
 :::
 
-## afterCreate Hook
+### afterCreate Hook
 ```ts
 afterCreate(fn: AfterCreateCallback): () => boolean
 ```
@@ -1474,7 +1488,7 @@ unsub()
 ```
 :::
 
-## beforeUpdate Hook
+### beforeUpdate Hook
 ```ts
 beforeUpdate(fn: BeforeUpdateCallback): () => boolean
 ```
@@ -1508,7 +1522,7 @@ unsub()
 ```
 :::
 
-## afterUpdate Hook
+### afterUpdate Hook
 ```ts
 afterUpdate(fn: AfterUpdateCallback): () => boolean
 ```
@@ -1536,7 +1550,7 @@ unsub()
 ```
 :::
 
-## beforeRemove Hook
+### beforeRemove Hook
 ```ts
 beforeRemove(fn: BeforeRemoveCallback): () => boolean
 ```
@@ -1569,7 +1583,7 @@ unsub()
 ```
 :::
 
-## afterRemove Hook
+### afterRemove Hook
 ```ts
 afterRemove(fn: AfterRemoveCallback): () => boolean
 ```
