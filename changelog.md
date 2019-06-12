@@ -1,11 +1,11 @@
 <a name="2.0.0-rc.4"></a>
-## [`2.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.4) (2019-06-11)
+## [`2.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.4) (2019-06-12)
 
 v2.0.0 is a significant release. This is a release candidate available on npm
 under the `@next` tag. The highlights are:
 
 * rewritten in TypeScript
-* plugin support
+* lifecycle hooks
 * Node 8.10 minimum version requirement
 
 To try it out, use:
