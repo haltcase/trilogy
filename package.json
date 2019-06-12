@@ -53,7 +53,7 @@
     "@types/node": "^8.10.49",
     "@types/rimraf": "^2.0.2",
     "@types/sql.js": "^1.0.1",
-    "ava": "^1.4.1",
+    "ava": "^2.1.0",
     "cpy-cli": "^2.0.0",
     "docsify-cli": "^4.3.0",
     "rimraf": "^2.6.3",
@@ -71,6 +71,9 @@
     ],
     "files": [
       "tests/**/*.ts"
+    ],
+    "helpers": [
+      "tests/helpers/**/*.ts"
     ],
     "require": [
       "ts-node/register"
