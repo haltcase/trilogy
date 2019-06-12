@@ -174,7 +174,7 @@ export class Hooks <D> {
       const fns = internal ? this._onQueryAll : this._onQuery
 
       for (const fn of fns) {
-        if (await (fn as OnQueryCallback)(query) === EventCancellation) {
+        if (await fn(query) === EventCancellation) {
           result.prevented = true
         }
       }
