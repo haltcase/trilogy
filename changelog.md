@@ -1,29 +1,29 @@
-<a name="2.0.0-rc.3"></a>
-## [`2.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.3) (2019-01-29)
+<a name="2.0.0-rc.4"></a>
+## [`2.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.4) (2019-06-11)
 
 v2.0.0 is a significant release. This is a release candidate available on npm
 under the `@next` tag. The highlights are:
 
 * rewritten in TypeScript
 * plugin support
-* Node 8 minimum version requirement
+* Node 8.10 minimum version requirement
 
 To try it out, use:
 
-```console
+```sh
 # using yarn
 yarn add trilogy@next
-yarn add trilogy@2.0.0-rc.3
+yarn add trilogy@2.0.0-rc.4
 
 # using npm
 npm i trilogy@next
-npm i trilogy@2.0.0-rc.3
+npm i trilogy@2.0.0-rc.4
 ```
 
 #### codename: solid source
 
 trilogy has been rewritten in TypeScript, which has already paid off &mdash;
-the last two patch releases contained fixes found in the process of refactoring
+the last two 1.x patch releases contained fixes found in the process of refactoring
 the code base with types. It also provides a much better editing experience:
 
 <details>
@@ -51,60 +51,81 @@ type Person = {
 ```
 </details>
 
-#### extensible ecosystem
+#### lifecycle hooks
 
-Plugins are now supported! They are fairly simple functions accepting a base
-`Trilogy` class and returning a subclass (so these are _mixins_):
+A set of lifecycle hooks has been implemented, of which `before*` variants support
+canceling events. These hooks are useful for debugging, logging, and simple
+plugin-like addons.
 
 <details>
 <summary>click to expand</summary>
 
 ```ts
-import { Plugin, PluginBase, mix } from 'trilogy'
+const { connect, EventCancellation } = require('./dist')
 
-// plugins should have a type that specifies what they provide
-// so users can maintain strong typechecking abilities
-interface MyCustomPlugin {
-  findAllAdmins: (table: string, username: string) => object
-}
+const db = connect(':memory:')
 
-const plugin: Plugin<MyCustomPlugin> = (Base: PluginBase) => {
-  return class extends Base {
-    findAllAdmins (table: string, username: string) {
-      // this is a small example from the knex documentation
-      return this.knex(table)
-        .where(function () {
-          this.where({ is_admin: true }).orWhere('permission', '>', 10)
-        })
-        .orWhere({ name: username })
+;(async () => {
+  const notRobots = await db.model('notRobots', {
+    name: String,
+    intelligence: Number
+  })
+
+  const unsub = await notRobots.beforeCreate(async person => {
+    if (person.intelligence < 1650) {
+      console.log('ignoring total human- ... uh, robot')
+      return EventCancellation
     }
-  }
-}
 
-// the `mix` function combines the types from all the provided plugins
-// and returns a subclass of `Trilogy` implementing all those types
-const Base = mix([plugin])
-const db = new Base(':memory:')
+    person.name += ' (totally not a robot)'
+  })
 
-// or `const db = mix([plugin]).connect(':memory:')
+  console.log(await db.create('notRobots', {
+    name: '0110101101001111010001010',
+    intelligence: 96156615
+  }))
 
-db.findAllAdmins('users', 'citycide')
-  .then(admins => console.log(admins))
-// -> ['citycide', ...]
+  // -> { name: '0110101101001111010001010 (totally not a robot)',
+  //      intelligence: 96156615 }
+
+  console.log(await db.create('notRobots', {
+    name: 'Tom',
+    intelligence: 100
+  }))
+
+  // "ignoring total human- ... uh, robot"
+  // -> undefined
+
+  // removes the hook, objects after this are unaffected
+  unsub()
+
+  await db.close()
+})()
 ```
 </details>
 
+###### BUG FIXES
+
+* store dates as ISO formatted strings ([d2a7cda](https://github.com/citycide/trilogy/commit/d2a7cda))
+
+
 ###### FEATURES
 
-* write in typescript, add plugin support ([6d9b9b3](https://github.com/citycide/trilogy/commit/6d9b9b3))
+* write trilogy in typescript
+* add lifecycle hooks
+* remove `verbose` in favor of `onQuery` hook ([cf7d085](https://github.com/citycide/trilogy/commit/cf7d085))
 * **invariant:** throw standard `Error` instead of custom type ([5a4bf70](https://github.com/citycide/trilogy/commit/5a4bf70))
 * **schema:** make `nullable` actually work inversely to `notNullable` ([e4ccc51](https://github.com/citycide/trilogy/commit/e4ccc51))
 * **schema-helpers:** throw on non-string column types ([43eebb6](https://github.com/citycide/trilogy/commit/43eebb6))
 * **where,cast:** make casting & where clauses stricter ([3ecee37](https://github.com/citycide/trilogy/commit/3ecee37))
 * **schema-helpers:** throw on empty schemas ([ce4a066](https://github.com/citycide/trilogy/pull/82/commits/ce4a066ecea487a995eade1d210b27cb9b2398cb))
+* throw if property name is required but not provided ([ede6363](https://github.com/citycide/trilogy/commit/ede6363))
 * **find\*:** move column signatures into their own methods ([a73f773](https://github.com/citycide/trilogy/pull/82/commits/a73f77398dad236bcfd03a033861fbff05269b41))
 * **count:** split `model.count` with column to `countIn` ([df4ccb4](https://github.com/citycide/trilogy/pull/82/commits/df4ccb4754a29c1434f7326c7f2a3c27fb57fd34))
 * **schema-helpers:** throw on invalid column types ([9d22fc2](https:/github.com/citycide/trilogy/pull/82/9d22fc221db8d14c63b2a2b435683371a19bd69d))
+* enforce valid option parameters with `runtypes` ([755555d](https://github.com/citycide/trilogy/commit/755555d))
+* unabbreviate `incr` & `decr` methods ([04404fe](https://github.com/citycide/trilogy/commit/04404fe))
+* upgrade to sql.js 1.x ([9669dcf](https://github.com/citycide/trilogy/commit/9669dcf))
 
 
 ###### PERFORMANCE
@@ -122,8 +143,13 @@ db.findAllAdmins('users', 'citycide')
 * **find\*:** `find()` and `findOne()` on models no longer accept an optional column argument. Instead, use the new `findIn()` or `findOneIn()` methods. Top level trilogy methods still accept `table.column` dot notation.
 * **count:** `model.count` no longer has a signature allowing a column as the first parameter. This is now a separate method called `countIn`.
 * **schema-helpers:** using an unknown column type in a descriptor will now result in an error.
+* an error will now be thrown immediately from methods that require a property name if none is provided.
+* date serialization has changed to improve reliability and predictability.
+* `incr` & `decr` have been renamed to `increment` & `decrement`.
+* invalid options objects passed to methods accepting them will now cause exceptions to be thrown.
+* the `verbose` option has been removed from trilogy instances. Use the new `onQuery` hook instead.
 
-Support for Node 4 and Node 6 has been dropped, meaning trilogy now requires >=8.
+Support for Node 4 and Node 6 has been dropped, meaning trilogy now requires >=8.10.
 
 trilogy no longer has a default export in order to better support TypeScript
 users. The recommended way to create a new instance has also changed (though
