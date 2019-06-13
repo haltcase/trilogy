@@ -493,7 +493,6 @@ export default class Model <
    * Delete all objects from this model.
    */
   clear (): Promise<number> {
-    // TODO?: make this return `D[]` like `remove()`
     const query = this.ctx.knex(this.name).truncate()
     return helpers.runQuery(this.ctx, query, { model: this })
   }
