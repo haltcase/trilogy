@@ -1,5 +1,5 @@
-<a name="2.0.0-rc.4"></a>
-## [`2.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.4.5...v2.0.0-rc.4) (2019-06-12)
+<a name="2.0.0-rc.5"></a>
+## [`2.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.4.6...v2.0.0-rc.5) (2019-06-12)
 
 v2.0.0 is a significant release. This is a release candidate available on npm
 under the `@next` tag. The highlights are:
@@ -13,11 +13,11 @@ To try it out, use:
 ```sh
 # using yarn
 yarn add trilogy@next
-yarn add trilogy@2.0.0-rc.4
+yarn add trilogy@2.0.0-rc.5
 
 # using npm
 npm i trilogy@next
-npm i trilogy@2.0.0-rc.4
+npm i trilogy@2.0.0-rc.5
 ```
 
 #### codename: solid source

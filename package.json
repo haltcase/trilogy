@@ -1,6 +1,6 @@
 {
   "name": "trilogy",
-  "version": "2.0.0-rc.4",
+  "version": "2.0.0-rc.5",
   "description": "No-hassle SQLite with a document store style API.",
   "license": "MIT",
   "author": "Bo Lingen <lingenbw@gmail.com> (https://github.com/citycide)",
