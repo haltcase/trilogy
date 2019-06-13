@@ -20,6 +20,12 @@ const ensureExists = (atPath: string) => {
   } catch {}
 }
 
+const initOptions = (path: string, options: types.TrilogyOptions) => ({
+  ...{ client: 'sqlite3' as const, dir: process.cwd() },
+  ...types.TrilogyOptions.check(options),
+  ...{ connection: { filename: path } }
+})
+
 /**
  * Initialize a new datastore instance, creating a SQLite database file at
  * the provided path if it does not yet exist, or reading it if it does.
@@ -66,14 +72,7 @@ export class Trilogy {
   constructor (path: string, options: types.TrilogyOptions = {}) {
     invariant(path, 'trilogy constructor must be provided a file path')
 
-    const obj = this.options = {
-      ...types.TrilogyOptions.check(options),
-      ...{
-        client: 'sqlite3',
-        connection: { filename: path },
-        dir: process.cwd()
-      }
-    }
+    const obj = this.options = initOptions(path, options)
 
     if (path === ':memory:') {
       obj.connection.filename = path
