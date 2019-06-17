@@ -49,8 +49,8 @@ trouble using it in the runtimes trilogy supports.
 On the other hand this means performance likely isn't as stellar, and the
 queries are run synchronously. Synchronous vs asynchronous seems to be a
 [matter of debate][async-sync] when it comes to Node's competing SQLite
-libraries, trilogy normalizes both of these backends to Promises and you
-won't need to interact with them differently.
+libraries, but trilogy normalizes both of these backends to Promises and
+you won't need to interact with them differently.
 
 ## memory-only
 
