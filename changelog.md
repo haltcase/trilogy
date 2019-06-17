@@ -169,6 +169,19 @@ const db = connect(':memory:')
 
 ---
 
+<a name="v1.4.6"></a>
+### [`v1.4.6`](https://github.com/citycide/trilogy/compare/v1.4.5...v1.4.6) (2019-05-30)
+
+To prevent installation breakage on newer Node releases, a third-party
+dependency now has its version pinned.
+
+###### BUG FIXES
+
+* **package:** pin osom dependency to prevent installation breakage
+
+
+---
+
 <a name="1.4.5"></a>
 ## [`1.4.5`](https://github.com/citycide/trilogy/compare/v1.4.4...v1.4.5) (2018-04-24)
 

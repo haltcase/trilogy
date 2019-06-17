@@ -55,29 +55,31 @@ help maintainers and contributors help you back:
 This set of labels is used in the project and will be added by
 project maintainers:
 
-| name                      | description                                     |
-| ------------------------- | ----------------------------------------------- |
-| breaking                  | Breaking change is necessary to close the issue |
-| discussion                | Fixes, APIs, or changes need feedback           |
-| duplicate                 | An earlier issue already exists on the topic    |
-| external                  | Depends on a third-party library or service     |
-| good first PR             | Probably good for a user's first contribution   |
-| greenkeeper               | Opened by the [Greenkeeper][gk] service         |
-| invalid                   | Issue doesn't apply to the project              |
-| meta                      | Relates to the repo or project structure        |
-| status: accepted          | Change is accepted and is open to community PRs |
-| status: declined          | The change is not currently under consideration |
-| status: in progress       | Work has started toward closing the issue       |
-| status: investigating     | Considering resolutions or looking for fixes    |
-| status: need response     | Waiting for more information from issue opener  |
-| status: pending release   | Issue is resolved but waiting to be released    |
-| type: bug                 | Relates to an unexpected bug in the project     |
-| type: chore               | General maintenance or upkeep of the project    |
-| type: ci                  | Relates to CI maintenance                       |
-| type: documentation       | Applies only to project documentation           |
-| type: feature             | Request for a new feature or enhancement        |
-| type: performance         | Relates to a performance problem in the project |
-| type: question            | Not a true issue, usually a question on usage   |
+| name                      | description                                               |
+| ------------------------- | --------------------------------------------------------- |
+| breaking                  | Breaking changes will occur as part of closing the issue. |
+| discussion                | [RFC] Fixes, APIs, or changes need feedback.              |
+| duplicate                 | An earlier issue already exists on the topic.             |
+| external                  | Issues with dependencies or otherwise unsolvable within the project itself. |
+| good first PR             | Probably good for a user's first contribution.            |
+| hacktoberfest             | Open season for contributions!                            |
+| help wanted               | Extra attention is needed.                                |
+| invalid                   | Issue doesn't apply or is working as intended.            |
+| meta                      | Relates to the repo or project structure.                 |
+| status: accepted          | Change is accepted and is open to community PRs.          |
+| status: declined          | The change is not currently under consideration.          |
+| status: in progress       | Work has started to close the issue.                      |
+| status: investigating     | Resolutions are being considered or researched.           |
+| status: need response     | Waiting for more information from issue opener.           |
+| status: pending release   | Issue is resolved but waiting to be released.             |
+| type: bug                 | Something isn't working as intended or expected.          |
+| type: chore               | General maintenance or upkeep.                            |
+| type: ci                  | Relates to CI maintenance.                                |
+| type: documentation       | Applies only to project documentation.                    |
+| type: feature             | Request for a new feature or enhancement.                 |
+| type: performance         | Opportunity for performance improvements.                 |
+| type: question            | Not a true issue, usually a question relating to usage.   |
+| type: test                | Issues concerns the tests.                                |
 
 #### type labels
 
@@ -112,6 +114,5 @@ isn't an actual issue with the project. `meta` is generally used for
 issues relating to the repository itself on GitHub, for example
 relating to this contributor guide.
 
-[gk]: https://greenkeeper.io/
 [angular]: https://github.com/angular/angular.js/blob/7f2accaa3aed18e811338c9593fb363808c2b40d/CONTRIBUTING.md#type
 [mcve]: https://stackoverflow.com/help/mcve
