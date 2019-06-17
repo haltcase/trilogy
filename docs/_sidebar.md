@@ -1,6 +1,0 @@
-- [readme](readme.md)
-- [api](api.md)
-- [backends](backends.md)
-- [contributor guide](contributing.md)
-- [code of conduct](code_of_conduct.md)
-- [changelog](changelog.md)

@@ -1,17 +1,10 @@
 {
   "name": "trilogy",
-  "version": "1.4.6",
+  "version": "2.0.0-rc.5",
   "description": "No-hassle SQLite with a document store style API.",
   "license": "MIT",
-  "author": {
-    "name": "Bo Lingen",
-    "email": "lingenbw@gmail.com",
-    "url": "https://github.com/citycide"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/citycide/trilogy"
-  },
+  "author": "Bo Lingen <lingenbw@gmail.com> (https://github.com/citycide)",
+  "repository": "https://github.com/citycide/trilogy",
   "homepage": "https://citycide.github.io/trilogy",
   "bugs": "https://github.com/citycide/trilogy/issues",
   "keywords": [
@@ -24,59 +17,70 @@
     "database",
     "electron",
     "mongoose",
-    "document"
+    "document",
+    "typescript"
   ],
   "engines": {
-    "node": ">=4.7.0"
+    "node": ">=8.10"
   },
   "files": [
-    "dist"
+    "dist",
+    "es"
   ],
-  "main": "dist/trilogy.js",
-  "module": "dist/trilogy.mjs",
-  "types": "dist/trilogy.d.ts",
+  "main": "dist/index.js",
+  "module": "es/index.mjs",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "prebuild": "npm run lint && rimraf \"dist/**\"",
-    "build": "rollup -c && npm run types",
-    "watch": "npm run types && rimraf \"dist/**\" && rollup -c -w",
-    "types": "cpy \"types/**/*\" dist",
-    "pretest": "npm run build",
+    "prebuild": "npm run lint && rimraf dist es",
+    "build": "npm run build:dist && npm run build:es",
+    "build:dist": "tsc -d",
+    "build:es": "tsc -m es2015 --outDir es",
     "test": "ava",
-    "lint": "standard \"src/**/*.js\" \"tests/**/*.js\" | snazzy",
-    "docs": "docsify serve docs",
+    "lint": "tslint -p tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
+    "docs:dev": "vuepress dev docsrc",
+    "predocs:build": "rimraf docs",
+    "docs:build": "vuepress build docsrc",
+    "postdocs:build": "cpy \"docsrc/{.nojekyll,CNAME}\" docs",
     "changelog": "changelog",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {
-    "component-type": "^1.2.1",
-    "generic-pool": "^3.1.7",
-    "knex": "^0.13.0",
-    "osom": "2.2.2"
+    "generic-pool": "^3.7.1",
+    "knex": "^0.17.5",
+    "runtypes": "^4.0.0",
+    "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "@citycide/changelog": "^1.0.0",
-    "ava": "^0.23.0",
-    "babel-core": "^6.25.0",
-    "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.5.2",
-    "babel-preset-stage-0": "^6.24.1",
-    "babel-register": "^6.24.1",
-    "babel-runtime": "^6.23.0",
-    "cpy-cli": "^1.0.1",
-    "docsify-cli": "^4.1.8",
-    "rimraf": "^2.6.1",
-    "rollup": "^0.51.6",
-    "rollup-plugin-babel": "^3.0.2",
-    "rollup-watch": "^4.0.0",
-    "snazzy": "^7.0.0",
-    "sql.js": "^0.5.0",
+    "@citycide/changelog": "^1.1.0",
+    "@types/generic-pool": "^3.1.9",
+    "@types/node": "^8.10.49",
+    "@types/rimraf": "^2.0.2",
+    "@types/sql.js": "^1.0.1",
+    "@vuepress/plugin-back-to-top": "^1.0.1",
+    "ava": "^2.1.0",
+    "cpy-cli": "^2.0.0",
+    "rimraf": "^2.6.3",
+    "sql.js": "^1.0.0",
     "sqlite3": "^4.0.8",
-    "standard": "^10.0.2"
+    "ts-node": "^8.2.0",
+    "tslint": "^5.17.0",
+    "tslint-config-standard": "^8.0.1",
+    "typescript": "^3.5.1",
+    "vuepress": "^1.0.1"
   },
   "ava": {
+    "compileEnhancements": false,
+    "extensions": [
+      "ts"
+    ],
     "files": [
-      "tests/**/*.js"
+      "tests/**/*.ts"
+    ],
+    "helpers": [
+      "tests/helpers/**/*.ts"
+    ],
+    "require": [
+      "ts-node/register"
     ]
   }
 }

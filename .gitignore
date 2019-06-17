@@ -3,13 +3,14 @@
 .idea
 .vscode
 
-# lockfiles
-yarn.lock
-package-lock.json
+# lock files
 npm-shrinkwrap.json
+package-lock.json
+yarn.lock
 
 # built files
 dist
+es
 trilogy-*.tgz
 
 node_modules

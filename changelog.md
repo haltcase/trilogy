@@ -1,3 +1,174 @@
+<a name="2.0.0-rc.5"></a>
+## [`2.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.4.6...v2.0.0-rc.5) (2019-06-12)
+
+v2.0.0 is a significant release. This is a release candidate available on npm
+under the `@next` tag. The highlights are:
+
+* rewritten in TypeScript
+* lifecycle hooks
+* Node 8.10 minimum version requirement
+
+To try it out, use:
+
+```sh
+# using yarn
+yarn add trilogy@next
+yarn add trilogy@2.0.0-rc.5
+
+# using npm
+npm i trilogy@next
+npm i trilogy@2.0.0-rc.5
+```
+
+#### codename: solid source
+
+trilogy has been rewritten in TypeScript, which has already paid off &mdash;
+the last two 1.x patch releases contained fixes found in the process of refactoring
+the code base with types. It also provides a much better editing experience:
+
+<details>
+<summary>click to expand</summary>
+
+```ts
+import * as trilogy from 'trilogy'
+
+const db = trilogy.connect(':memory:')
+
+// you can provide types like this to `model()`
+// to get compiler assistance
+type Person = {
+  name: string
+}
+
+;(async () => {
+  const people = await db.model<Person>('people', {
+    name: String
+  })
+
+  await people.create({ names: 'typo' })
+  // !> Property 'names' does not exist in type 'Person'. Did you mean 'name'?
+})()
+```
+</details>
+
+#### lifecycle hooks
+
+A set of lifecycle hooks has been implemented, of which `before*` variants support
+canceling events. These hooks are useful for debugging, logging, and simple
+plugin-like addons.
+
+<details>
+<summary>click to expand</summary>
+
+```ts
+const { connect, EventCancellation } = require('./dist')
+
+const db = connect(':memory:')
+
+;(async () => {
+  const notRobots = await db.model('notRobots', {
+    name: String,
+    intelligence: Number
+  })
+
+  const unsub = await notRobots.beforeCreate(async person => {
+    if (person.intelligence < 1650) {
+      console.log('ignoring total human- ... uh, robot')
+      return EventCancellation
+    }
+
+    person.name += ' (totally not a robot)'
+  })
+
+  console.log(await db.create('notRobots', {
+    name: '0110101101001111010001010',
+    intelligence: 96156615
+  }))
+
+  // -> { name: '0110101101001111010001010 (totally not a robot)',
+  //      intelligence: 96156615 }
+
+  console.log(await db.create('notRobots', {
+    name: 'Tom',
+    intelligence: 100
+  }))
+
+  // "ignoring total human- ... uh, robot"
+  // -> undefined
+
+  // removes the hook, objects after this are unaffected
+  unsub()
+
+  await db.close()
+})()
+```
+</details>
+
+###### BUG FIXES
+
+* store dates as ISO formatted strings ([d2a7cda](https://github.com/citycide/trilogy/commit/d2a7cda))
+
+
+###### FEATURES
+
+* write trilogy in typescript
+* add lifecycle hooks
+* remove `verbose` in favor of `onQuery` hook ([cf7d085](https://github.com/citycide/trilogy/commit/cf7d085))
+* **invariant:** throw standard `Error` instead of custom type ([5a4bf70](https://github.com/citycide/trilogy/commit/5a4bf70))
+* **schema:** make `nullable` actually work inversely to `notNullable` ([e4ccc51](https://github.com/citycide/trilogy/commit/e4ccc51))
+* **schema-helpers:** throw on non-string column types ([43eebb6](https://github.com/citycide/trilogy/commit/43eebb6))
+* **where,cast:** make casting & where clauses stricter ([3ecee37](https://github.com/citycide/trilogy/commit/3ecee37))
+* **schema-helpers:** throw on empty schemas ([ce4a066](https://github.com/citycide/trilogy/pull/82/commits/ce4a066ecea487a995eade1d210b27cb9b2398cb))
+* throw if property name is required but not provided ([ede6363](https://github.com/citycide/trilogy/commit/ede6363))
+* **find\*:** move column signatures into their own methods ([a73f773](https://github.com/citycide/trilogy/pull/82/commits/a73f77398dad236bcfd03a033861fbff05269b41))
+* **count:** split `model.count` with column to `countIn` ([df4ccb4](https://github.com/citycide/trilogy/pull/82/commits/df4ccb4754a29c1434f7326c7f2a3c27fb57fd34))
+* **schema-helpers:** throw on invalid column types ([9d22fc2](https:/github.com/citycide/trilogy/pull/82/9d22fc221db8d14c63b2a2b435683371a19bd69d))
+* enforce valid option parameters with `runtypes` ([755555d](https://github.com/citycide/trilogy/commit/755555d))
+* unabbreviate `incr` & `decr` methods ([04404fe](https://github.com/citycide/trilogy/commit/04404fe))
+* upgrade to sql.js 1.x ([9669dcf](https://github.com/citycide/trilogy/commit/9669dcf))
+
+
+###### PERFORMANCE
+
+* **count:** avoid `arguments` usage ([cb33ff1](https://github.com/citycide/trilogy/commit/cb33ff1))
+
+
+###### BREAKING CHANGES
+
+* **schema:** providing both the `nullable` & `notNullable` properties will cause an `Error` to be thrown.
+* **where,cast:** invalid where clauses and unrecognized types at casting will now cause `Error`s to be thrown.
+* **schema-helpers:** an error will be thrown when column type cannot be retrieved.
+* **invariant:** `InvariantError`s are no longer thrown, they are `Error`s instead.
+* **flow:** flow definitions have been removed.
+* **find\*:** `find()` and `findOne()` on models no longer accept an optional column argument. Instead, use the new `findIn()` or `findOneIn()` methods. Top level trilogy methods still accept `table.column` dot notation.
+* **count:** `model.count` no longer has a signature allowing a column as the first parameter. This is now a separate method called `countIn`.
+* **schema-helpers:** using an unknown column type in a descriptor will now result in an error.
+* an error will now be thrown immediately from methods that require a property name if none is provided.
+* date serialization has changed to improve reliability and predictability.
+* `incr` & `decr` have been renamed to `increment` & `decrement`.
+* invalid options objects passed to methods accepting them will now cause exceptions to be thrown.
+* the `verbose` option has been removed from trilogy instances. Use the new `onQuery` hook instead.
+
+Support for Node 4 and Node 6 has been dropped, meaning trilogy now requires >=8.10.
+
+trilogy no longer has a default export in order to better support TypeScript
+users. The recommended way to create a new instance has also changed (though
+the old way is still possible).
+
+```js
+// before
+import Trilogy from 'trilogy'
+const db = new Trilogy(':memory:')
+```
+
+```js
+// after
+import { connect } from 'trilogy'
+const db = connect(':memory:')
+```
+
+---
+
 <a name="v1.4.6"></a>
 ### [`v1.4.6`](https://github.com/citycide/trilogy/compare/v1.4.5...v1.4.6) (2019-05-30)
 
@@ -12,7 +183,7 @@ dependency now has its version pinned.
 ---
 
 <a name="1.4.5"></a>
-### [`1.4.5`](https://github.com/citycide/trilogy/compare/v1.4.4...v1.4.5) (2018-04-24)
+## [`1.4.5`](https://github.com/citycide/trilogy/compare/v1.4.4...v1.4.5) (2018-04-24)
 
 
 No changes since `1.4.4` - this release restores the v1 release line to the `latest` tag,
@@ -22,7 +193,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.4"></a>
-### [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
+## [`1.4.4`](https://github.com/citycide/trilogy/compare/v1.4.3...v1.4.4) (2018-01-09)
 
 
 ###### BUG FIXES
@@ -33,7 +204,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.3"></a>
-### [`1.4.3`](https://github.com/citycide/trilogy/compare/v1.4.2...v1.4.3) (2018-01-09)
+## [`1.4.3`](https://github.com/citycide/trilogy/compare/v1.4.2...v1.4.3) (2018-01-09)
 
 
 ###### BUG FIXES
@@ -44,7 +215,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.2"></a>
-### [`1.4.2`](https://github.com/citycide/trilogy/compare/v1.4.1...v1.4.2) (2017-12-08)
+## [`1.4.2`](https://github.com/citycide/trilogy/compare/v1.4.1...v1.4.2) (2017-12-08)
 
 
 ###### BUG FIXES
@@ -60,7 +231,7 @@ where a v2 beta was accidentally publish.
 ---
 
 <a name="1.4.1"></a>
-### [`1.4.1`](https://github.com/citycide/trilogy/compare/v1.4.0...v1.4.1) (2017-11-16)
+## [`1.4.1`](https://github.com/citycide/trilogy/compare/v1.4.0...v1.4.1) (2017-11-16)
 
 Small patch for TypeScript users to correctly export types.
 
@@ -71,7 +242,7 @@ Small patch for TypeScript users to correctly export types.
 ---
 
 <a name="1.4.0"></a>
-### [`1.4.0`](https://github.com/citycide/trilogy/compare/v1.3.0...v1.4.0) (2017-11-04)
+## [`1.4.0`](https://github.com/citycide/trilogy/compare/v1.3.0...v1.4.0) (2017-11-04)
 
 
 ###### FEATURES
@@ -81,7 +252,7 @@ Small patch for TypeScript users to correctly export types.
 ---
 
 <a name="1.3.0"></a>
-### [`1.3.0`](https://github.com/citycide/trilogy/compare/v1.2.1...v1.3.0) (2017-08-24)
+## [`1.3.0`](https://github.com/citycide/trilogy/compare/v1.2.1...v1.3.0) (2017-08-24)
 
 This release brings a pair of exciting features!
 
@@ -147,7 +318,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.2.1"></a>
-### [`1.2.1`](https://github.com/citycide/trilogy/compare/v1.2.0...v1.2.1) (2017-07-25)
+## [`1.2.1`](https://github.com/citycide/trilogy/compare/v1.2.0...v1.2.1) (2017-07-25)
 
 
 ###### BUG FIXES
@@ -158,7 +329,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.2.0"></a>
-### [`1.2.0`](https://github.com/citycide/trilogy/compare/v1.1.0...v1.2.0) (2017-06-09)
+## [`1.2.0`](https://github.com/citycide/trilogy/compare/v1.1.0...v1.2.0) (2017-06-09)
 
 
 ###### FEATURES
@@ -170,7 +341,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.1.0"></a>
-### [`1.1.0`](https://github.com/citycide/trilogy/compare/v1.0.0...v1.1.0) (2017-03-23)
+## [`1.1.0`](https://github.com/citycide/trilogy/compare/v1.0.0...v1.1.0) (2017-03-23)
 
 
 ###### BUG FIXES
@@ -185,7 +356,7 @@ const db = new Trilogy(':memory:')
 ---
 
 <a name="1.0.0"></a>
-### [`1.0.0`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.5...v1.0.0) (2017-03-16)
+## [`1.0.0`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.5...v1.0.0) (2017-03-16)
 
 We've officially arrived at **1.0.0**!
 
@@ -201,7 +372,7 @@ Thanks for the help getting here!
 ---
 
 <a name="1.0.0-rc.5"></a>
-### [`1.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2017-02-26)
+## [`1.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2017-02-26)
 
 This is probably the last release candidate before 1.0.0!
 
@@ -216,7 +387,7 @@ I feel like I've said that before.
 ---
 
 <a name="1.0.0-rc.4"></a>
-### [`1.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2017-02-24)
+## [`1.0.0-rc.4`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2017-02-24)
 
 This is probably the last release candidate before 1.0.0!
 
@@ -229,7 +400,7 @@ This is probably the last release candidate before 1.0.0!
 ---
 
 <a name="1.0.0-rc.3"></a>
-### [`1.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2017-02-04)
+## [`1.0.0-rc.3`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2017-02-04)
 
 This release contains a breaking change regarding the return value of `create()`.
 You can follow the discussion leading up to this change in
@@ -262,7 +433,7 @@ Many thanks to [**@jonataswalker**](https://github.com/jonataswalker) who put in
 ---
 
 <a name="1.0.0-rc.2"></a>
-### [`1.0.0-rc.2`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2017-01-17)
+## [`1.0.0-rc.2`](https://github.com/citycide/trilogy/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2017-01-17)
 
 
 ###### BUG FIXES
@@ -272,7 +443,7 @@ Many thanks to [**@jonataswalker**](https://github.com/jonataswalker) who put in
 ---
 
 <a name="1.0.0-rc.1"></a>
-### [`1.0.0-rc.1`](https://github.com/citycide/trilogy/compare/v0.11.1...v1.0.0-rc.1) (2017-01-13)
+## [`1.0.0-rc.1`](https://github.com/citycide/trilogy/compare/v0.11.1...v1.0.0-rc.1) (2017-01-13)
 
 :raised_hands: Welcome to the very first official release candidate of Trilogy! :raised_hands:
 
@@ -291,7 +462,7 @@ There have not been significant changes since v0.11.1.
 ---
 
 <a name="0.11.1"></a>
-### [`0.11.1`](https://github.com/citycide/trilogy/compare/v0.10.0...v0.11.1) (2017-01-10)
+## [`0.11.1`](https://github.com/citycide/trilogy/compare/v0.10.0...v0.11.1) (2017-01-10)
 
 This is a small feature patch on top of v0.11.0 adding `model()` options
 that include the ability to set compound primary keys, multiple unique
@@ -334,7 +505,7 @@ and useful migration tips.
 ---
 
 <a name="0.10.0"></a>
-### [`0.10.0`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.10.0) (2016-12-17)
+## [`0.10.0`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.10.0) (2016-12-17)
 
 
 ###### BUG FIXES
@@ -357,4 +528,4 @@ and useful migration tips.
 ---
 
 <a name="0.9.2"></a>
-### [`0.9.2`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.9.2) (2016-09-14)
+## [`0.9.2`](https://github.com/citycide/trilogy/compare/v0.9.2...v0.9.2) (2016-09-14)

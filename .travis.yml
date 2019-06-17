@@ -1,13 +1,11 @@
-dist: trusty
+dist: xenial
 
 language: node_js
 node_js:
-  - '8'
-  - '6'
-  - '4'
-
-before_install:
-  - if [[ `npm -v` == 2* ]]; then npm i -g npm@3; fi
+  - 12
+  - 11
+  - 10
+  - 8
 
 notifications:
   email: false

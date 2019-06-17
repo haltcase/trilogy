@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "importHelpers": true,
+    "lib": ["es2017", "webworker"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "pretty": true,
+    "strict": true,
+    "target": "es2017"
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}

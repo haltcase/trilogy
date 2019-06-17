@@ -1,6 +1,16 @@
+---
+home: true
+heroImage: https://raw.githubusercontent.com/citycide/trilogy/master/media/logo.svg?sanitize=true
+heroText: ' '
+tagline: this time the SQL really is better than the original
+actionText: Get Started →
+actionLink: /guide/
+footer: MIT Licensed | Copyright © 2016-present Bo Lingen
+---
+
+<br/><br/>
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/citycide/trilogy/master/media/logo.svg?sanitize=true" width="420" alt="trilogy">
-  <br>
   <a href="https://www.npmjs.com/package/trilogy"><img src="https://flat.badgen.net/npm/v/trilogy" alt="Version"></a>
   <a href="https://www.npmjs.com/package/trilogy"><img src="https://flat.badgen.net/npm/license/trilogy" alt="License"></a>
   <a href="https://travis-ci.org/citycide/trilogy"><img src="https://flat.badgen.net/travis/citycide/trilogy" alt="Travis CI"></a>
@@ -8,6 +18,8 @@
   <a href="https://standardjs.com"><img src="https://flat.badgen.net/badge/code%20style/standard/green" alt="JavaScript Standard Style"></a>
   <a href="https://gitter.im/citycide/trilogy"><img src="https://flat.badgen.net/badge/chat/on%20gitter/green" alt="Gitter"></a>
 </p>
+
+<br/><br/>
 
 ***trilogy*** is a simple Promise-based wrapper for SQLite databases.
 It supports both the native C++ [`sqlite3`][sqlite3] driver and the pure
@@ -21,7 +33,11 @@ that's influenced more by [Mongoose][mongoose] than by SQL.
 
 ---
 
-[features](#features) &middot; [installation](#installation) &middot; [usage](#usage) &middot; [contributing](#contributing) &middot; [license](#license)
+<p align="center">
+  <a href="#features">features</a>
+  &sdot;
+  <a href="#quick-start">quick start</a>
+</p>
 
 ---
 
@@ -49,6 +65,8 @@ that's influenced more by [Mongoose][mongoose] than by SQL.
   You can even swap the backend after you've started, with no changes to the
   rest of your code!
 
+  [***learn more***](reference/backends.md)
+
 * :cop: **written in [TypeScript][typescript]**
 
   trilogy is written in and provides a first-class experience for TypeScript.
@@ -65,62 +83,16 @@ that's influenced more by [Mongoose][mongoose] than by SQL.
   or NW.js can be difficult. That's why trilogy also supports the `sql.js` backend,
   which doesn't need to be compiled at all!
 
-## installation
+## quick start
 
-1. Install trilogy
-
-   ```console
-   # using yarn
-   yarn add trilogy
-
-   # using npm
-   npm i trilogy
-   ```
-
-2. Install a backend
-
-   ```console
-   # using yarn
-   yarn add sqlite3
-
-   # using npm
-   npm i sqlite3
-   ```
-
-   _or_
-
-   ```console
-   # using yarn
-   yarn add sql.js
-
-   # using npm
-   npm i sql.js
-   ```
-
-## usage
-
-Full documentation is [available here][docs] and includes guides, an API
-reference, and more.
-
-Here's a quick overview. It uses `async` & `await` but is easily usable with
-vanilla Promises.
+```sh
+yarn add trilogy sqlite3 # or sql.js
+```
 
 ```js
 import { connect } from 'trilogy'
 
-// defaults to using the `sqlite3` backend
-const db = connect('./file.db')
-
-// choose `sql.js` to avoid native compilation :)
-const db = connect('./file.db', {
-  client: 'sql.js'
-})
-
-// set the filename to ':memory:' for fast, in-memory storage
-const db = connect(':memory:', {
-  // it works for both clients above!
-  client: 'sql.js'
-})
+const db = connect(':memory:')
 
 ;(async function () {
   const games = await db.model('games', {
@@ -149,23 +121,7 @@ const db = connect(':memory:', {
 })()
 ```
 
-## contributing
-
-This project is open to contributions of all kinds! Don't worry if you're
-not 100% up to speed on the process &mdash; there's a short outline in the
-[Contributor Guide](.github/contributing.md).
-
-You'll also find a reference for the set of labels used to categorize issues,
-with descriptions of each.
-([Contributor Guide - issue labels](.github/contributing.md#labels))
-
-Also, please read and follow the project's [Code of Conduct](.github/code_of_conduct.md).
-
-## license
-
-MIT © Bo Lingen / citycide
-
-See [license](license)
+Looking for a more [thorough guide](guide/)?
 
 [sqlite3]: https://github.com/mapbox/sqlite3
 [sqljs]: https://github.com/kripken/sql.js
@@ -173,5 +129,4 @@ See [license](license)
 [knex]: https://github.com/tgriesser/knex
 [electron]: https://github.com/electron/electron
 [nwjs]: https://github.com/nwjs/nw.js
-[docs]: https://citycide.github.io/trilogy
 [typescript]: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
