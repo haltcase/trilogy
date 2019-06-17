@@ -80,8 +80,8 @@ that's influenced more by [Mongoose][mongoose] than by SQL.
 * :revolving_hearts: **perfect for [Electron][electron] & [NW.js][nwjs]**
 
   Compiling the `sqlite3` module for all the platforms you target with Electron
-  or NW.js isn't always easy, so you can easily use trilogy with the `sql.js`
-  backend, which doesn't need to be compiled at all!
+  or NW.js can be difficult. That's why trilogy also supports the `sql.js` backend,
+  which doesn't need to be compiled at all!
 
 ## quick start
 
