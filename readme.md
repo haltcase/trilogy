@@ -99,8 +99,8 @@ that's influenced more by [Mongoose][mongoose] than by SQL.
 
 ## usage
 
-See the [documentation here][docs] for the full API &mdash; including usage and
-examples.
+Full documentation is [available here][docs] and includes guides, an API
+reference, and more.
 
 Here's a quick overview. It uses `async` & `await` but is easily usable with
 vanilla Promises.
@@ -173,5 +173,5 @@ See [license](license)
 [knex]: https://github.com/tgriesser/knex
 [electron]: https://github.com/electron/electron
 [nwjs]: https://github.com/nwjs/nw.js
-[docs]: https://citycide.github.io/trilogy/#/api
+[docs]: https://citycide.github.io/trilogy
 [typescript]: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
