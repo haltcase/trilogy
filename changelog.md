@@ -1,8 +1,7 @@
-<a name="2.0.0-rc.5"></a>
-## [`2.0.0-rc.5`](https://github.com/citycide/trilogy/compare/v1.4.6...v2.0.0-rc.5) (2019-06-12)
+<a name="2.0.0"></a>
+## [`2.0.0`](https://github.com/citycide/trilogy/compare/v1.4.6...v2.0.0) (2019-06-12)
 
-v2.0.0 is a significant release. This is a release candidate available on npm
-under the `@next` tag. The highlights are:
+v2.0.0 is a significant release. The highlights are:
 
 * rewritten in TypeScript
 * lifecycle hooks
@@ -13,18 +12,22 @@ To try it out, use:
 ```sh
 # using yarn
 yarn add trilogy@next
-yarn add trilogy@2.0.0-rc.5
+yarn add trilogy@2.0.0
 
 # using npm
 npm i trilogy@next
-npm i trilogy@2.0.0-rc.5
+npm i trilogy@2.0.0
 ```
+
+The documentation has also been expanded and improved, and is available at
+[https://trilogy.js.org](https://trilogy.js.org).
 
 #### codename: solid source
 
-trilogy has been rewritten in TypeScript, which has already paid off &mdash;
-the last two 1.x patch releases contained fixes found in the process of refactoring
-the code base with types. It also provides a much better editing experience:
+trilogy has been rewritten in TypeScript, which paid off early and often &mdash;
+two of the last three 1.x patch releases contained fixes found in the process of
+refactoring the code base with types. It also provides a greatly improved editing
+experience:
 
 <details>
 <summary>click to expand</summary>
