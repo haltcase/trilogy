@@ -52,7 +52,7 @@ With an options object:
 
 ```ts
 const db = connect('./storage.db', {
-  // use `sql.js` to avoid build issues with gyp
+  // optionally use `sql.js`, eg. to avoid native module build issues
   client: 'sql.js',
 
   // directory with which to resolve `path`
