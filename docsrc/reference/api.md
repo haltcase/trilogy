@@ -34,7 +34,6 @@ supports and some guidance on which to choose.
 | --------- | :-------:  | :-------------: | --------------------------------------------------- |
 | `client`  | `string`   | `sqlite3`       | Must be one of `sqlite3` or `sql.js`.               |
 | `dir`     | `string`   | `process.cwd()` | The working directory with which to resolve `path`. |
-| `verbose` | `Function` | `() => {}`      | Receives every query run against the database.      |
 :::
 
 ::: returns
@@ -58,10 +57,7 @@ const db = connect('./storage.db', {
 
   // directory with which to resolve `path`
   // it defaults to `process.cwd()`
-  dir: path.resolve('./here'),
-
-  // pass a function that receives all queries run
-  verbose: console.log.bind(console)
+  dir: path.resolve('./here')
 })
 ```
 :::
