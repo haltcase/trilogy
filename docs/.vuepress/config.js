@@ -8,7 +8,6 @@ const changelogTitle = '# changelog\n\n'
 module.exports = {
   title: 'trilogy',
   description: 'No-hassle SQLite with a document store style API',
-  dest: 'docs',
   plugins: [
     '@vuepress/back-to-top'
   ],

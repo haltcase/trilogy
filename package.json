@@ -37,10 +37,8 @@
     "build:es": "tsc -m es2015 --outDir es",
     "test": "ava",
     "lint": "tslint -p tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
-    "docs:dev": "vuepress dev docsrc",
-    "predocs:build": "rimraf docs",
-    "docs:build": "vuepress build docsrc",
-    "postdocs:build": "cpy \"docsrc/{.nojekyll,CNAME}\" docs",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs",
     "changelog": "changelog",
     "prepublishOnly": "npm test && npm run build"
   },

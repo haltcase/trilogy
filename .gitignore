@@ -9,9 +9,9 @@ package-lock.json
 yarn.lock
 
 # built files
-dist
-docs
-es
+/dist
+/es
+/docs/.vuepress/dist
 trilogy-*.tgz
 
 node_modules
