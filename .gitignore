@@ -10,6 +10,7 @@ yarn.lock
 
 # built files
 dist
+docs
 es
 trilogy-*.tgz
 
