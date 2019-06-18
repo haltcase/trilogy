@@ -173,5 +173,5 @@ See [license](license)
 [knex]: https://github.com/tgriesser/knex
 [electron]: https://github.com/electron/electron
 [nwjs]: https://github.com/nwjs/nw.js
-[docs]: https://citycide.github.io/trilogy
+[docs]: https://trilogy.js.org
 [typescript]: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
