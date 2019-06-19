@@ -61,25 +61,27 @@ project maintainers:
 | discussion                | [RFC] Fixes, APIs, or changes need feedback.              |
 | duplicate                 | An earlier issue already exists on the topic.             |
 | external                  | Issues with dependencies or otherwise unsolvable within the project itself. |
-| good first PR             | Probably good for a user's first contribution.            |
+| good first issue          | Probably good for a user's first contribution.            |
 | hacktoberfest             | Open season for contributions!                            |
 | help wanted               | Extra attention is needed.                                |
 | invalid                   | Issue doesn't apply or is working as intended.            |
 | meta                      | Relates to the repo or project structure.                 |
+| question                  | Not a true issue, usually a question relating to usage.   |
 | status: accepted          | Change is accepted and is open to community PRs.          |
 | status: declined          | The change is not currently under consideration.          |
 | status: in progress       | Work has started to close the issue.                      |
 | status: investigating     | Resolutions are being considered or researched.           |
-| status: need response     | Waiting for more information from issue opener.           |
+| status: need response     | Waiting for more information from the issue author.       |
 | status: pending release   | Issue is resolved but waiting to be released.             |
 | type: bug                 | Something isn't working as intended or expected.          |
+| type: build               | Affects the build system or dependencies.                 |
 | type: chore               | General maintenance or upkeep.                            |
 | type: ci                  | Relates to CI maintenance.                                |
 | type: documentation       | Applies only to project documentation.                    |
 | type: feature             | Request for a new feature or enhancement.                 |
 | type: performance         | Opportunity for performance improvements.                 |
-| type: question            | Not a true issue, usually a question relating to usage.   |
-| type: test                | Issues concerns the tests.                                |
+| type: refactor            | Improvements with no change in functionality.             |
+| type: test                | Concerns the quality or quantity of tests.                |
 
 #### type labels
 
