@@ -63,11 +63,11 @@ module.exports = {
             items: [
               {
                 text: 'Contributor Guide',
-                link: 'https://github.com/citycide/trilogy/blob/next/.github/contributing.md#contributor-guide'
+                link: 'https://github.com/citycide/trilogy/blob/master/.github/contributing.md#contributor-guide'
               },
               {
                 text: 'Code of Conduct',
-                link: 'https://github.com/citycide/trilogy/blob/next/.github/code_of_conduct.md#contributor-covenant-code-of-conduct'
+                link: 'https://github.com/citycide/trilogy/blob/master/.github/code_of_conduct.md#contributor-covenant-code-of-conduct'
               }
             ]
           }
