@@ -1,3 +1,14 @@
+<a name="2.0.1"></a>
+## [`2.0.1`](https://github.com/citycide/trilogy/compare/v2.0.0...v2.0.1) (2019-06-24)
+
+
+###### BUG FIXES
+
+* **timestamps:** only create timestamp triggers when necessary ([35dbab6](https://github.com/citycide/trilogy/commit/35dbab6))
+
+
+---
+
 <a name="2.0.0"></a>
 ## [`2.0.0`](https://github.com/citycide/trilogy/compare/v1.4.6...v2.0.0) (2019-06-12)
 
