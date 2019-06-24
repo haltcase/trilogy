@@ -11,11 +11,9 @@ To try it out, use:
 
 ```sh
 # using yarn
-yarn add trilogy@next
 yarn add trilogy@2.0.0
 
 # using npm
-npm i trilogy@next
 npm i trilogy@2.0.0
 ```
 
