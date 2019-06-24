@@ -5,7 +5,7 @@ import * as knex from 'knex'
 
 import Model from './model'
 import { runQuery } from './helpers'
-import { toKnexSchema, createTimestampTrigger } from './schema-helpers'
+import { toKnexSchema } from './schema-helpers'
 import { pureConnect } from './sqljs-handler'
 import { defaultTo, invariant, makeDirPath } from './util'
 
@@ -147,8 +147,6 @@ export class Trilogy {
       }
     }
 
-    // tslint:disable-next-line:no-floating-promises
-    createTimestampTrigger(model)
     return model
   }
 

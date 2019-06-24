@@ -54,6 +54,9 @@ export function toKnexSchema <D extends types.ReturnDict> (
       const value = (options as any)[key]
       if (key === 'timestamps' && options.timestamps) {
         table.timestamps(false, true)
+
+        // tslint:disable-next-line:no-floating-promises
+        createTimestampTrigger(model)
       } else if (key === 'index') {
         createIndices(table, value)
       } else {
