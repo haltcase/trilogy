@@ -1,4 +1,4 @@
-import { KNEX_NO_ARGS, COLUMN_TYPES, IGNORABLE_PROPS } from './constants'
+import { ColumnTypes, IgnorableProps, KnexNoArgs } from './constants'
 import { isWhereMultiple, isWhereTuple, findKey, runQuery } from './helpers'
 import {
   invariant,
@@ -39,12 +39,12 @@ export function toKnexSchema <D extends types.ReturnDict> (
       }
 
       for (const [property, value] of Object.entries(props)) {
-        if (IGNORABLE_PROPS.has(property)) continue
+        if (property in IgnorableProps) continue
 
-        if (KNEX_NO_ARGS.has(property)) {
-          props[property] && (partial as any)[property]()
+        if (property in KnexNoArgs) {
+          value && partial[property as keyof typeof KnexNoArgs]()
         } else {
-          props[property] && (partial as any)[property](value)
+          value && (partial as any)[property](value)
         }
       }
     }
@@ -204,7 +204,7 @@ function getDataType (property: types.ColumnDescriptor): string | never {
   if (isString(type)) {
     const lower = type.toLowerCase()
 
-    if (!COLUMN_TYPES.has(lower)) {
+    if (!(lower in ColumnTypes)) {
       return 'string'
     }
 

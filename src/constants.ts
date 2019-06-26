@@ -1,24 +1,24 @@
-export const COLUMN_TYPES = new Set([
-  'increments',
-  'array',
-  'object',
-  'json',
-  'string',
-  'number',
-  'boolean',
-  'date'
-])
+export enum ColumnTypes {
+  increments = 'increments',
+  array = 'array',
+  object = 'object',
+  json = 'json',
+  string = 'string',
+  number = 'number',
+  boolean = 'boolean',
+  date = 'date'
+}
 
-export const KNEX_NO_ARGS = new Set([
-  'primary',
-  'unique',
-  'notNullable'
-])
+export enum KnexNoArgs {
+  primary = 'primary',
+  unique = 'unique',
+  notNullable = 'notNullable'
+}
 
-export const IGNORABLE_PROPS = new Set([
-  'name',
-  'nullable',
-  'type',
-  'get',
-  'set'
-])
+export enum IgnorableProps {
+  name = 'name',
+  nullable = 'nullable',
+  type = 'type',
+  get = 'get',
+  set = 'set'
+}

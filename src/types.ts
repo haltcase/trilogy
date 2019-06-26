@@ -2,7 +2,7 @@ import Model from './model'
 
 import * as t from 'runtypes'
 
-import { COLUMN_TYPES } from './constants'
+import { ColumnTypes } from './constants'
 import { isFunction } from './util'
 
 import {
@@ -127,7 +127,7 @@ export const UpdateOptions = t.Partial({
 
 export const ColumnKind = t.Union(t.String, t.Function).withConstraint(value => {
   const type = isFunction(value) ? value.name : String(value)
-  return COLUMN_TYPES.has(type.toLowerCase())
+  return type.toLowerCase() in ColumnTypes
 }, { name: 'ColumnKind' })
 
 export const ColumnDescriptor = t.Partial({
