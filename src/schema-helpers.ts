@@ -24,7 +24,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
 
       // each column's value is either its type or a descriptor
       const type = getDataType(descriptor)
-      const partial: types.ValueOf<knex.TableBuilder> = (table as any)[toKnexMethod(type)](name)
+      const partial = table[toKnexMethod(type)](name)
 
       if (isFunction(descriptor) || !isObject(descriptor)) return
 
@@ -214,7 +214,9 @@ function getDataType (property: types.ColumnDescriptor): string | never {
   return invariant(false, `column type must be of type string`)
 }
 
-export function toKnexMethod (type: string): string | never {
+export function toKnexMethod (
+  type: string
+): 'text' | 'integer' | 'dateTime' | 'increments' | never {
   switch (type) {
     case 'string':
     case 'array':
