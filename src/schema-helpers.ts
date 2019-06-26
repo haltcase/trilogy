@@ -1,7 +1,6 @@
 import { KNEX_NO_ARGS, COLUMN_TYPES, IGNORABLE_PROPS } from './constants'
 import { isWhereMultiple, isWhereTuple, findKey, runQuery } from './helpers'
 import {
-  eachObj,
   invariant,
   isFunction,
   isObject,
@@ -20,7 +19,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
 ) {
   return (table: knex.TableBuilder) => {
     // every property of `model.schema` is a column
-    eachObj(model.schema, (descriptor, name) => {
+    for (const [name, descriptor] of Object.entries(model.schema)) {
       if (options.timestamps && ['created_at', 'updated_at'].includes(name as string)) return
 
       // each column's value is either its type or a descriptor
@@ -39,26 +38,25 @@ export function toKnexSchema <D extends types.ReturnDict> (
         props.notNullable = !props.nullable
       }
 
-      eachObj(props, (value, property) => {
-        if (IGNORABLE_PROPS.has(property)) return
+      for (const [property, value] of Object.entries(props)) {
+        if (IGNORABLE_PROPS.has(property)) continue
 
         if (KNEX_NO_ARGS.has(property)) {
           props[property] && (partial as any)[property]()
         } else {
           props[property] && (partial as any)[property](value)
         }
-      })
-    })
+      }
+    }
 
-    for (const key of Object.keys(options)) {
-      const value = (options as any)[key]
+    for (const [key, value] of Object.entries(options)) {
       if (key === 'timestamps' && options.timestamps) {
         table.timestamps(false, true)
 
         // tslint:disable-next-line:no-floating-promises
         createTimestampTrigger(model)
-      } else if (key === 'index') {
-        createIndices(table, value)
+      } else if (key === 'index' && value) {
+        createIndices(table, value as Exclude<(typeof options)['index'], undefined>)
       } else {
         (table as any)[key](value)
       }

@@ -3,29 +3,15 @@ import { mkdirSync, statSync } from 'fs'
 
 import * as types from './types'
 
-export function eachObj <T extends types.LooseObject> (
-  collection: T,
-  fn: (value: T[keyof T], key: keyof T) => any
-) {
-  const keys = Object.keys(collection)
-
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i]
-    const value = collection[key]
-    if (fn(value, key) === false) break
-  }
-}
-
 export function mapObj <T extends types.LooseObject, R extends T> (
   collection: T,
-  fn: (value: T[keyof T], key: keyof T) => R
+  fn: (value: T[keyof T], key: keyof T) => R[keyof R]
 ): R {
   const result = {} as R
 
-  eachObj(collection, (value, key) => {
-    // tslint:disable-next-line:semicolon
-    ;(result[key] as R) = fn(value, key)
-  })
+  for (const [key, value] of Object.entries(collection)) {
+    result[key as keyof R] = fn(value, key)
+  }
 
   return result
 }
