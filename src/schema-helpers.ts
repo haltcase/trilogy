@@ -20,7 +20,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
   return (table: knex.TableBuilder) => {
     // every property of `model.schema` is a column
     for (const [name, descriptor] of Object.entries(model.schema)) {
-      if (options.timestamps && ['created_at', 'updated_at'].includes(name as string)) return
+      if (options.timestamps && (name === 'created_at' || name === 'updated_at')) return
 
       // each column's value is either its type or a descriptor
       const type = getDataType(descriptor)
