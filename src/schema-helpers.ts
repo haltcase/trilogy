@@ -20,6 +20,8 @@ export function toKnexSchema <D extends types.ReturnDict> (
   return (table: knex.TableBuilder) => {
     // every property of `model.schema` is a column
     for (const [name, descriptor] of Object.entries(model.schema)) {
+      // these timestamp fields are handled as part of the model options
+      // processing below, ignore them here so we don't duplicate the fields
       if (options.timestamps && (name === 'created_at' || name === 'updated_at')) return
 
       // each column's value is either its type or a descriptor
