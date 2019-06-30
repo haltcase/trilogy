@@ -1,3 +1,14 @@
+<a name="v2.0.2"></a>
+## [`v2.0.2`](https://github.com/citycide/trilogy/compare/v2.0.1...v2.0.2) (2019-06-30)
+
+
+###### BUG FIXES
+
+* escape input values in raw queries ([`43d0558`](https://github.com/citycide/trilogy/commit/43d0558345d00565a8592ada69fd680e2458b9cb))
+* pass descriptor properties to knex properly ([`63c9569`](https://github.com/citycide/trilogy/commit/63c9569c5ef88e0e028b9fad12bd4ba6c843cd8e))
+
+---
+
 <a name="2.0.1"></a>
 ## [`2.0.1`](https://github.com/citycide/trilogy/compare/v2.0.0...v2.0.1) (2019-06-24)
 
