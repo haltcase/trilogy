@@ -13,6 +13,13 @@ import * as knex from 'knex'
 import Model from './model'
 import * as types from './types'
 
+const TimestampTriggerTemplate = `
+create trigger if not exists :name: after update on :modelName: begin
+  update :modelName: set :column: = \`current_timestamp\`
+  where :key: = \`old\`.:key:;
+end
+`
+
 export function toKnexSchema <D extends types.ReturnDict> (
   model: Model<D>,
   options: types.ModelOptions
@@ -95,23 +102,25 @@ export async function createTrigger (
   const keys = Object.keys(model.schema)
   const tableName = `${model.name}_returning_temp`
   const triggerName = `on_${event}_${model.name}`
+  const keyBindings = keys.map(() => '??').join(', ')
   const fieldPrefix = event === TriggerEvent.Delete ? 'old.' : 'new.'
-  const fieldReferences = keys.map(k => fieldPrefix + k).join(', ')
+  const fieldReferences = keys.map(k => fieldPrefix + k)
+  const queryOptions = { model, internal: true }
+
+  const tempTable = `create table if not exists ?? (${keyBindings})`
+  const tempTrigger = `
+    create trigger if not exists ?? after ${event} on ?? begin
+      insert into ?? select ${keyBindings};
+    end
+  `
 
   await Promise.all([
-    runQuery(model.ctx, model.ctx.knex.raw(`
-      create table if not exists ${tableName} (
-        ${keys.join(', ')}
-      )
-    `), { model, internal: true }),
-    runQuery(model.ctx, model.ctx.knex.raw(`
-      create trigger if not exists ${triggerName}
-        after ${event} on ${model.name}
-        begin
-          insert into ${tableName} select ${fieldReferences};
-        end
-    `), { model, internal: true })
-  ])
+    model.ctx.knex.raw(tempTable, [tableName, ...keys]),
+    model.ctx.knex.raw(
+      tempTrigger,
+      [triggerName, model.name, tableName, ...fieldReferences]
+    )
+  ].map(query => runQuery(model.ctx, query, queryOptions)))
 
   let query = model.ctx.knex(tableName)
   if (event === TriggerEvent.Insert) {
@@ -121,9 +130,9 @@ export async function createTrigger (
 
   const cleanup = () => {
     return Promise.all([
-      model.ctx.knex.raw(`drop table if exists ${tableName}`),
-      model.ctx.knex.raw(`drop trigger if exists ${triggerName}`)
-    ].map(query => runQuery(model.ctx, query, { model, internal: true })))
+      model.ctx.knex.raw(`drop table if exists ??`, tableName),
+      model.ctx.knex.raw(`drop trigger if exists ??`, triggerName)
+    ].map(query => runQuery(model.ctx, query, queryOptions)))
   }
 
   return [query, cleanup]
@@ -137,15 +146,12 @@ export function createTimestampTrigger (model: Model<any>, column = 'updated_at'
     return Promise.resolve()
   }
 
-  const query = model.ctx.knex.raw(`
-    create trigger if not exists on_update_${model.name}_timestamp
-      after update on ${model.name}
-      begin
-        update ${model.name}
-          set ${column} = current_timestamp
-          where ${key} = old.${key};
-      end
-  `)
+  const query = model.ctx.knex.raw(TimestampTriggerTemplate, {
+    name: `on_update_${model.name}_timestamp`,
+    modelName: model.name,
+    column,
+    key
+  })
 
   return runQuery(model.ctx, query, { model, internal: true })
 }

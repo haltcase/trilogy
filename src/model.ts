@@ -379,7 +379,6 @@ export default class Model <
     query = helpers.buildWhere(query, criteria)
 
     const affected = await helpers.runQuery(this.ctx, query, { model: this })
-
     if (affected === 0) return []
 
     const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
@@ -422,15 +421,15 @@ export default class Model <
 
     const [returning, cleanup] = await createTrigger(this, TriggerEvent.Update)
 
-    let query = this.ctx.knex(this.name)
-    const raw = allowNegative
-      ? `${column} - ${amount}`
-      : `MAX(0, ${column} - ${amount})`
-    query = query.update({ [column]: this.ctx.knex.raw(raw) })
-    query = helpers.buildWhere(query, criteria)
+    const raw = allowNegative ? '?? - ?' : 'MAX(0, ?? - ?)'
+    const query = helpers.buildWhere(
+      this.ctx.knex(this.name).update({
+        [column]: this.ctx.knex.raw(raw, [column, amount] as [string, number])
+      }),
+      criteria
+    )
 
     const affected = await helpers.runQuery(this.ctx, query, { model: this })
-
     if (affected === 0) return []
 
     const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {

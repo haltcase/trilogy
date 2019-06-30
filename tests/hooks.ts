@@ -7,12 +7,12 @@ const onlyNonInternalRegex =
   /^\s*INSERT OR IGNORE into `objects` \(`name`\) values \('desk'\)/
 
 const expectations = [
-  /^\s*create table if not exists objects_returning_temp/,
-  /^\s*create trigger if not exists on_insert_objects/,
+  /^\s*create table if not exists `objects_returning_temp`/,
+  /^\s*create trigger if not exists `on_insert_objects`/,
   onlyNonInternalRegex,
   /^\s*select \* from `objects_returning_temp` limit 1/,
-  /^\s*drop table if exists objects_returning_temp/,
-  /^\s*drop trigger if exists on_insert_objects/
+  /^\s*drop table if exists `objects_returning_temp`/,
+  /^\s*drop trigger if exists `on_insert_objects`/
 ]
 
 test('hooks.onQuery: receives executed queries (internal as option)', async t => {
