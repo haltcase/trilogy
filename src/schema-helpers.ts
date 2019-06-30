@@ -46,7 +46,7 @@ export function toKnexSchema <D extends types.ReturnDict> (
         if (property in KnexNoArgs) {
           value && partial[property as keyof typeof KnexNoArgs]()
         } else {
-          value && (partial as any)[property](value)
+          (partial as any)[property](value)
         }
       }
     }
