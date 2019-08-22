@@ -7,14 +7,6 @@ assignees: ''
 
 ---
 
----
-name: 'Bug report'
-about: 'Report a reproducible bug'
-title: ''
-labels: 'type: bug'
-assignees: ''
----
-
 <!-- BEFORE YOU SUBMIT...
 
 * read the [Contributor Guide](https://github.com/citycide/trilogy/blob/master/contributing.md)
