@@ -7,14 +7,6 @@ assignees: ''
 
 ---
 
----
-name: 'Feature request'
-about: 'Suggest an idea for this project'
-title: ''
-labels: 'type: feature'
-assignees: ''
----
-
 <!-- BEFORE YOU SUBMIT...
 
 * read the [Contributor Guide](https://github.com/citycide/trilogy/blob/master/contributing.md)
