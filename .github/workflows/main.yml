@@ -1,17 +1,13 @@
 name: Labels
 
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/labels.json'
+on: [push]
 
 jobs:
-  build:
+  labels:
     runs-on: ubuntu-latest
     
     steps:
+    - uses: actions/checkout@1.0.0
     - name: "Update Issue Labels"
       uses: lannonbr/issue-label-manager-action@2.0.0
       env:
