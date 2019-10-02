@@ -167,7 +167,7 @@ MIT © Bo Lingen / citycide
 
 See [license](license)
 
-[sqlite3]: https://github.com/mapbox/sqlite3
+[sqlite3]: https://github.com/mapbox/node-sqlite3
 [sqljs]: https://github.com/kripken/sql.js
 [mongoose]: https://mongoosejs.com/
 [knex]: https://github.com/tgriesser/knex
