@@ -1,0 +1,78 @@
+- name: breaking
+  color: f75f30
+  description: Breaking changes will occur as part of closing the issue.
+- name: discussion
+  color: 42b9b1
+  description: "[RFC] Fixes, APIs, or changes need feedback."
+- name: duplicate
+  color: cccccc
+  description: An earlier issue already exists on the topic.
+- name: external
+  color: fef2c0
+  description: Issues with dependencies or otherwise unsolvable within the project itself.
+- name: good first issue
+  color: 0090ee
+  description: Probably good for a user's first contribution.
+- name: hacktoberfest
+  color: d15f3b
+  description: Open season for contributions!
+- name: help wanted
+  color: 33aa3f
+  description: Extra attention is needed.
+- name: invalid
+  color: e6e6e6
+  description: Issue doesn't apply or is working as intended.
+- name: meta
+  color: '669999'
+  description: Relates to the repo or project structure.
+- name: question
+  color: cc317c
+  description: Not a true issue, usually a question relating to usage.
+- name: 'status: accepted'
+  color: 128A0C
+  description: Change is accepted and is open to community PRs.
+- name: 'status: declined'
+  color: e99695
+  description: The change is not currently under consideration.
+- name: 'status: in progress'
+  color: a7e3a1
+  description: Work has started to close the issue.
+- name: 'status: investigating'
+  color: 006b75
+  description: Resolutions are being considered or researched.
+- name: 'status: need response'
+  color: fbca04
+  description: Waiting for more information from the issue author.
+- name: 'status: pending release'
+  color: 1b8181
+  description: Issue is resolved but waiting to be released.
+- name: 'type: bug'
+  color: ee0701
+  description: Something isn't working as intended or expected.
+- name: 'type: build'
+  color: 736d6d
+  description: Affects the build system or dependencies.
+- name: 'type: chore'
+  color: 636e63
+  description: General maintenance or upkeep.
+- name: 'type: ci'
+  color: 476e9d
+  description: Relates to CI maintenance.
+- name: 'type: documentation'
+  color: 437d7d
+  description: Applies only to project documentation.
+- name: 'type: feature'
+  color: 84b6eb
+  description: Request for a new feature or enhancement.
+- name: 'type: performance'
+  color: c2e0c6
+  description: Opportunity for performance improvements.
+- name: 'type: refactor'
+  color: 65707a
+  description: Improvements with no change in functionality.
+- name: 'type: test'
+  color: eac462
+  description: Concerns the quality or quantity of tests.
+- name: 'zzz: testing'
+  color: '333333'
+  description: Testing GitHub action
