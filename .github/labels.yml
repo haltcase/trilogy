@@ -73,6 +73,3 @@
 - name: 'type: test'
   color: eac462
   description: Concerns the quality or quantity of tests.
-- name: 'zzz: testing'
-  color: '333333'
-  description: Testing GitHub action
