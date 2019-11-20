@@ -17,7 +17,7 @@ export function mapObj <T extends types.LooseObject, R extends T> (
 }
 
 export const isObject = (value: any): value is types.LooseObject =>
-  (value && value.constructor === Object) || false
+  (value?.constructor === Object) || false
 
 export const isFunction = (value: any): value is Function => typeof value === 'function'
 export const isString = (value: any): value is string => typeof value === 'string'
@@ -38,9 +38,6 @@ export const toArray = <T> (value: T | T[]): NonNullable<T>[] =>
     : isNil(value)
       ? []
       : [value as NonNullable<T>]
-
-export const defaultTo = <T, V> (value: T | null | undefined, fallback: V) =>
-  isNil(value) ? fallback : value
 
 export const firstOrValue = <T> (value: T | T[]): T =>
   Array.isArray(value) ? value[0] : value

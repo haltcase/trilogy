@@ -168,7 +168,7 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
     // tslint:disable-next-line:await-promise
     const res = await query
     if (util.isNumber(res)) return res
-    return res ? res.length : 0
+    return res?.length ?? 0
   }
 
   // tslint:disable-next-line:await-promise

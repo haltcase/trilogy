@@ -6,7 +6,7 @@ import {
   Cast, normalizeSchema, createTrigger, TriggerEvent
 } from './schema-helpers'
 import {
-  invariant, isEmpty, isString, isObject, isNil, toArray, defaultTo, firstOrValue
+  invariant, isEmpty, isString, isObject, isNil, toArray, firstOrValue
 } from './util'
 
 import * as types from './types'
@@ -623,7 +623,7 @@ async function baseGet <D extends types.ReturnDict, K extends keyof D> (
   options?: types.LooseObject
 ): Promise<D[K] | undefined> {
   const data = await model.findOneIn(column, criteria, options)
-  return defaultTo(data, defaultValue)
+  return data ?? defaultValue
 }
 
 async function baseSet <D extends types.ReturnDict, K extends keyof D> (
