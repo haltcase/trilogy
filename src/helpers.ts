@@ -8,7 +8,7 @@ import { Trilogy } from '.'
 import { Hook, OnQueryContext } from './hooks'
 import * as types from './types'
 
-const HAS_TABLE_SUBSTRING = `from sqlite_master where type = 'table'`
+const HasTableSubstring = `from sqlite_master where type = 'table'`
 
 export function parseResponse (
   contents: types.SqlJsResponse
@@ -177,7 +177,7 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
 
   if (options.needResponse) {
     response = parseResponse(db.exec(asString))
-    if (asString.toLowerCase().includes(HAS_TABLE_SUBSTRING)) {
+    if (asString.toLowerCase().includes(HasTableSubstring)) {
       response = !!response.length
     }
   } else {
