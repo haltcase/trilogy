@@ -178,7 +178,7 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
   if (options.needResponse) {
     response = parseResponse(db.exec(asString))
     if (asString.toLowerCase().includes(HasTableSubstring)) {
-      response = !!response.length
+      response = Boolean(response.length)
     }
   } else {
     db.run(asString)
