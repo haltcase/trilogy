@@ -34,7 +34,7 @@
     "prebuild": "npm run lint && rimraf dist es",
     "build": "npm run build:dist && npm run build:es",
     "build:dist": "tsc -d",
-    "build:es": "tsc -m es2015 --outDir es",
+    "build:es": "tsc -m esnext --outDir es",
     "test": "ava",
     "lint": "tslint -p tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "docs:dev": "vuepress dev docs",
