@@ -50,9 +50,8 @@ export function pureConnect (instance: Trilogy): Pool<SqlJs.Database> {
       return readDatabase(instance)
     },
 
-    destroy (client: SqlJs.Database): Promise<undefined> {
+    async destroy (client: SqlJs.Database): Promise<void> {
       client.close()
-      return Promise.resolve(undefined)
     }
   }, { min: 1, max: 1 })
 }

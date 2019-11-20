@@ -205,7 +205,7 @@ export class Trilogy {
    * @param query Any query built with `knex`
    * @param [needResponse] Whether to return the result of the query
    */
-  raw (query: knex.QueryBuilder | knex.Raw, needResponse?: boolean) {
+  async raw <T = any> (query: knex.QueryBuilder | knex.Raw, needResponse?: boolean): Promise<T> {
     return runQuery(this, query, { needResponse })
   }
 
@@ -214,11 +214,9 @@ export class Trilogy {
    * files. This should always be called at the end of your program to
    * gracefully shut down, and only once since the connection can't be reopened.
    */
-  close () {
+  async close () {
     if (this.isNative) {
-      // must wrap this return value in native Promise due to
-      // https://github.com/petkaantonov/bluebird/issues/1277
-      return Promise.resolve(this.knex.destroy())
+      return this.knex.destroy()
     } else {
       return this.pool!.drain()
     }
@@ -232,12 +230,12 @@ export class Trilogy {
    * @param object Data to insert
    * @param options
    */
-  create <T = types.LooseObject> (
+  async create <T = types.LooseObject> (
     modelName: string,
     object: types.LooseObject,
     options?: types.LooseObject
   ): Promise<T>
-  create (
+  async create (
     modelName: string,
     object: types.LooseObject,
     options?: types.LooseObject
@@ -253,12 +251,12 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param options
    */
-  find <T = types.LooseObject> (
+  async find <T = types.LooseObject> (
     location: string,
     criteria?: types.Criteria,
     options?: types.FindOptions
   ): Promise<T[]>
-  find (
+  async find (
     location: string,
     criteria?: types.Criteria,
     options?: types.FindOptions
@@ -280,12 +278,12 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param options
    */
-  findOne <T = types.LooseObject> (
+  async findOne <T = types.LooseObject> (
     location: string,
     criteria?: types.Criteria,
     options?: types.FindOptions
   ): Promise<T>
-  findOne (
+  async findOne (
     location: string,
     criteria?: types.Criteria,
     options?: types.FindOptions
@@ -310,13 +308,13 @@ export class Trilogy {
    * @param creation Data used to create the object if it doesn't exist
    * @param options
    */
-  findOrCreate <T = types.LooseObject> (
+  async findOrCreate <T = types.LooseObject> (
     modelName: string,
     criteria: types.Criteria,
     creation?: types.LooseObject,
     options?: types.FindOptions
   ): Promise<T>
-  findOrCreate (
+  async findOrCreate (
     modelName: string,
     criteria: types.Criteria,
     creation?: types.LooseObject,
@@ -335,7 +333,7 @@ export class Trilogy {
    * @param data Updates to be made on matching objects
    * @param options
    */
-  update (
+  async update (
     modelName: string,
     criteria: types.Criteria,
     data: types.LooseObject,
@@ -355,7 +353,7 @@ export class Trilogy {
    * @param data Updates to be made on matching objects
    * @param options
    */
-  updateOrCreate (
+  async updateOrCreate (
     modelName: string,
     criteria: types.Criteria,
     data: types.LooseObject,
@@ -374,12 +372,12 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param defaultValue Value returned if the result doesn't exist
    */
-  get <T = types.ReturnType> (
+  async get <T = types.ReturnType> (
     location: string,
     criteria: types.Criteria,
     defaultValue?: T
   ): Promise<T>
-  get (
+  async get (
     location: string,
     criteria: types.Criteria,
     defaultValue?: any
@@ -400,7 +398,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param value Value returned if the result doesn't exist
    */
-  set <T> (location: string, criteria: types.Criteria, value: T) {
+  async set <T> (location: string, criteria: types.Criteria, value: T) {
     const [table, column] = location.split('.', 2)
 
     invariant(column, 'property name is required, ex: `set("users.rank")`')
@@ -416,9 +414,9 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param defaultValue Value returned if the result doesn't exist
    */
-  getRaw <T> (location: string, criteria: types.Criteria, defaultValue: T): Promise<T>
-  getRaw (location: string, criteria: types.Criteria): Promise<types.ReturnType>
-  getRaw (
+  async getRaw <T> (location: string, criteria: types.Criteria, defaultValue: T): Promise<T>
+  async getRaw (location: string, criteria: types.Criteria): Promise<types.ReturnType>
+  async getRaw (
     location: string,
     criteria: types.Criteria,
     defaultValue?: any
@@ -438,7 +436,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param value Value returned if the result doesn't exist
    */
-  setRaw <T> (location: string, criteria: types.Criteria, value: T) {
+  async setRaw <T> (location: string, criteria: types.Criteria, value: T) {
     const [table, column] = location.split('.', 2)
 
     invariant(column, 'property name is required, ex: `setRaw("users.rank")`')
@@ -455,7 +453,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param amount
    */
-  increment (location: string, criteria: types.Criteria, amount?: number) {
+  async increment (location: string, criteria: types.Criteria, amount?: number) {
     const [table, column] = location.split('.', 2)
     const model = this.getModel(table)
     return model.increment(column, criteria, amount)
@@ -469,7 +467,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param amount
    */
-  decrement (
+  async decrement (
     location: string,
     criteria: types.Criteria,
     amount?: number,
@@ -491,7 +489,7 @@ export class Trilogy {
    * @param modelName Name of the model
    * @param criteria Criteria used to restrict selection
    */
-  remove (modelName: string, criteria: types.Criteria) {
+  async remove (modelName: string, criteria: types.Criteria) {
     const model = this.getModel(modelName)
     return model.remove(criteria)
   }
@@ -501,7 +499,7 @@ export class Trilogy {
    *
    * @param modelName Name of the model
    */
-  clear (modelName: string) {
+  async clear (modelName: string) {
     const model = this.getModel(modelName)
     return model.clear()
   }
@@ -513,7 +511,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param options
    */
-  count (
+  async count (
     location?: string,
     criteria?: types.Criteria,
     options?: types.AggregateOptions
@@ -543,7 +541,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param options
    */
-  min (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
+  async min (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
     const [table, column] = location.split('.', 2)
 
     invariant(column, 'property name is required, ex: `min("users.rank")`')
@@ -560,7 +558,7 @@ export class Trilogy {
    * @param criteria Criteria used to restrict selection
    * @param options
    */
-  max (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
+  async max (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
     const [table, column] = location.split('.', 2)
 
     invariant(column, 'property name is required, ex: `max("users.rank")`')

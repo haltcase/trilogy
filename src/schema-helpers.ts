@@ -138,12 +138,12 @@ export async function createTrigger (
   return [query, cleanup]
 }
 
-export function createTimestampTrigger (model: Model<any>, column = 'updated_at') {
+export async function createTimestampTrigger (model: Model<any>, column = 'updated_at') {
   const { key, hasIncrements } = findKey(model.schema)
 
   if (!key && !hasIncrements) {
     // there's no way to uniquely identify the updated record
-    return Promise.resolve()
+    return
   }
 
   const query = model.ctx.knex.raw(TimestampTriggerTemplate, {
