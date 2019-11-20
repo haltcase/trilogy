@@ -82,7 +82,7 @@ export function buildWhere <T = any, U = any> (
     return partial.where(util.mapObj(where, castValue))
   }
 
-  return util.invariant(false, `invalid where clause type: '${typeof where}'`)
+  util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
 export function isWhereTuple (
@@ -144,7 +144,7 @@ export function normalizeCriteria <D> (
     return where
   }
 
-  return util.invariant(false, `invalid criteria: ${where}`)
+  util.invariant(false, `invalid criteria: ${where}`)
 }
 
 export async function runQuery <D extends types.ReturnDict = types.LooseObject> (

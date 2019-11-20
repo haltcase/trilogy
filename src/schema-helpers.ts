@@ -219,7 +219,7 @@ function getDataType (property: types.ColumnDescriptor): string | never {
     return lower
   }
 
-  return invariant(false, `column type must be of type string`)
+  invariant(false, `column type must be of type string`)
 }
 
 export function toKnexMethod (
@@ -239,7 +239,7 @@ export function toKnexMethod (
     case 'increments':
       return 'increments'
     default:
-      return invariant(false, `invalid column type definition: ${type}`)
+      invariant(false, `invalid column type definition: ${type}`)
   }
 }
 
@@ -258,7 +258,7 @@ export function toInputType (type: string, value: any): types.StorageType | neve
     case 'date':
       return (value as Date).toISOString()
     default:
-      return invariant(false, `invalid type on insert to database: ${type}`)
+      invariant(false, `invalid type on insert to database: ${type}`)
   }
 }
 
@@ -278,7 +278,7 @@ export function toReturnType (type: string, value: any): types.ReturnType | neve
     case 'date':
       return new Date(value)
     default:
-      return invariant(false, `invalid type returned from database: ${type}`)
+      invariant(false, `invalid type returned from database: ${type}`)
   }
 }
 
@@ -307,7 +307,7 @@ export class Cast <D extends types.ReturnDict> {
       })
     }
 
-    return invariant(false, `invalid input type: '${typeof object}'`)
+    invariant(false, `invalid input type: '${typeof object}'`)
   }
 
   fromDefinition (object: types.LooseObject, options: { raw?: boolean }): D {
