@@ -11,7 +11,7 @@ import { SqlJs } from 'sql.js/module'
 export async function readDatabase (instance: Trilogy): Promise<SqlJs.Database> {
   const name = instance.options.connection.filename
 
-  const init = require('sql.js')
+  const init = await import('sql.js')
   const SQL = await init()
 
   if (name === ':memory:') {
