@@ -13,18 +13,11 @@ import {
 
 export type Fn <T extends any[], R = any> = (...args: T) => R
 
-export interface Thenable <T> {
-  then <U> (
-    onFulfilled?: (value: T) => U | Thenable<U>,
-    onRejected?: (error: any) => U | Thenable<U>
-  ): Thenable<U>
-}
-
 export type Query =
   | Raw
-  | QueryBuilder
+  | QueryBuilder<any, any>
   | SchemaBuilder
-  | Thenable<any>
+  | Promise<any>
 
 export type QueryOptions <D extends ReturnDict = LooseObject> = {
   model?: Model<D>,

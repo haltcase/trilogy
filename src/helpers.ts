@@ -165,7 +165,6 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
   if (instance.isNative) {
     if (options.needResponse) return query
 
-    // tslint:disable-next-line:await-promise
     const res = await query
     if (util.isNumber(res)) return res
     return res?.length ?? 0

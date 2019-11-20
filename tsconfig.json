@@ -4,7 +4,13 @@
     "declaration": false,
     "downlevelIteration": true,
     "importHelpers": true,
-    "lib": ["es2017", "webworker"],
+    "lib": [
+      "es2017",
+      // required for `sql.js` types
+      "webworker",
+      // required for `knex` types
+      "es2018.promise"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitReturns": true,

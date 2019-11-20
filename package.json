@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "generic-pool": "^3.7.1",
-    "knex": "^0.17.5",
+    "knex": "^0.20.1",
     "runtypes": "^4.0.0",
     "tslib": "^1.10.0"
   },

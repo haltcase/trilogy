@@ -136,7 +136,6 @@ export class Trilogy {
     const query = this.knex.schema.createTable(name, opts)
 
     if (this.isNative) {
-      // tslint:disable-next-line:await-promise
       if (!await check) {
         // tslint:disable-next-line:await-promise
         await query
