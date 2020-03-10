@@ -63,7 +63,7 @@ test('getters & setters are not fired by `getRaw()` or `setRaw()`', async t => {
   t.is(updated, 50)
 
   await db.update('people', { name: 'John Doe' }, { age: 55 })
-  const final = await db.getRaw('people.age', { name: 'John Doe' })
+  const final = await db.getRaw<Person, 'age'>('people.age', { name: 'John Doe' })
   t.is(final, 56)
 })
 
