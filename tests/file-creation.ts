@@ -22,7 +22,9 @@ test.after.always('remove test database file', async () => {
 
 test('throws if no file path is provided', t => {
   // @ts-ignore
-  t.throws(() => connect(), Error)
+  t.throws(() => connect(), {
+    message: 'trilogy constructor must be provided a file path'
+  })
 })
 
 test('native client creates a new file immediately', t => {

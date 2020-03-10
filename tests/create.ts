@@ -59,11 +59,11 @@ test('create: handles nil values correctly', async t => {
 
   await t.throwsAsync(
     () => two.create({ name: null }),
-    'people_two.name is not nullable but received nil'
+    { message: 'people_two.name is not nullable but received nil' }
   )
 
   await t.throwsAsync(
     () => two.create({ name: undefined }),
-    'people_two.name is not nullable but received nil'
+    { message: 'people_two.name is not nullable but received nil' }
   )
 })
