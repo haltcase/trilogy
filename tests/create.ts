@@ -58,12 +58,12 @@ test('create: handles nil values correctly', async t => {
   t.deepEqual(await one.findOne(), { name: null })
 
   await t.throwsAsync(
-    () => two.create({ name: null }),
+    two.create({ name: null }),
     { message: 'people_two.name is not nullable but received nil' }
   )
 
   await t.throwsAsync(
-    () => two.create({ name: undefined }),
+    two.create({ name: undefined }),
     { message: 'people_two.name is not nullable but received nil' }
   )
 })
