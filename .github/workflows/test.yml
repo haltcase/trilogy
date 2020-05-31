@@ -1,4 +1,4 @@
-name: CI
+name: Test
 on:
   pull_request:
     branches:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macOS-latest]
-        node: [13, 12, 10, 8]
+        node: [14, 12, 10, 8]
     name: Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@master
