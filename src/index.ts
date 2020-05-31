@@ -415,6 +415,10 @@ export class Trilogy {
    */
   async getRaw <T> (location: string, criteria: types.Criteria, defaultValue: T): Promise<T>
   async getRaw (location: string, criteria: types.Criteria): Promise<types.ReturnType>
+  async getRaw <T extends Record<string, unknown>, K extends keyof T = keyof T> (
+    location: string,
+    criteria: types.Criteria
+  ): Promise<T[K]>
   async getRaw (
     location: string,
     criteria: types.Criteria,
