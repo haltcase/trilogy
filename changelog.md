@@ -1,3 +1,14 @@
+<a name="2.0.3"></a>
+## [`2.0.3`](https://github.com/citycide/trilogy/compare/v2.0.2...v2.0.3) (2020-06-20)
+
+
+###### BUG FIXES
+
+* **types:** allow providing value type to `getRaw` ([a41da36](https://github.com/citycide/trilogy/commit/a41da36))
+
+
+---
+
 <a name="v2.0.2"></a>
 ## [`v2.0.2`](https://github.com/citycide/trilogy/compare/v2.0.1...v2.0.2) (2019-06-30)
 
