@@ -19,9 +19,9 @@ export type Query =
   | SchemaBuilder
   | Promise<any>
 
-export type QueryOptions <D extends ReturnDict = LooseObject> = {
-  model?: Model<D>,
-  needResponse?: boolean,
+export interface QueryOptions <D extends ReturnDict = LooseObject> {
+  model?: Model<D>
+  needResponse?: boolean
   internal?: boolean
 }
 
@@ -55,10 +55,10 @@ export type CriteriaBaseNormalized <D = LooseObject> =
   | CriteriaObj<D>
 
 export type CriteriaList <D = LooseObject> =
-  CriteriaBase<DistinctArrayTuple<D>>[]
+  Array<CriteriaBase<DistinctArrayTuple<D>>>
 
 export type CriteriaListNormalized <D = LooseObject> =
-  CriteriaBaseNormalized<DistinctArrayTuple<D>>[]
+  Array<CriteriaBaseNormalized<DistinctArrayTuple<D>>>
 
 export type Criteria <D = LooseObject> =
   | CriteriaBase<D>
@@ -157,7 +157,7 @@ export type Schema <D = LooseObject> = {
 }
 
 export type SqlJsResponse = Array<{
-  columns: string[],
+  columns: string[]
   values: any[]
 }>
 

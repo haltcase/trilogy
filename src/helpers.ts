@@ -8,11 +8,11 @@ import { Trilogy } from '.'
 import { Hook, OnQueryContext } from './hooks'
 import * as types from './types'
 
-const HasTableSubstring = `from sqlite_master where type = 'table'`
+const HasTableSubstring = "from sqlite_master where type = 'table'"
 
-export function parseResponse (
+export const parseResponse = (
   contents: types.SqlJsResponse
-): types.LooseObject[] {
+): types.LooseObject[] => {
   if (!contents || !contents.length) return []
 
   const [{ columns, values }] = contents
@@ -31,10 +31,10 @@ export function parseResponse (
   return results
 }
 
-export function buildOrder <T = any, U = any> (
+export const buildOrder = <T = any, U = any> (
   partial: knex.QueryBuilder<T, U>,
   order: string | [string] | [string, string]
-): knex.QueryBuilder<T, U> {
+): knex.QueryBuilder<T, U> => {
   if (util.isString(order)) {
     if (order === 'random') {
       return partial.orderByRaw('RANDOM()')
@@ -53,11 +53,11 @@ export function buildOrder <T = any, U = any> (
   return partial
 }
 
-export function buildWhere <T = any, U = any> (
+export const buildWhere = <T = any, U = any> (
   partial: knex.QueryBuilder<T, U>,
   where: types.CriteriaBase | types.CriteriaList | undefined,
   inner?: boolean
-): knex.QueryBuilder<T, U> {
+): knex.QueryBuilder<T, U> => {
   if (where === undefined) return partial
 
   if (isWhereTuple(where)) {
@@ -85,9 +85,9 @@ export function buildWhere <T = any, U = any> (
   util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
-export function isWhereTuple (
+export const isWhereTuple = (
   where: any
-): where is types.Criteria2 | types.Criteria3 {
+): where is types.Criteria2 | types.Criteria3 => {
   return (
     Array.isArray(where) &&
     (where.length === 2 || where.length === 3) &&
@@ -95,14 +95,14 @@ export function isWhereTuple (
   )
 }
 
-export function isWhereMultiple (where: any): where is types.CriteriaList {
+export const isWhereMultiple = (where: any): where is types.CriteriaList => {
   return (
     Array.isArray(where) &&
     where.every(item => isWhereTuple(item) || util.isObject(item))
   )
 }
 
-export function isValidWhere (where: any): where is types.CriteriaBase {
+export const isValidWhere = (where: any): where is types.CriteriaBase => {
   return (
     isWhereTuple(where) ||
     util.isObject(where) ||
@@ -147,11 +147,15 @@ export function normalizeCriteria <D> (
   util.invariant(false, `invalid criteria: ${where}`)
 }
 
-export async function runQuery <D extends types.ReturnDict = types.LooseObject> (
+const getQueryAction = (str: string): string => {
+  return str.split(' ', 1)[0].toLowerCase()
+}
+
+export const runQuery = async <D extends types.ReturnDict = types.LooseObject> (
   instance: Trilogy,
   query: types.Query,
   options: types.QueryOptions<D> = {}
-): Promise<any> {
+): Promise<any> => {
   const asString = query.toString()
   const action = getQueryAction(asString)
 
@@ -192,7 +196,7 @@ export async function runQuery <D extends types.ReturnDict = types.LooseObject> 
   return response
 }
 
-export function findKey (schema: types.Schema) {
+export const findKey = (schema: types.Schema) => {
   let key = ''
   let hasIncrements = false
 
@@ -209,8 +213,4 @@ export function findKey (schema: types.Schema) {
   }
 
   return { key, hasIncrements }
-}
-
-function getQueryAction (str: string): string {
-  return str.split(' ', 1)[0].toLowerCase()
 }

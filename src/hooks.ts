@@ -11,7 +11,7 @@ import {
 
 export type HookOptions = CreateOptions | UpdateOptions | {}
 
-export type OnQueryOptions = {
+export interface OnQueryOptions {
   includeInternal?: boolean
 }
 
@@ -34,7 +34,7 @@ export type HookCallback <D> =
   | BeforeRemoveCallback<D>
   | AfterRemoveCallback<D>
 
-export type HookResult = {
+export interface HookResult {
   prevented: boolean
 }
 

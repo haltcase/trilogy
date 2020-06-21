@@ -3,10 +3,10 @@ import { mkdirSync, statSync } from 'fs'
 
 import * as types from './types'
 
-export function mapObj <T extends types.LooseObject, R extends T> (
+export const mapObj = <T extends types.LooseObject, R extends T> (
   collection: T,
   fn: (value: T[keyof T], key: keyof T) => R[keyof R]
-): R {
+): R => {
   const result = {} as R
 
   for (const [key, value] of Object.entries(collection)) {
@@ -32,9 +32,9 @@ export const isEmpty = (value: any): boolean => {
   return false
 }
 
-export const toArray = <T> (value: T | T[]): NonNullable<T>[] =>
+export const toArray = <T> (value: T | T[]): Array<NonNullable<T>> =>
   Array.isArray(value)
-    ? value as NonNullable<T>[]
+    ? value as Array<NonNullable<T>>
     : isNil(value)
       ? []
       : [value as NonNullable<T>]

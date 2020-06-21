@@ -11,6 +11,91 @@ import {
 
 import * as types from './types'
 
+const baseCount = async <D extends types.ReturnDict> (
+  model: Model<D>,
+  column: keyof D,
+  criteria?: types.Criteria<D>,
+  options: types.AggregateOptions = {}
+): Promise<number> => {
+  invariant(
+    column && isString(column),
+    `invalid column: expected string, got ${typeof column}`
+  )
+
+  types.AggregateOptions.check(options)
+
+  const val = `${column} as count`
+  const builder = model.ctx.knex(model.name)
+  let query = options.distinct ? builder.countDistinct(val) : builder.count(val)
+  query = helpers.buildWhere(query, model.cast.toDefinition(
+    criteria || {},
+    { raw: true, ...options }
+  ))
+
+  if (options.group) query = query.groupBy(toArray(options.group))
+
+  const res = await helpers.runQuery(model.ctx, query, {
+    model,
+    needResponse: true
+  })
+  if (!Array.isArray(res)) return 0
+  return res[0].count
+}
+
+const baseMinMax = async <D extends types.ReturnDict> (
+  model: Model<D>,
+  method: 'min' | 'max',
+  column: keyof D,
+  criteria?: types.Criteria<D>,
+  options: types.AggregateOptions = {}
+) => {
+  types.AggregateOptions.check(options)
+
+  const val = `${column} as ${method}`
+  let query = model.ctx.knex(model.name)[method](val)
+  query = helpers.buildWhere(query, model.cast.toDefinition(
+    criteria || {},
+    { raw: true, ...options }
+  ))
+
+  if (options.group) query = query.groupBy(toArray(options.group))
+
+  const res = await helpers.runQuery(model.ctx, query, {
+    model,
+    needResponse: true
+  })
+  if (!Array.isArray(res)) return undefined
+  return res[0][method]
+}
+
+const baseGet = async <D extends types.ReturnDict, K extends keyof D> (
+  model: Model<D>,
+  column: K,
+  criteria: types.Criteria<D> | undefined,
+  defaultValue?: D[K],
+  options?: types.LooseObject
+): Promise<D[K] | undefined> => {
+  const data = await model.findOneIn(column, criteria, options)
+  return data ?? defaultValue
+}
+
+const baseSet = async <D extends types.ReturnDict, K extends keyof D> (
+  model: Model<D>,
+  column: K,
+  criteria: types.Criteria<D> | undefined,
+  value?: D[K],
+  options?: types.LooseObject
+): Promise<D[]> => {
+  invariant(
+    model.schema[column as string],
+    `no column by the name '${column}' is defined in '${model.name}'`
+  )
+
+  return await model.update(criteria, {
+    [column]: value
+  } as Partial<D>, options)
+}
+
 /**
  * Instances of `Model` manage the casting of values back and forth between the
  * SQLite backend and their corresponding JavaScript types as well as calling
@@ -83,9 +168,9 @@ export default class Model <
 
     const created = !isEmpty(result)
       ? this.cast.fromDefinition(
-          firstOrValue(result),
-          options
-        )
+        firstOrValue(result),
+        options
+      )
       : undefined
 
     await this._callHook(Hook.AfterCreate, created, options)
@@ -141,7 +226,7 @@ export default class Model <
     column: keyof D,
     criteria?: types.Criteria<D>,
     options?: types.FindOptions
-  ): Promise<types.ValueOf<D>[]> {
+  ): Promise<Array<types.ValueOf<D>>> {
     const response = await this.find(criteria, options)
     return response.map(object => {
       return this.cast.fromColumnDefinition(
@@ -305,7 +390,7 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param defaultValue Value returned if the result doesn't exist
    */
-  get <K extends keyof D = keyof D, V extends D[K] = D[K]> (
+  async get <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria?: types.Criteria<D>, defaultValue?: V
   ) {
     return baseGet<D, K>(this, column, criteria, defaultValue)
@@ -319,7 +404,7 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param value Value returned if the result doesn't exist
    */
-  set <K extends keyof D = keyof D, V extends D[K] = D[K]> (
+  async set <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria: types.Criteria<D>, value: V
   ) {
     return baseSet<D, K>(this, column, criteria, value)
@@ -332,7 +417,7 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param defaultValue Value returned if the result doesn't exist
    */
-  getRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
+  async getRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria: types.Criteria<D>, defaultValue?: V
   ) {
     return baseGet<D, K>(this, column, criteria, defaultValue, { raw: true })
@@ -345,7 +430,7 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param value Value returned if the result doesn't exist
    */
-  setRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
+  async setRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
     column: K, criteria: types.Criteria<D>, value: V
   ) {
     return baseSet<D, K>(this, column, criteria, value, { raw: true })
@@ -491,7 +576,7 @@ export default class Model <
   /**
    * Delete all objects from this model.
    */
-  clear (): Promise<number> {
+  async clear (): Promise<number> {
     const query = this.ctx.knex(this.name).truncate()
     return helpers.runQuery(this.ctx, query, { model: this })
   }
@@ -554,91 +639,6 @@ export default class Model <
     criteria?: types.Criteria<D>,
     options?: types.AggregateOptions
   ): Promise<number | undefined> {
-    return baseMinMax(this, 'max', column, criteria, options)
+    return await baseMinMax(this, 'max', column, criteria, options)
   }
-}
-
-async function baseCount <D extends types.ReturnDict> (
-  model: Model<D>,
-  column: keyof D,
-  criteria?: types.Criteria<D>,
-  options: types.AggregateOptions = {}
-): Promise<number> {
-  invariant(
-    column && isString(column),
-    `invalid column: expected string, got ${typeof column}`
-  )
-
-  types.AggregateOptions.check(options)
-
-  const val = `${column} as count`
-  const builder = model.ctx.knex(model.name)
-  let query = options.distinct ? builder.countDistinct(val) : builder.count(val)
-  query = helpers.buildWhere(query, model.cast.toDefinition(
-    criteria || {},
-    { raw: true, ...options }
-  ))
-
-  if (options.group) query = query.groupBy(toArray(options.group))
-
-  const res = await helpers.runQuery(model.ctx, query, {
-    model,
-    needResponse: true
-  })
-  if (!Array.isArray(res)) return 0
-  return res[0].count
-}
-
-async function baseMinMax <D extends types.ReturnDict> (
-  model: Model<D>,
-  method: 'min' | 'max',
-  column: keyof D,
-  criteria?: types.Criteria<D>,
-  options: types.AggregateOptions = {}
-) {
-  types.AggregateOptions.check(options)
-
-  const val = `${column} as ${method}`
-  let query = model.ctx.knex(model.name)[method](val)
-  query = helpers.buildWhere(query, model.cast.toDefinition(
-    criteria || {},
-    { raw: true, ...options }
-  ))
-
-  if (options.group) query = query.groupBy(toArray(options.group))
-
-  const res = await helpers.runQuery(model.ctx, query, {
-    model,
-    needResponse: true
-  })
-  if (!Array.isArray(res)) return undefined
-  return res[0][method]
-}
-
-async function baseGet <D extends types.ReturnDict, K extends keyof D> (
-  model: Model<D>,
-  column: K,
-  criteria: types.Criteria<D> | undefined,
-  defaultValue?: D[K],
-  options?: types.LooseObject
-): Promise<D[K] | undefined> {
-  const data = await model.findOneIn(column, criteria, options)
-  return data ?? defaultValue
-}
-
-async function baseSet <D extends types.ReturnDict, K extends keyof D> (
-  model: Model<D>,
-  column: K,
-  criteria: types.Criteria<D> | undefined,
-  value?: D[K],
-  options?: types.LooseObject
-): Promise<D[]> {
-  invariant(
-    model.schema[column as string],
-    `no column by the name '${column}' is defined in '${model.name}'`
-  )
-
-  return model.update(criteria, {
-    [column]: value
-  } as Partial<D>, options)
 }

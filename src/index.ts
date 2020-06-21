@@ -222,355 +222,6 @@ export class Trilogy {
   }
 
   /**
-   * Create an object on the given model. `object` should match the model's
-   * defined schema but values will cast into types as needed.
-   *
-   * @param modelName Name of the existing model where the object will be created
-   * @param object Data to insert
-   * @param options
-   */
-  async create <T = types.LooseObject> (
-    modelName: string,
-    object: types.LooseObject,
-    options?: types.LooseObject
-  ): Promise<T>
-  async create (
-    modelName: string,
-    object: types.LooseObject,
-    options?: types.LooseObject
-  ) {
-    const model = this.getModel(modelName)
-    return model.create(object, options)
-  }
-
-  /**
-   * Find all objects matching a given criteria.
-   *
-   * @param location Model name and an optional column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param options
-   */
-  async find <T = types.LooseObject> (
-    location: string,
-    criteria?: types.Criteria,
-    options?: types.FindOptions
-  ): Promise<T[]>
-  async find (
-    location: string,
-    criteria?: types.Criteria,
-    options?: types.FindOptions
-  ) {
-    const [table, column] = location.split('.', 2)
-    const model = this.getModel(table)
-    if (column) {
-      return model.findIn(column, criteria, options)
-    } else {
-      return model.find(criteria, options)
-    }
-  }
-
-  /**
-   * Find a single object matching a given criteria. The first matching
-   * object is returned.
-   *
-   * @param location Model name and an optional column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param options
-   */
-  async findOne <T = types.LooseObject> (
-    location: string,
-    criteria?: types.Criteria,
-    options?: types.FindOptions
-  ): Promise<T>
-  async findOne (
-    location: string,
-    criteria?: types.Criteria,
-    options?: types.FindOptions
-  ) {
-    const [table, column] = location.split('.', 2)
-    const model = this.getModel(table)
-    if (column) {
-      return model.findOneIn(column, criteria, options)
-    } else {
-      return model.findOne(criteria, options)
-    }
-  }
-
-  /**
-   * Find a matching object based on the given criteria, or create it if it
-   * doesn't exist. When creating the object, a merged object created from
-   * `criteria` and `creation` will be used, with the properties from
-   * `creation` taking precedence.
-   *
-   * @param modelName Name of the model
-   * @param criteria Criteria to search for
-   * @param creation Data used to create the object if it doesn't exist
-   * @param options
-   */
-  async findOrCreate <T = types.LooseObject> (
-    modelName: string,
-    criteria: types.Criteria,
-    creation?: types.LooseObject,
-    options?: types.FindOptions
-  ): Promise<T>
-  async findOrCreate (
-    modelName: string,
-    criteria: types.Criteria,
-    creation?: types.LooseObject,
-    options?: types.FindOptions
-  ) {
-    const model = this.getModel(modelName)
-    return model.findOrCreate(criteria, creation, options)
-  }
-
-  /**
-   * Modify the properties of an existing object. While optional, if `data`
-   * contains no properties no update queries will be run.
-   *
-   * @param modelName Name of the model
-   * @param criteria Criteria used to restrict selection
-   * @param data Updates to be made on matching objects
-   * @param options
-   */
-  async update (
-    modelName: string,
-    criteria: types.Criteria,
-    data: types.LooseObject,
-    options?: types.UpdateOptions
-  ) {
-    const model = this.getModel(modelName)
-    return model.update(criteria, data, options)
-  }
-
-  /**
-   * Update an existing object or create it if it doesn't exist. If creation
-   * is necessary a merged object created from `criteria` and `data` will be
-   * used, with the properties from `data` taking precedence.
-   *
-   * @param modelName Name of the model
-   * @param criteria Criteria used to restrict selection
-   * @param data Updates to be made on matching objects
-   * @param options
-   */
-  async updateOrCreate (
-    modelName: string,
-    criteria: types.Criteria,
-    data: types.LooseObject,
-    options?: types.CreateOptions & types.UpdateOptions
-  ) {
-    const model = this.getModel(modelName)
-    return model.updateOrCreate(criteria, data, options)
-  }
-
-  /**
-   * Works similarly to the `get` methods in lodash, underscore, etc. Returns
-   * the value at `column` or, if it does not exist, the supplied `defaultValue`.
-   * Essentially a useful shorthand for some `find` scenarios.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param defaultValue Value returned if the result doesn't exist
-   */
-  async get <T = types.ReturnType> (
-    location: string,
-    criteria: types.Criteria,
-    defaultValue?: T
-  ): Promise<T>
-  async get (
-    location: string,
-    criteria: types.Criteria,
-    defaultValue?: any
-  ): Promise<any> {
-    const [table, column] = location.split('.', 2)
-
-    invariant(column, 'property name is required, ex: `get("users.rank")`')
-
-    const model = this.getModel(table)
-    return model.get(column, criteria, defaultValue)
-  }
-
-  /**
-   * Works similarly to the `set` methods in lodash, underscore, etc. Updates
-   * the value at `column` to be `value` where the given criteria is met.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param value Value returned if the result doesn't exist
-   */
-  async set <T> (location: string, criteria: types.Criteria, value: T) {
-    const [table, column] = location.split('.', 2)
-
-    invariant(column, 'property name is required, ex: `set("users.rank")`')
-
-    const model = this.getModel(table)
-    return model.set(column, criteria, value)
-  }
-
-  /**
-   * Works exactly like `get` but bypasses getters and retrieves the raw database value.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param defaultValue Value returned if the result doesn't exist
-   */
-  async getRaw <T> (location: string, criteria: types.Criteria, defaultValue: T): Promise<T>
-  async getRaw (location: string, criteria: types.Criteria): Promise<types.ReturnType>
-  async getRaw <T extends Record<string, unknown>, K extends keyof T = keyof T> (
-    location: string,
-    criteria: types.Criteria
-  ): Promise<T[K]>
-  async getRaw (
-    location: string,
-    criteria: types.Criteria,
-    defaultValue?: any
-  ): Promise<any> {
-    const [table, column] = location.split('.', 2)
-
-    invariant(column, 'property name is required, ex: `getRaw("users.rank")`')
-
-    const model = this.getModel(table)
-    return model.getRaw(column, criteria, defaultValue)
-  }
-
-  /**
-   * Works exactly like `set` but bypasses setters when updating the target value.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param value Value returned if the result doesn't exist
-   */
-  async setRaw <T> (location: string, criteria: types.Criteria, value: T) {
-    const [table, column] = location.split('.', 2)
-
-    invariant(column, 'property name is required, ex: `setRaw("users.rank")`')
-
-    const model = this.getModel(table)
-    return model.setRaw(column, criteria, value)
-  }
-
-  /**
-   * Increment the value of a given model's property by the specified amount,
-   * which defaults to `1` if not provided.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param amount
-   */
-  async increment (location: string, criteria: types.Criteria, amount?: number) {
-    const [table, column] = location.split('.', 2)
-    const model = this.getModel(table)
-    return model.increment(column, criteria, amount)
-  }
-
-  /**
-   * Decrement the value of a given model's property by the specified amount,
-   * which defaults to `1` if not provided.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param amount
-   */
-  async decrement (
-    location: string,
-    criteria: types.Criteria,
-    amount?: number,
-    allowNegative?: boolean
-  ) {
-    const [table, column] = location.split('.', 2)
-    const model = this.getModel(table)
-    return model.decrement(column, criteria, amount, allowNegative)
-  }
-
-  /**
-   * Delete objects matching `criteria` from the given model.
-   *
-   * @remarks
-   * If `criteria` is empty or absent, nothing will be done. This is a safeguard
-   * against unintentionally deleting everything in the model. Use `clear` if
-   * you really want to remove all rows.
-   *
-   * @param modelName Name of the model
-   * @param criteria Criteria used to restrict selection
-   */
-  async remove (modelName: string, criteria: types.Criteria) {
-    const model = this.getModel(modelName)
-    return model.remove(criteria)
-  }
-
-  /**
-   * Delete all objects from the given model.
-   *
-   * @param modelName Name of the model
-   */
-  async clear (modelName: string) {
-    const model = this.getModel(modelName)
-    return model.clear()
-  }
-
-  /**
-   * Count the number of objects in the given model.
-   *
-   * @param location Model name and an optional column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param options
-   */
-  async count (
-    location?: string,
-    criteria?: types.Criteria,
-    options?: types.AggregateOptions
-  ): Promise<number> {
-    if (location == null && criteria == null && options == null) {
-      const query = this.knex('sqlite_master')
-        .whereNot('name', 'sqlite_sequence')
-        .where({ type: 'table' })
-        .count('* as count')
-
-      return runQuery(this, query, { needResponse: true })
-        .then(([{ count }]) => count)
-    }
-
-    const [table, column] = (location ?? '').split('.', 2)
-    const model = this.getModel(table)
-    return column
-      ? model.countIn(column, criteria, options)
-      : model.count(criteria, options)
-  }
-
-  /**
-   * Find the minimum value contained in the model, comparing all values in
-   * `column` that match the given criteria.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param options
-   */
-  async min (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
-    const [table, column] = location.split('.', 2)
-
-    invariant(column, 'property name is required, ex: `min("users.rank")`')
-
-    const model = this.getModel(table)
-    return model.min(column, criteria, options)
-  }
-
-  /**
-   * Find the maximum value contained in the model, comparing all values in
-   * `column` that match the given criteria.
-   *
-   * @param location Model name and a column in dot-notation
-   * @param criteria Criteria used to restrict selection
-   * @param options
-   */
-  async max (location: string, criteria: types.Criteria, options?: types.AggregateOptions) {
-    const [table, column] = location.split('.', 2)
-
-    invariant(column, 'property name is required, ex: `max("users.rank")`')
-
-    const model = this.getModel(table)
-    return model.max(column, criteria, options)
-  }
-
-  /**
    * The `onQuery` hook is called each time a query is run on the database,
    * and receives the query in string form.
    *
@@ -582,8 +233,8 @@ export class Trilogy {
    */
   onQuery (
     ...args:
-      | [hooks.OnQueryCallback, hooks.OnQueryOptions?]
-      | [string, hooks.OnQueryCallback, hooks.OnQueryOptions?]
+    | [hooks.OnQueryCallback, hooks.OnQueryOptions?]
+    | [string, hooks.OnQueryCallback, hooks.OnQueryOptions?]
   ): types.Fn<[], boolean> {
     // tslint:disable-next-line:no-empty
     let fn: hooks.OnQueryCallback = () => {}
@@ -622,7 +273,7 @@ export class Trilogy {
     }
 
     // all queries run across all defined models
-    const unsubs: types.Fn<[], boolean>[] =
+    const unsubs: Array<types.Fn<[], boolean>> =
       Array.from(new Array(this._definitions.size))
 
     let i = -1
@@ -658,7 +309,7 @@ export class Trilogy {
     } else {
       // all creations run across all defined models
       const [fn] = args
-      const unsubs: types.Fn<[], boolean>[] =
+      const unsubs: Array<types.Fn<[], boolean>> =
         Array.from(new Array(this._definitions.size))
 
       let i = -1
@@ -689,7 +340,7 @@ export class Trilogy {
     } else {
       // all creations run across all defined models
       const [fn] = args
-      const unsubs: types.Fn<[], boolean>[] =
+      const unsubs: Array<types.Fn<[], boolean>> =
         Array.from(new Array(this._definitions.size))
 
       let i = -1
@@ -725,7 +376,7 @@ export class Trilogy {
     } else {
       // all updates run across all defined models
       const [fn] = args
-      const unsubs: types.Fn<[], boolean>[] =
+      const unsubs: Array<types.Fn<[], boolean>> =
         Array.from(new Array(this._definitions.size))
 
       let i = -1
@@ -756,7 +407,7 @@ export class Trilogy {
     } else {
       // all updates run across all defined models
       const [fn] = args
-      const unsubs: types.Fn<[], boolean>[] =
+      const unsubs: Array<types.Fn<[], boolean>> =
         Array.from(new Array(this._definitions.size))
 
       let i = -1
@@ -792,7 +443,7 @@ export class Trilogy {
     } else {
       // all removals run across all defined models
       const [fn] = args
-      const unsubs: types.Fn<[], boolean>[] =
+      const unsubs: Array<types.Fn<[], boolean>> =
         Array.from(new Array(this._definitions.size))
 
       let i = -1
@@ -822,7 +473,7 @@ export class Trilogy {
     } else {
       // all removals run across all defined models
       const [fn] = args
-      const unsubs: types.Fn<[], boolean>[] =
+      const unsubs: Array<types.Fn<[], boolean>> =
         Array.from(new Array(this._definitions.size))
 
       let i = -1
