@@ -10,8 +10,6 @@ import Model from "./model"
 import { ColumnTypes, Driver } from "./constants"
 import { isFunction } from "./util"
 
-import type { Object } from "ts-toolbelt"
-
 export type Fn <T extends any[], R = any> = (...args: T) => R
 
 export type Query =
@@ -22,6 +20,12 @@ export type Query =
 export type QueryLike = Query | Promise<boolean>
 
 export type Listable <T> = T | T[]
+
+export type Nullable <T> = T | null | undefined
+
+export type Compulsory <T extends object> = {
+  [K in keyof T]-?: NonNullable<T[K]>
+}
 
 export interface QueryOptions <
   Props extends ModelProps<LooseObject> = ModelProps<LooseObject>
@@ -157,7 +161,7 @@ export type FindOptions = t.Static<typeof FindOptions>
 export type ColumnKind = t.Static<typeof ColumnKind>
 export type ColumnDescriptor = t.Static<typeof ColumnDescriptor>
 
-export type TrilogyOptionsNormalized = Object.Compulsory<TrilogyOptions & {
+export type TrilogyOptionsNormalized = Compulsory<TrilogyOptions & {
   connection: { filename: string }
 }>
 

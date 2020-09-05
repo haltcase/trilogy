@@ -1,5 +1,3 @@
-import { Union } from "ts-toolbelt"
-
 import * as types from "./types"
 
 export const mapObj = <T extends types.LooseObject, R extends T> (
@@ -23,7 +21,7 @@ export const isFunction = (value: any): value is Function => typeof value === "f
 export const isString = (value: any): value is string => typeof value === "string"
 export const isNumber = (value: any): value is number => typeof value === "number"
 
-export const isEmpty = (value: any): value is Union.Nullable<{} | []> => {
+export const isEmpty = (value: any): value is types.Nullable<{} | []> => {
   if (value == null) return true
   if (Array.isArray(value)) return value.length === 0
   if (isObject(value)) return Object.keys(value).length === 0

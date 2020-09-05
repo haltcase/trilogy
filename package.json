@@ -51,7 +51,6 @@
     "generic-pool": "^3.7.1",
     "knex": "^0.21.5",
     "runtypes": "^5.0.1",
-    "ts-toolbelt": "^6.15.5",
     "tslib": "^2.0.1"
   },
   "devDependencies": {

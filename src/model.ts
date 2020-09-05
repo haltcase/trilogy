@@ -1,5 +1,3 @@
-import { Union } from "ts-toolbelt"
-
 import { Trilogy } from "."
 import { Hooks, Hook } from "./hooks"
 
@@ -182,7 +180,7 @@ export default class Model <
     })
 
     // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const result = await helpers.getQueryResult<Driver, typeof returning, Props, Union.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, returning, {
+    const result = await helpers.getQueryResult<Driver, typeof returning, Props, types.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, returning, {
       model: this,
       internal: true
     })
@@ -220,7 +218,7 @@ export default class Model <
     if (options.skip != null) query = query.offset(options.skip)
 
     // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const result = await helpers.getQueryResult<Driver, typeof query, Props, Union.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, query, {
+    const result = await helpers.getQueryResult<Driver, typeof query, Props, types.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, query, {
       model: this
     })
 
