@@ -1,13 +1,14 @@
-import { invariant } from './util'
-import { normalizeCriteria } from './helpers'
+import { invariant } from "./util"
+import { normalizeCriteria } from "./helpers"
 
 import {
+  ModelProps,
   Fn,
   Criteria,
   CriteriaNormalized,
   CreateOptions,
   UpdateOptions
-} from './types'
+} from "./types"
 
 export type HookOptions = CreateOptions | UpdateOptions | {}
 
@@ -39,30 +40,30 @@ export interface HookResult {
 }
 
 export enum Hook {
-  OnQuery = 'ON_QUERY',
-  BeforeCreate = 'BEFORE_CREATE',
-  AfterCreate = 'AFTER_CREATE',
-  BeforeUpdate = 'BEFORE_UPDATE',
-  AfterUpdate = 'AFTER_UPDATE',
-  BeforeRemove = 'BEFORE_REMOVE',
-  AfterRemove = 'AFTER_REMOVE'
+  OnQuery = "ON_QUERY",
+  BeforeCreate = "BEFORE_CREATE",
+  AfterCreate = "AFTER_CREATE",
+  BeforeUpdate = "BEFORE_UPDATE",
+  AfterUpdate = "AFTER_UPDATE",
+  BeforeRemove = "BEFORE_REMOVE",
+  AfterRemove = "AFTER_REMOVE"
 }
 
-export const EventCancellation = Symbol('trilogy.EventCancellation')
+export const EventCancellation = Symbol("trilogy.EventCancellation")
 
 /**
  * Base implementation of lifecycle hooks inherited by all model instances.
  */
-export class Hooks <D> {
-  private _onQuery = new Set<OnQueryCallback>()
-  private _onQueryAll = new Set<OnQueryCallback>()
+export class Hooks <Props extends ModelProps<any>> {
+  readonly #onQuery = new Set<OnQueryCallback>()
+  readonly #onQueryAll = new Set<OnQueryCallback>()
 
-  private _beforeCreate = new Set<BeforeCreateCallback<D>>()
-  private _afterCreate = new Set<AfterCreateCallback<D>>()
-  private _beforeUpdate = new Set<BeforeUpdateCallback<D>>()
-  private _afterUpdate = new Set<AfterUpdateCallback<D>>()
-  private _beforeRemove = new Set<BeforeRemoveCallback<D>>()
-  private _afterRemove = new Set<AfterRemoveCallback<D>>()
+  readonly #beforeCreate = new Set<BeforeCreateCallback<Props["objectOutput"]>>()
+  readonly #afterCreate = new Set<AfterCreateCallback<Props["objectOutput"]>>()
+  readonly #beforeUpdate = new Set<BeforeUpdateCallback<Props["objectOutput"]>>()
+  readonly #afterUpdate = new Set<AfterUpdateCallback<Props["objectOutput"]>>()
+  readonly #beforeRemove = new Set<BeforeRemoveCallback<Props["objectOutput"]>>()
+  readonly #afterRemove = new Set<AfterRemoveCallback<Props["objectOutput"]>>()
 
   /**
    * The `onQuery` hook is called each time a query is run on the database,
@@ -73,20 +74,21 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  onQuery (fn: OnQueryCallback, options: OnQueryOptions = {}) {
+  onQuery (fn: OnQueryCallback, options: OnQueryOptions = {}): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
     if (options.includeInternal) {
-      this._onQuery.add(fn)
-      this._onQueryAll.add(fn)
-      return () =>
-        this._onQueryAll.delete(fn) && this._onQuery.delete(fn)
+      this.#onQuery.add(fn)
+      this.#onQueryAll.add(fn)
+      return (): boolean =>
+        this.#onQueryAll.delete(fn) && this.#onQuery.delete(fn)
     } else {
-      this._onQuery.add(fn)
-      return () => this._onQuery.delete(fn)
+      this.#onQuery.add(fn)
+      return (): boolean =>
+        this.#onQuery.delete(fn)
     }
   }
 
@@ -104,14 +106,14 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  beforeCreate (fn: BeforeCreateCallback<D>) {
+  beforeCreate (fn: BeforeCreateCallback<Props["objectOutput"]>): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
-    this._beforeCreate.add(fn)
-    return () => this._beforeCreate.delete(fn)
+    this.#beforeCreate.add(fn)
+    return (): boolean => this.#beforeCreate.delete(fn)
   }
 
   /**
@@ -122,14 +124,14 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  afterCreate (fn: AfterCreateCallback<D>) {
+  afterCreate (fn: AfterCreateCallback<Props["objectOutput"]>): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
-    this._afterCreate.add(fn)
-    return () => this._afterCreate.delete(fn)
+    this.#afterCreate.add(fn)
+    return (): boolean => this.#afterCreate.delete(fn)
   }
 
   /**
@@ -145,14 +147,14 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  beforeUpdate (fn: BeforeUpdateCallback<D>) {
+  beforeUpdate (fn: BeforeUpdateCallback<Props["objectOutput"]>): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
-    this._beforeUpdate.add(fn)
-    return () => this._beforeUpdate.delete(fn)
+    this.#beforeUpdate.add(fn)
+    return (): boolean => this.#beforeUpdate.delete(fn)
   }
 
   /**
@@ -163,14 +165,14 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  afterUpdate (fn: AfterUpdateCallback<D>) {
+  afterUpdate (fn: AfterUpdateCallback<Props["objectOutput"]>): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
-    this._afterUpdate.add(fn)
-    return () => this._afterUpdate.delete(fn)
+    this.#afterUpdate.add(fn)
+    return (): boolean => this.#afterUpdate.delete(fn)
   }
 
   /**
@@ -186,14 +188,14 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  beforeRemove (fn: BeforeRemoveCallback<D>) {
+  beforeRemove (fn: BeforeRemoveCallback<Props["objectOutput"]>): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
-    this._beforeRemove.add(fn)
-    return () => this._beforeRemove.delete(fn)
+    this.#beforeRemove.add(fn)
+    return (): boolean => this.#beforeRemove.delete(fn)
   }
 
   /**
@@ -203,14 +205,14 @@ export class Hooks <D> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  afterRemove (fn: AfterRemoveCallback<D>) {
+  afterRemove (fn: AfterRemoveCallback<Props["objectOutput"]>): () => boolean {
     invariant(
-      typeof fn === 'function',
-      'hook callbacks must be of type function'
+      typeof fn === "function",
+      "hook callbacks must be of type function"
     )
 
-    this._afterRemove.add(fn)
-    return () => this._afterRemove.delete(fn)
+    this.#afterRemove.add(fn)
+    return (): boolean => this.#afterRemove.delete(fn)
   }
 
   /**
@@ -218,29 +220,29 @@ export class Hooks <D> {
    *
    * @internal
    */
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.OnQuery, arg: OnQueryContext
   ): Promise<HookResult>
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.BeforeCreate, arg: T | Partial<T>, options?: CreateOptions
   ): Promise<HookResult>
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.AfterCreate, arg: T, options?: CreateOptions
   ): Promise<HookResult>
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.BeforeUpdate, arg: [T | Partial<T>, Criteria<T>], options?: UpdateOptions
   ): Promise<HookResult>
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.AfterUpdate, arg: T[], options?: UpdateOptions
   ): Promise<HookResult>
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.BeforeRemove, arg: Criteria<T>, options?: {}
   ): Promise<HookResult>
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook.AfterRemove, arg: T[], options?: {}
   ): Promise<HookResult>
 
-  async _callHook <T = D> (
+  async _callHook <T = Props["objectOutput"]> (
     hook: Hook,
     arg: T | Partial<T> | [T | Partial<T>, Criteria<T>] | Criteria<T> | OnQueryContext,
     options?: HookOptions
@@ -251,7 +253,7 @@ export class Hooks <D> {
 
     if (hook === Hook.OnQuery) {
       const [query, internal] = arg as OnQueryContext
-      const fns = internal ? this._onQueryAll : this._onQuery
+      const fns = internal ? this.#onQueryAll : this.#onQuery
 
       for (const fn of fns) {
         if (await fn(query) === EventCancellation) {
@@ -263,13 +265,13 @@ export class Hooks <D> {
     }
 
     const fns = ({
-      [Hook.BeforeCreate]: this._beforeCreate,
-      [Hook.AfterCreate]: this._afterCreate,
-      [Hook.BeforeUpdate]: this._beforeUpdate,
-      [Hook.AfterUpdate]: this._afterUpdate,
-      [Hook.BeforeRemove]: this._beforeRemove,
-      [Hook.AfterRemove]: this._afterRemove
-    } as Record<Hook, Set<HookCallback<T>>>)[hook]
+      [Hook.BeforeCreate]: this.#beforeCreate,
+      [Hook.AfterCreate]: this.#afterCreate,
+      [Hook.BeforeUpdate]: this.#beforeUpdate,
+      [Hook.AfterUpdate]: this.#afterUpdate,
+      [Hook.BeforeRemove]: this.#beforeRemove,
+      [Hook.AfterRemove]: this.#afterRemove
+    })[hook]
 
     for (const fn of fns) {
       let thisResult: unknown
@@ -278,19 +280,19 @@ export class Hooks <D> {
         const [data, criteria] = arg as [T | Partial<T>, Criteria<T>]
         thisResult = await (
           fn as BeforeUpdateCallback<T>
-        )(data, normalizeCriteria(criteria), options || {})
+        )(data, normalizeCriteria(criteria), options ?? {})
       } else if (hook === Hook.BeforeRemove) {
         thisResult = await (
           fn as BeforeRemoveCallback<T>
-        )(normalizeCriteria(arg as Criteria<T>), options || {})
+        )(normalizeCriteria(arg as Criteria<T>), options ?? {})
       } else if (hook === Hook.BeforeCreate || hook === Hook.AfterCreate) {
         thisResult = await (
           fn as BeforeCreateCallback<T> | AfterCreateCallback<T>
-        )(arg as T, options || {})
+        )(arg as T, options ?? {})
       } else {
         thisResult = await (
           fn as AfterUpdateCallback<T> | AfterRemoveCallback<T>
-        )(arg as T[], options || {})
+        )(arg as T[], options ?? {})
       }
 
       if (thisResult === EventCancellation) {

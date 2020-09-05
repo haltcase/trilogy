@@ -1,30 +1,37 @@
-export type Person = {
-  name: string,
+import { ColumnTypes } from "../../src/constants"
+
+export interface Person4 {
+  name: ColumnTypes.string,
+  age: ColumnTypes.number
+}
+
+export interface Person {
+  name: string
   age: number
 }
 
-export type Person2 = {
-  age: number,
+export interface Person2 {
+  age: number
   gender: string
 }
 
-export type Person3 = {
-  age: number,
+export interface Person3 {
+  age: number
   favoriteColor: string
 }
 
-export type FirstSecond = {
-  first: string,
+export interface FirstSecond {
+  first: string
   second: string
 }
 
-export type Game = {
-  name: string,
-  last_played: Date,
+export interface Game {
+  name: string
+  last_played: Date
   genre: string
 }
 
-export type User = {
-  name: string,
+export interface User {
+  name: string
   rank: number
 }

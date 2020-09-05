@@ -1,99 +1,117 @@
-import { Trilogy } from '.'
-import { Hooks, Hook } from './hooks'
+import { Union } from "ts-toolbelt"
 
-import * as helpers from './helpers'
+import { Trilogy } from "."
+import { Hooks, Hook } from "./hooks"
+
+import * as helpers from "./helpers"
 import {
-  Cast, normalizeSchema, createTrigger, TriggerEvent
-} from './schema-helpers'
+  createTrigger,
+  normalizeSchema,
+  TriggerEvent,
+  Cast
+} from "./schema-helpers"
 import {
-  invariant, isEmpty, isString, isObject, isNil, toArray, firstOrValue
-} from './util'
+  invariant, isString, isObject, toArray, firstOrValue
+} from "./util"
 
-import * as types from './types'
+import * as types from "./types"
+import { Driver } from "./constants"
 
-const baseCount = async <D extends types.ReturnDict> (
-  model: Model<D>,
-  column: keyof D,
-  criteria?: types.Criteria<D>,
+const baseCount = async <
+  T extends types.LooseObject,
+  Props extends types.ModelProps<T>
+> (
+  model: Model<T, Props>,
+  column: keyof Props["schema"],
+  criteria?: types.Criteria<Props["objectInput"]>,
   options: types.AggregateOptions = {}
 ): Promise<number> => {
   invariant(
-    column && isString(column),
+    column != null && isString(column),
     `invalid column: expected string, got ${typeof column}`
   )
 
   types.AggregateOptions.check(options)
 
-  const val = `${column} as count`
+  const val = `${String(column)} as count`
   const builder = model.ctx.knex(model.name)
   let query = options.distinct ? builder.countDistinct(val) : builder.count(val)
   query = helpers.buildWhere(query, model.cast.toDefinition(
-    criteria || {},
+    criteria ?? {},
     { raw: true, ...options }
   ))
 
-  if (options.group) query = query.groupBy(toArray(options.group))
+  if (options.group != null) query = query.groupBy(toArray(options.group))
 
-  const res = await helpers.runQuery(model.ctx, query, {
-    model,
-    needResponse: true
+  // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+  const result = await helpers.getQueryResult<Driver, typeof query, Props, [{ count: number }] | undefined>(model.ctx, query, {
+    model
   })
-  if (!Array.isArray(res)) return 0
-  return res[0].count
+  return Array.isArray(result) ? result[0].count : 0
 }
 
-const baseMinMax = async <D extends types.ReturnDict> (
-  model: Model<D>,
-  method: 'min' | 'max',
-  column: keyof D,
-  criteria?: types.Criteria<D>,
+const baseMinMax = async <
+  T extends types.LooseObject,
+  Props extends types.ModelProps<T>
+> (
+  model: Model<T, Props>,
+  method: "min" | "max",
+  column: keyof Props["objectOutput"],
+  criteria?: types.Criteria<Props["objectOutput"]>,
   options: types.AggregateOptions = {}
-) => {
+): Promise<number | undefined> => {
   types.AggregateOptions.check(options)
 
-  const val = `${column} as ${method}`
+  const val = `${String(column)} as ${method}`
   let query = model.ctx.knex(model.name)[method](val)
   query = helpers.buildWhere(query, model.cast.toDefinition(
-    criteria || {},
+    criteria ?? {},
     { raw: true, ...options }
   ))
 
-  if (options.group) query = query.groupBy(toArray(options.group))
+  if (options.group != null) query = query.groupBy(toArray(options.group))
 
-  const res = await helpers.runQuery(model.ctx, query, {
-    model,
-    needResponse: true
+  // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+  const result = await helpers.getQueryResult<Driver, typeof query, Props, [Record<"min" | "max", number>] | undefined>(model.ctx, query, {
+    model: model
   })
-  if (!Array.isArray(res)) return undefined
-  return res[0][method]
+  return Array.isArray(result) ? result[0][method] : undefined
 }
 
-const baseGet = async <D extends types.ReturnDict, K extends keyof D> (
-  model: Model<D>,
+const baseGet = async <
+  T extends types.LooseObject,
+  Props extends types.ModelProps<T>,
+  K extends keyof Props["objectOutput"]
+> (
+  model: Model<T, Props>,
   column: K,
-  criteria: types.Criteria<D> | undefined,
-  defaultValue?: D[K],
+  criteria: types.Criteria<Props["objectOutput"]> | undefined,
+  defaultValue?: Props["objectOutput"][K],
   options?: types.LooseObject
-): Promise<D[K] | undefined> => {
+): Promise<Props["objectOutput"][K] | undefined> => {
   const data = await model.findOneIn(column, criteria, options)
   return data ?? defaultValue
 }
 
-const baseSet = async <D extends types.ReturnDict, K extends keyof D> (
-  model: Model<D>,
+const baseSet = async <
+  T extends types.LooseObject,
+  Props extends types.ModelProps<T>,
+  K extends keyof Props["objectOutput"]
+> (
+  model: Model<T, Props>,
   column: K,
-  criteria: types.Criteria<D> | undefined,
-  value?: D[K],
+  criteria: types.Criteria<Props["objectOutput"]> | undefined,
+  value?: Props["objectOutput"][K],
   options?: types.LooseObject
-): Promise<D[]> => {
+): Promise<Array<Props["objectOutput"]>> => {
   invariant(
     model.schema[column as string],
-    `no column by the name '${column}' is defined in '${model.name}'`
+    `no column by the name '${String(column)}' is defined in '${model.name}'`
   )
 
-  return await model.update(criteria, {
+  return model.update(criteria, {
     [column]: value
-  } as Partial<D>, options)
+  } as Partial<Props["objectOutput"]>, options)
 }
 
 /**
@@ -107,10 +125,11 @@ const baseSet = async <D extends types.ReturnDict, K extends keyof D> (
  * @internal
  */
 export default class Model <
-  D extends types.ReturnDict = types.LooseObject
-> extends Hooks<D> {
-  cast: Cast<D>
-  schema: types.Schema<D>
+  T extends types.LooseObject = types.LooseObject,
+  Props extends types.ModelProps<T> = types.ModelProps<T>
+> extends Hooks<Props> {
+  schema: types.SchemaNormalized<Props["schema"]>
+  cast: Cast<T, Props>
 
   /**
    * @param ctx trilogy instance used as a context for the model
@@ -121,12 +140,12 @@ export default class Model <
   constructor (
     public ctx: Trilogy,
     public name: string,
-    schema: types.SchemaRaw<D>,
+    schema: Props["schema"],
     public options: types.ModelOptions
   ) {
     super()
-    this.schema = normalizeSchema<D>(schema, options)
-    this.cast = new Cast<D>(this)
+    this.schema = normalizeSchema(schema, options)
+    this.cast = new Cast(this)
   }
 
   /**
@@ -137,9 +156,9 @@ export default class Model <
    * @param options
    */
   async create (
-    object: D,
+    object: Props["objectInput"],
     options: types.CreateOptions = {}
-  ): Promise<D | undefined> {
+  ): Promise<Props["objectOutput"] | undefined> {
     const { prevented } =
       await this._callHook(Hook.BeforeCreate, object, options)
 
@@ -153,25 +172,25 @@ export default class Model <
     const query = this.ctx.knex.raw(
       this.ctx.knex(this.name)
         .insert(insertion)
-        .toString()
-        .replace(/^insert/i, 'INSERT OR IGNORE')
+        .toSQL()
+        .sql
+        .replace(/^insert/i, "INSERT OR IGNORE")
     )
 
-    await helpers.runQuery(this.ctx, query, { model: this })
+    await helpers.executeQuery<Props>(this.ctx, query, {
+      model: this
+    })
 
-    const result = await helpers.runQuery(this.ctx, returning, {
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const result = await helpers.getQueryResult<Driver, typeof returning, Props, Union.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, returning, {
       model: this,
-      needResponse: true,
       internal: true
     })
     await cleanup()
 
-    const created = !isEmpty(result)
-      ? this.cast.fromDefinition(
-        firstOrValue(result),
-        options
-      )
-      : undefined
+    const created = result == null || (Array.isArray(result) && result.length < 1)
+      ? undefined
+      : this.cast.fromDefinition(firstOrValue(result), options)
 
     await this._callHook(Hook.AfterCreate, created, options)
     return created
@@ -184,32 +203,32 @@ export default class Model <
    * @param options
    */
   async find (
-    criteria?: types.Criteria<D>,
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options: types.FindOptions = {}
-  ): Promise<D[]> {
+  ): Promise<Array<Props["objectOutput"]>> {
     types.FindOptions.check(options)
 
-    const order = options.random ? 'random' : options.order
+    const order = options.random ? "random" : options.order
     let query = this.ctx.knex(this.name).select()
     query = helpers.buildWhere(query, this.cast.toDefinition(
-      criteria || {},
+      criteria ?? {},
       { raw: true, ...options }
     ))
 
-    if (order) query = helpers.buildOrder(query, order)
-    if (options.limit) query = query.limit(options.limit)
-    if (options.skip) query = query.offset(options.skip)
+    if (order != null) query = helpers.buildOrder(query, order)
+    if (options.limit != null) query = query.limit(options.limit)
+    if (options.skip != null) query = query.offset(options.skip)
 
-    const response = await helpers.runQuery(this.ctx, query, {
-      model: this,
-      needResponse: true
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const result = await helpers.getQueryResult<Driver, typeof query, Props, Union.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, query, {
+      model: this
     })
 
-    if (!Array.isArray(response)) {
-      return response ? [response] : []
+    if (!Array.isArray(result)) {
+      return result != null ? [result] : []
     }
 
-    return response.map(object => {
+    return result.map(object => {
       return this.cast.fromDefinition(object, options)
     })
   }
@@ -223,14 +242,14 @@ export default class Model <
    * @param options
    */
   async findIn (
-    column: keyof D,
-    criteria?: types.Criteria<D>,
+    column: keyof Props["schema"],
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options?: types.FindOptions
-  ): Promise<Array<types.ValueOf<D>>> {
-    const response = await this.find(criteria, options)
-    return response.map(object => {
+  ): Promise<Array<types.ValueOf<Props["objectOutput"]>>> {
+    const result = await this.find(criteria, options)
+    return result.map(object => {
       return this.cast.fromColumnDefinition(
-        column as string,
+        column,
         object[column],
         options
       )
@@ -245,28 +264,28 @@ export default class Model <
    * @param options
    */
   async findOne (
-    criteria?: types.Criteria<D>,
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options: types.FindOptions = {}
-  ): Promise<D | undefined> {
+  ): Promise<Props["objectOutput"] | undefined> {
     types.FindOptions.check(options)
 
-    const order = options.random ? 'random' : options.order
+    const order = options.random ? "random" : options.order
     let query = this.ctx.knex(this.name).first()
     query = helpers.buildWhere(query, this.cast.toDefinition(
-      criteria || {},
+      criteria ?? {},
       { raw: true, ...options }
     ))
 
-    if (order) query = helpers.buildOrder(query, order)
-    if (options.skip) query = query.offset(options.skip)
+    if (order != null) query = helpers.buildOrder(query, order)
+    if (options.skip != null) query = query.offset(options.skip)
 
-    const response = await helpers.runQuery(this.ctx, query, {
-      model: this,
-      needResponse: true
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const response = await helpers.getQueryResult<Driver, typeof query, Props, types.Listable<Props["objectOutput"]>>(this.ctx, query, {
+      model: this
     })
 
-    const result = firstOrValue<D>(response)
-    if (isNil(result)) return undefined
+    const result = firstOrValue<Props["objectOutput"]>(response)
+    if (result == null) return undefined
 
     return this.cast.fromDefinition(result, options)
   }
@@ -279,9 +298,9 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param options
    */
-  async findOneIn <K extends keyof D = keyof D, V = D[K]> (
+  async findOneIn <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V = Props["objectOutput"][K]> (
     column: K,
-    criteria?: types.Criteria<D>,
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options: types.FindOptions = {}
   ): Promise<V | undefined> {
     return this.findOne(criteria, options)
@@ -299,13 +318,14 @@ export default class Model <
    * @param options
    */
   async findOrCreate (
-    criteria: types.CriteriaObj<D>,
-    creation: Partial<D> = {},
+    criteria: types.CriteriaObj<Props["objectOutput"]>,
+    creation: Partial<Props["objectOutput"]> = {},
     options?: types.FindOptions
-  ): Promise<D | undefined> {
+  ): Promise<Props["objectOutput"] | undefined> {
     return (
-      await this.findOne(criteria, options) ||
-      this.create({ ...criteria, ...creation } as D)
+      await this.findOne(criteria, options) ??
+      // TODO: get rid of this `any` cast
+      this.create({ ...criteria, ...creation } as any)
     )
   }
 
@@ -318,10 +338,10 @@ export default class Model <
    * @param options
    */
   async update (
-    criteria: types.Criteria<D> = {},
-    data: Partial<D> = {},
+    criteria: types.Criteria<Props["objectOutput"]> = {},
+    data: Partial<Props["objectOutput"]> = {},
     options: types.UpdateOptions = {}
-  ): Promise<D[]> {
+  ): Promise<Array<Props["objectOutput"]>> {
     types.UpdateOptions.check(options)
 
     if (Object.keys(data).length < 1) return []
@@ -340,11 +360,11 @@ export default class Model <
     let query = this.ctx.knex(this.name).update(typedData)
     query = helpers.buildWhere(query, typedCriteria)
 
-    await helpers.runQuery(this.ctx, query, { model: this })
+    await helpers.executeQuery<Props>(this.ctx, query, { model: this })
 
-    const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
       model: this,
-      needResponse: true,
       internal: true
     })
 
@@ -367,15 +387,16 @@ export default class Model <
    * @param options
    */
   async updateOrCreate (
-    criteria: types.CriteriaObj<D>,
-    data: Partial<D>,
+    criteria: types.CriteriaObj<Props["objectOutput"]>,
+    data: Partial<Props["objectOutput"]>,
     options: types.UpdateOptions & types.CreateOptions = {}
-  ): Promise<D[]> {
+  ): Promise<Array<Props["objectOutput"]>> {
     const found = await this.find(criteria, options)
 
-    if (!found || !found.length) {
-      return this.create({ ...criteria, ...data } as D, options)
-        .then(res => toArray<D>(res as D))
+    if (found.length < 1) {
+      // TODO: get rid of this `any` cast
+      return this.create({ ...criteria, ...data } as any, options)
+        .then(res => toArray<Props["objectOutput"]>(res as Props["objectOutput"]))
     } else {
       return this.update(criteria, data, options)
     }
@@ -390,10 +411,10 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param defaultValue Value returned if the result doesn't exist
    */
-  async get <K extends keyof D = keyof D, V extends D[K] = D[K]> (
-    column: K, criteria?: types.Criteria<D>, defaultValue?: V
-  ) {
-    return baseGet<D, K>(this, column, criteria, defaultValue)
+  async get <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
+    column: K, criteria?: types.Criteria<Props["objectOutput"]>, defaultValue?: V
+  ): Promise<Props["objectOutput"][K] | undefined> {
+    return baseGet(this, column, criteria, defaultValue)
   }
 
   /**
@@ -404,10 +425,10 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param value Value returned if the result doesn't exist
    */
-  async set <K extends keyof D = keyof D, V extends D[K] = D[K]> (
-    column: K, criteria: types.Criteria<D>, value: V
-  ) {
-    return baseSet<D, K>(this, column, criteria, value)
+  async set <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
+    column: K, criteria: types.Criteria<Props["objectOutput"]>, value: V
+  ): Promise<Array<Props["objectOutput"]>> {
+    return baseSet(this, column, criteria, value)
   }
 
   /**
@@ -417,10 +438,10 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param defaultValue Value returned if the result doesn't exist
    */
-  async getRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
-    column: K, criteria: types.Criteria<D>, defaultValue?: V
-  ) {
-    return baseGet<D, K>(this, column, criteria, defaultValue, { raw: true })
+  async getRaw <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
+    column: K, criteria: types.Criteria<Props["objectOutput"]>, defaultValue?: V
+  ): Promise<Props["objectOutput"][K] | undefined> {
+    return baseGet(this, column, criteria, defaultValue, { raw: true })
   }
 
   /**
@@ -430,10 +451,10 @@ export default class Model <
    * @param criteria Criteria used to restrict selection
    * @param value Value returned if the result doesn't exist
    */
-  async setRaw <K extends keyof D = keyof D, V extends D[K] = D[K]> (
-    column: K, criteria: types.Criteria<D>, value: V
-  ) {
-    return baseSet<D, K>(this, column, criteria, value, { raw: true })
+  async setRaw <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
+    column: K, criteria: types.Criteria<Props["objectOutput"]>, value: V
+  ): Promise<Array<Props["objectOutput"]>> {
+    return baseSet(this, column, criteria, value, { raw: true })
   }
 
   /**
@@ -445,12 +466,12 @@ export default class Model <
    * @param amount
    */
   async increment (
-    column: keyof D,
-    criteria?: types.Criteria<D>,
+    column: keyof Props["objectOutput"],
+    criteria?: types.Criteria<Props["objectOutput"]>,
     amount?: number
-  ): Promise<D[]> {
+  ): Promise<Array<Props["objectOutput"]>> {
     const { prevented } =
-      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<D>])
+      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<Props["objectOutput"]>])
 
     if (prevented) return []
 
@@ -463,12 +484,12 @@ export default class Model <
     let query = this.ctx.knex(this.name).increment(column as string, amount)
     query = helpers.buildWhere(query, criteria)
 
-    const affected = await helpers.runQuery(this.ctx, query, { model: this })
+    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this })
     if (affected === 0) return []
 
-    const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
       model: this,
-      needResponse: true,
       internal: true
     })
 
@@ -490,13 +511,13 @@ export default class Model <
    * @param amount
    */
   async decrement (
-    column: keyof D,
-    criteria?: types.Criteria<D>,
+    column: keyof Props["objectOutput"],
+    criteria?: types.Criteria<Props["objectOutput"]>,
     amount?: number,
     allowNegative?: boolean
-  ): Promise<D[]> {
+  ): Promise<Array<Props["objectOutput"]>> {
     const { prevented } =
-      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<D>])
+      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<Props["objectOutput"]>])
 
     if (prevented) return []
 
@@ -506,7 +527,7 @@ export default class Model <
 
     const [returning, cleanup] = await createTrigger(this, TriggerEvent.Update)
 
-    const raw = allowNegative ? '?? - ?' : 'MAX(0, ?? - ?)'
+    const raw = allowNegative ? "?? - ?" : "MAX(0, ?? - ?)"
     const query = helpers.buildWhere(
       this.ctx.knex(this.name).update({
         [column]: this.ctx.knex.raw(raw, [column, amount] as [string, number])
@@ -514,12 +535,12 @@ export default class Model <
       criteria
     )
 
-    const affected = await helpers.runQuery(this.ctx, query, { model: this })
+    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this })
     if (affected === 0) return []
 
-    const updatedRaw: D[] = await helpers.runQuery(this.ctx, returning, {
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
       model: this,
-      needResponse: true,
       internal: true
     })
 
@@ -542,7 +563,7 @@ export default class Model <
    *
    * @param criteria Criteria used to restrict selection
    */
-  async remove (criteria: types.Criteria<D>): Promise<D[]> {
+  async remove (criteria: types.Criteria<Props["objectOutput"]>): Promise<Array<Props["objectOutput"]>> {
     const { prevented } =
       await this._callHook(Hook.BeforeRemove, criteria)
 
@@ -558,13 +579,15 @@ export default class Model <
     let query = this.ctx.knex(this.name).del()
     query = helpers.buildWhere(query, criteria)
 
-    const deleteCount = await helpers.runQuery(this.ctx, query, { model: this })
+    const deleteCount = await helpers.executeQuery<Props>(this.ctx, query, {
+      model: this
+    })
 
     if (deleteCount === 0) return []
 
-    const deleted = await helpers.runQuery(this.ctx, returning, {
+    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    const deleted = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
       model: this,
-      needResponse: true,
       internal: true
     })
 
@@ -578,7 +601,7 @@ export default class Model <
    */
   async clear (): Promise<number> {
     const query = this.ctx.knex(this.name).truncate()
-    return helpers.runQuery(this.ctx, query, { model: this })
+    return helpers.executeQuery<Props>(this.ctx, query, { model: this })
   }
 
   /**
@@ -588,10 +611,10 @@ export default class Model <
    * @param options
    */
   async count (
-    criteria?: types.Criteria<D>,
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options: types.AggregateOptions = {}
   ): Promise<number> {
-    return baseCount<D>(this, '*', criteria, options)
+    return baseCount(this, "*", criteria, options)
   }
 
   /**
@@ -603,11 +626,11 @@ export default class Model <
    * @param options
    */
   async countIn (
-    column: keyof D,
-    criteria?: types.Criteria<D>,
+    column: types.StringKeys<Props["objectOutput"]>,
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options: types.AggregateOptions = {}
   ): Promise<number> {
-    return baseCount<D>(this, column, criteria, options)
+    return baseCount(this, column, criteria, options)
   }
 
   /**
@@ -619,11 +642,11 @@ export default class Model <
    * @param options
    */
   async min (
-    column: keyof D,
-    criteria?: types.Criteria<D>,
+    column: keyof Props["objectOutput"],
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options: types.AggregateOptions = {}
   ): Promise<number | undefined> {
-    return baseMinMax(this, 'min', column, criteria, options)
+    return baseMinMax(this, "min", column, criteria, options)
   }
 
   /**
@@ -635,10 +658,10 @@ export default class Model <
    * @param options
    */
   async max (
-    column: keyof D,
-    criteria?: types.Criteria<D>,
+    column: keyof Props["objectOutput"],
+    criteria?: types.Criteria<Props["objectOutput"]>,
     options?: types.AggregateOptions
   ): Promise<number | undefined> {
-    return await baseMinMax(this, 'max', column, criteria, options)
+    return baseMinMax(this, "max", column, criteria, options)
   }
 }

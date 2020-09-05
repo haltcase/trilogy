@@ -1,19 +1,20 @@
-import { castValue } from './schema-helpers'
-import { writeDatabase } from './sqljs-handler'
-import * as util from './util'
+import { Driver } from "./constants"
+import { castValue } from "./schema-helpers"
+import { writeDatabase } from "./sqljs-handler"
+import * as util from "./util"
 
-import * as knex from 'knex'
+import * as knex from "knex"
 
-import { Trilogy } from '.'
-import { Hook, OnQueryContext } from './hooks'
-import * as types from './types'
+import { Trilogy } from "."
+import { Hook, OnQueryContext } from "./hooks"
+import * as types from "./types"
 
 const HasTableSubstring = "from sqlite_master where type = 'table'"
 
 export const parseResponse = (
   contents: types.SqlJsResponse
 ): types.LooseObject[] => {
-  if (!contents || !contents.length) return []
+  if (contents?.length < 1) return []
 
   const [{ columns, values }] = contents
   const results = []
@@ -36,8 +37,8 @@ export const buildOrder = <T = any, U = any> (
   order: string | [string] | [string, string]
 ): knex.QueryBuilder<T, U> => {
   if (util.isString(order)) {
-    if (order === 'random') {
-      return partial.orderByRaw('RANDOM()')
+    if (order === "random") {
+      return partial.orderByRaw("RANDOM()")
     }
     return partial.orderBy(order)
   }
@@ -72,14 +73,15 @@ export const buildWhere = <T = any, U = any> (
     }
   }
 
-  if (!inner && isWhereMultiple(where)) {
+  if (inner == null && isWhereMultiple(where)) {
     return where.reduce<knex.QueryBuilder<T, U>>((accumulator, clause) => {
       return buildWhere(accumulator, clause, true)
     }, partial)
   }
 
-  if (util.isObject(where)) {
-    return partial.where(util.mapObj(where, castValue))
+  if (!Array.isArray(where)) {
+    const criteria = util.mapObj(where, castValue)
+    return partial.where(criteria)
   }
 
   util.invariant(false, `invalid where clause type: '${typeof where}'`)
@@ -91,7 +93,7 @@ export const isWhereTuple = (
   return (
     Array.isArray(where) &&
     (where.length === 2 || where.length === 3) &&
-    typeof where[0] === 'string'
+    typeof where[0] === "string"
   )
 }
 
@@ -144,70 +146,140 @@ export function normalizeCriteria <D> (
     return where
   }
 
-  util.invariant(false, `invalid criteria: ${where}`)
+  util.invariant(false, `invalid criteria: ${String(where)}`)
 }
 
 const getQueryAction = (str: string): string => {
-  return str.split(' ', 1)[0].toLowerCase()
+  return str.split(" ", 1)[0].toLowerCase()
 }
 
-export const runQuery = async <D extends types.ReturnDict = types.LooseObject> (
+const runQuery = async <
+  T extends types.LooseObject,
+  Props extends types.ModelProps<T>
+> (
   instance: Trilogy,
   query: types.Query,
-  options: types.QueryOptions<D> = {}
-): Promise<any> => {
-  const asString = query.toString()
-  const action = getQueryAction(asString)
+  options: types.QueryOptions<Props> = {}
+): Promise<types.Query | number | boolean | unknown[]> => {
+  const {
+    bindings,
+    sql: sqlString
+  } = util.firstOrValue(query.toSQL())
 
-  if (options.model) {
+  if (options.model != null) {
     await options.model._callHook(
       Hook.OnQuery,
-      [asString, options.internal] as OnQueryContext
+      [sqlString, options.internal ?? false] as OnQueryContext
     )
   }
 
   if (instance.isNative) {
-    if (options.needResponse) return query
+    if (options.needResponse ?? false) {
+      return query
+    }
 
-    const res = await query
-    if (util.isNumber(res)) return res
-    return res?.length ?? 0
+    const result = await query
+    return util.isNumber(result)
+      ? result
+      : result?.length ?? 0
   }
 
-  // tslint:disable-next-line:await-promise
-  const db = await instance.pool!.acquire()
+  util.invariant(
+    instance.pool != null,
+    "Invalid connection pool: unexpected null."
+  )
+
+  const db = await instance.pool.acquire()
+  const action = getQueryAction(sqlString)
   let response
 
-  if (options.needResponse) {
-    response = parseResponse(db.exec(asString))
-    if (asString.toLowerCase().includes(HasTableSubstring)) {
+  if (options.needResponse ?? false) {
+    // TODO: execute the query more securely?
+    response = parseResponse(db.exec(query.toQuery()))
+    if (sqlString.toLowerCase().includes(HasTableSubstring)) {
       response = Boolean(response.length)
     }
   } else {
-    db.run(asString)
+    db.run(sqlString, bindings.map(castValue))
 
-    if (['insert', 'update', 'delete'].includes(action)) {
+    if (["insert", "update", "delete"].includes(action)) {
       response = db.getRowsModified()
     }
   }
 
   writeDatabase(instance, db)
-  instance.pool!.release(db)
+  void instance.pool.release(db)
   return response
 }
 
-export const findKey = (schema: types.Schema) => {
-  let key = ''
+export const executeQuery = async <
+  Props extends types.ModelProps<types.LooseObject> = types.ModelProps<types.LooseObject>,
+  Options extends Omit<types.QueryOptions<Props>, "needResponse"> = Omit<types.QueryOptions<Props>, "needResponse">
+> (
+  instance: Trilogy,
+  query: types.Query,
+  options: Options = {} as Options
+): Promise<number> => {
+  return runQuery(instance, query, {
+    ...options,
+    needResponse: false
+  })
+}
+
+export const getQueryResult = async <
+  DriverType extends Driver,
+  Query extends types.QueryLike = types.Query,
+  Props extends types.ModelProps<types.LooseObject> = types.ModelProps<types.LooseObject>,
+  R = types.QueryResult<DriverType, Query>,
+  Options extends Omit<types.QueryOptions<Props>, "needResponse"> = Omit<types.QueryOptions<Props>, "needResponse">
+> (
+  instance: Trilogy,
+  query: Query,
+  options: Options = {} as Options
+): Promise<R> => {
+  return runQuery(instance, query as types.Query, {
+    ...options,
+    needResponse: true
+  })
+}
+
+// export const getQueryResult = async <
+//   DriverType extends Driver,
+//   Query extends types.QueryLike = types.Query,
+//   T extends types.LooseObject = types.LooseObject,
+//   R = types.QueryResult<DriverType, Query>,
+//   D extends types.InferObjectShape<T> = types.InferObjectShape<T>
+// > (
+//   instance: Trilogy,
+//   query: Query,
+//   options: O.Omit<types.QueryOptions<T, D>, "needResponse"> = {}
+// ): Promise<R> => {
+//   return runQuery(instance, query as types.Query, {
+//     ...options,
+//     needResponse: true
+//   })
+// }
+
+export const findKey = (schema: types.SchemaNormalized): {
+  key: string
+  hasIncrements: boolean
+} => {
+  let key = ""
   let hasIncrements = false
 
   const keys = Object.keys(schema)
   for (const name of keys) {
-    const props = schema[name]
-    if (props === 'increments' || props.type === 'increments') {
+    const {
+      type,
+      primary = false,
+      unique = false
+    } = schema[name]
+
+    if (type === "increments") {
       key = name
       hasIncrements = true
       break
-    } else if (props.primary || props.unique) {
+    } else if (primary || unique) {
       key = name
     }
   }

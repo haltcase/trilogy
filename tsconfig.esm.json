@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "outDir": "es",
+    "plugins": [
+      {
+        "transform": "@zoltu/typescript-transformer-append-js-extension/output/index.js",
+        "after": true,
+      }
+    ]
+  }
+}

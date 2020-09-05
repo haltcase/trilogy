@@ -1,14 +1,14 @@
-import test from 'ava'
-import { connect } from '../src'
+import test from "ava"
+import { connect } from "../src"
 
-const db = connect(':memory:')
+const db = connect(":memory:")
 
 const schema = { name: String }
 
 const tables = [
-  { name: 'one', schema },
-  { name: 'two', schema },
-  { name: 'three', schema }
+  { name: "one", schema },
+  { name: "two", schema },
+  { name: "three", schema }
 ]
 
 test.before(async () => {
@@ -19,14 +19,14 @@ test.before(async () => {
 
 test.after.always(() => db.close())
 
-test('is true for existing tables', async t => {
+test("is true for existing tables", async t => {
   await Promise.all(
     tables.map(async ({ name }) => t.true(await db.hasModel(name)))
   )
 })
 
-test('is false for non-existent tables', async t => {
-  const noTables = ['four', 'five', 'six']
+test("is false for non-existent tables", async t => {
+  const noTables = ["four", "five", "six"]
   await Promise.all(
     noTables.map(async table => t.false(await db.hasModel(table)))
   )

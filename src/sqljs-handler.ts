@@ -1,10 +1,9 @@
-import { dirname } from 'path'
-import { readFileSync, writeFileSync } from 'fs'
+import { dirname } from "path"
+import { mkdirSync, readFileSync, writeFileSync } from "fs"
 
-import { createPool, Pool } from 'generic-pool'
+import * as pool from "generic-pool"
 
-import { Trilogy } from '.'
-import { makeDirPath } from './util'
+import { Trilogy } from "."
 
 import { Database } from 'sql.js'
 
@@ -14,18 +13,18 @@ export async function readDatabase (instance: Trilogy): Promise<Database> {
   const init = await import('sql.js')
   const SQL = await init.default()
 
-  if (name === ':memory:') {
+  if (name === ":memory:") {
     return new SQL.Database()
   }
 
   let client
 
   try {
-    makeDirPath(dirname(name))
+    mkdirSync(dirname(name), { recursive: true })
     const file = readFileSync(name)
     client = new SQL.Database(file)
   } catch (e) {
-    if (e.code === 'ENOENT') {
+    if (e.code === "ENOENT") {
       client = new SQL.Database()
       writeDatabase(instance, client)
     } else {
@@ -38,15 +37,15 @@ export async function readDatabase (instance: Trilogy): Promise<Database> {
 
 export function writeDatabase (instance: Trilogy, db: Database) {
   const name = instance.options.connection.filename
-  if (name === ':memory:') return
+  if (name === ":memory:") return
 
-  makeDirPath(dirname(name))
-  writeFileSync(name, db.export(), { mode: parseInt('0777', 8) })
+  mkdirSync(dirname(name), { recursive: true })
+  writeFileSync(name, db.export(), { mode: parseInt("0777", 8) })
 }
 
-export function pureConnect (instance: Trilogy): Pool<Database> {
-  return createPool({
-    create () {
+export function pureConnect (instance: Trilogy): pool.Pool<Database> {
+  return pool.createPool({
+    async create () {
       return readDatabase(instance)
     },
 

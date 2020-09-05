@@ -1,28 +1,41 @@
-import Model from './model'
-
-import * as t from 'runtypes'
-
-import { ColumnTypes } from './constants'
-import { isFunction } from './util'
-
 import {
   Raw,
   SchemaBuilder,
   QueryBuilder
-} from 'knex'
+} from "knex"
+
+import t from "runtypes"
+
+import Model from "./model"
+import { ColumnTypes, Driver } from "./constants"
+import { isFunction } from "./util"
+
+import type { Object } from "ts-toolbelt"
 
 export type Fn <T extends any[], R = any> = (...args: T) => R
 
 export type Query =
-  | Raw
+  | Raw<any>
   | QueryBuilder<any, any>
   | SchemaBuilder
-  | Promise<any>
 
-export interface QueryOptions <D extends ReturnDict = LooseObject> {
-  model?: Model<D>
+export type QueryLike = Query | Promise<boolean>
+
+export type Listable <T> = T | T[]
+
+export interface QueryOptions <
+  Props extends ModelProps<LooseObject> = ModelProps<LooseObject>
+> {
+  model?: Model<Props["shape"], Props>
   needResponse?: boolean
   internal?: boolean
+}
+
+export type ModelProps <T> = {
+  shape: T,
+  schema: Schema<T>,
+  objectOutput: InferObjectShape<Schema<T>>,
+  objectInput: MarkOptionals<Schema<T>>
 }
 
 export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
@@ -36,10 +49,6 @@ export type DistinctArrayTuple <T, V = any> = T extends [string, string, V]
 export type StringKeys <D = LooseObject> = Extract<keyof D, string>
 export type LooseObject = Record<string, any>
 export type ValueOf <D> = D[keyof D]
-
-export type Defined <T> = {
-  [P in keyof T]: Exclude<T[P], undefined>
-}
 
 export type Criteria2 <D = LooseObject> = [StringKeys<D>, D[StringKeys<D>]]
 export type Criteria3 <D = LooseObject> = [StringKeys<D>, string, D[StringKeys<D>]]
@@ -85,7 +94,7 @@ export const OrderClause = t.Union(
 )
 
 export const TrilogyOptions = t.Partial({
-  client: t.Union(t.Literal('sqlite3'), t.Literal('sql.js')),
+  client: t.Union(t.Literal("sqlite3"), t.Literal("sql.js")),
   dir: t.String
 })
 
@@ -121,7 +130,7 @@ export const UpdateOptions = t.Partial({
 export const ColumnKind = t.Union(t.String, t.Function).withConstraint(value => {
   const type = isFunction(value) ? value.name : String(value)
   return type.toLowerCase() in ColumnTypes
-}, { name: 'ColumnKind' })
+}, { name: "ColumnKind" })
 
 export const ColumnDescriptor = t.Partial({
   defaultTo: t.Unknown,
@@ -148,12 +157,16 @@ export type FindOptions = t.Static<typeof FindOptions>
 export type ColumnKind = t.Static<typeof ColumnKind>
 export type ColumnDescriptor = t.Static<typeof ColumnDescriptor>
 
-export type SchemaRaw <D = LooseObject> = {
-  [P in keyof Partial<D>]: ColumnKind | ColumnDescriptor
+export type TrilogyOptionsNormalized = Object.Compulsory<TrilogyOptions & {
+  connection: { filename: string }
+}>
+
+export type Schema <T = LooseObject> = {
+  [P in keyof Partial<T>]: ColumnKind | ColumnDescriptor
 }
 
-export type Schema <D = LooseObject> = {
-  [P in keyof Partial<D>]: ColumnDescriptor
+export type SchemaNormalized <T = LooseObject> = {
+  [P in keyof Partial<T>]: ColumnDescriptor
 }
 
 export type SqlJsResponse = Array<{
@@ -180,3 +193,55 @@ export type CastToDefinition =
   | [string, string, StorageType]
   | CriteriaList
   | never
+
+export type QueryResult <
+  DriverType extends Driver = Driver.native,
+  Q extends QueryLike = Query
+> =
+  DriverType extends Driver.native
+    ? Query
+    : Q extends Promise<boolean>
+      ? boolean
+      : unknown[]
+
+export type ValueOfSchemaProperty <PropertyType, D = LooseObject, PropertyDefault = never> = (
+  PropertyType extends typeof ColumnTypes["json"] ? D | D[] :
+    PropertyType extends typeof ColumnTypes["string"] ? string :
+      PropertyType extends typeof ColumnTypes["array"] ? any[] :
+        PropertyType extends typeof ColumnTypes["object"] ? D :
+          PropertyType extends typeof ColumnTypes["number"] ? number :
+            PropertyType extends typeof ColumnTypes["boolean"] ? boolean :
+              PropertyType extends typeof ColumnTypes["increments"] ? number :
+                PropertyType extends typeof ColumnTypes["date"] ? Date :
+                  PropertyType extends "json" ? D | D[] :
+                    PropertyType extends "increments" ? number :
+                      PropertyType extends StringConstructor ? string :
+                        PropertyType extends NumberConstructor ? number :
+                          PropertyType extends BooleanConstructor ? boolean :
+                            PropertyType extends DateConstructor ? Date :
+                              PropertyType extends ArrayConstructor ? D[] :
+                                PropertyType extends ObjectConstructor ? D :
+                                  PropertyType
+) | (PropertyDefault extends never ? never : undefined)
+
+export type KeysOfType <T, U> = {
+  [K in keyof T]: T[K] extends U ? K : never
+}[keyof T]
+
+// TODO!: I don't think this type works; seems to be the only thing preventing model type inference from working
+
+export type OptionalSchemaKeys <Schema> =
+  KeysOfType<Schema, "increments" | typeof ColumnTypes["increments"]>
+
+export type MarkOptionals <
+  ModelSchema extends Schema<LooseObject>,
+  ModelObject extends InferObjectShape<ModelSchema> = InferObjectShape<ModelSchema>,
+  Optionals extends keyof ModelObject = OptionalSchemaKeys<ModelSchema>
+> =
+  Omit<ModelObject, Optionals> & Partial<Pick<ModelObject, Optionals>>
+
+export type InferObjectShape <ModelSchema, ModelObject = LooseObject> = {
+  [Property in keyof ModelSchema]: ModelSchema[Property] extends { type: infer PropertyType, defaultTo?: infer PropertyDefault }
+    ? ValueOfSchemaProperty<PropertyType, ModelObject, PropertyDefault>
+    : ValueOfSchemaProperty<ModelSchema[Property], ModelObject>
+}
