@@ -1,9 +1,11 @@
 import ava, { TestInterface } from "ava"
-import { connect, Model } from "../src"
+import { connect, ModelWithShape } from "../src"
 
 import { Person } from "./helpers/types"
 
-const test = ava as TestInterface<{ people: Model<Person> }>
+const test = ava as TestInterface<{
+  people: ModelWithShape<Person>
+}>
 
 const db = connect(":memory:")
 
@@ -14,8 +16,8 @@ const persons = [
 ]
 
 test.before(async t => {
-  t.context.people = await db.model("people", {
-    name: { type: String, primary: true },
+  t.context.people = await db.modelWithShape<Person>("people", {
+    name: String,
     age: Number
   })
 
@@ -27,7 +29,7 @@ test.before(async t => {
   await Promise.all(persons.map(async person => t.context.people.create(person)))
 })
 
-test.after.always(async () => db.close())
+test.after.always(() => db.close())
 
 test("returns the number of models when parameter count === 0", async t => {
   t.is(await t.context.people.count(), 1)
@@ -64,7 +66,7 @@ test("countIn() variant counts on the given column", async t => {
     age: number | null
   }
 
-  const people = await db.model<Person>("people", {
+  const people = await db.modelWithShape<Person>("people", {
     name: { type: String, primary: true },
     age: Number
   })

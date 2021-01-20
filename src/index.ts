@@ -5,7 +5,7 @@ import * as pool from "generic-pool"
 import knex from "knex"
 import { SqlJs } from "sql.js/module"
 
-import Model from "./model"
+import Model, { ModelWithShape } from "./model"
 import { executeQuery, getQueryResult } from "./helpers"
 import { toKnexSchema } from "./schema-helpers"
 import { pureConnect } from "./sqljs-handler"
@@ -115,16 +115,16 @@ export class Trilogy {
    * @param schema Object defining the schema of the model
    * @param options Configuration for this model instance
    */
-  async model <T extends types.LooseObject = types.LooseObject, Props extends types.ModelProps<T> = types.ModelProps<T>> (
+  async model <T extends types.Schema = types.SchemaBase> (
     name: string,
-    schema: Props["schema"],
+    schema: T,
     options: types.ModelOptions = {}
-  ): Promise<Model<T, Props>> {
+  ): Promise<Model<T>> {
     if (this.#definitions.has(name)) {
-      return this.#definitions.get(name) as Model<T, Props>
+      return this.#definitions.get(name) as Model<T>
     }
 
-    const model = new Model<T, Props>(this, name, schema, options)
+    const model = new Model<T>(this, name, schema, options)
     this.#definitions.set(name, model)
 
     const opts = toKnexSchema(
@@ -148,6 +148,26 @@ export class Trilogy {
   }
 
   /**
+   * This method is primarily for TypeScript users when a specific
+   * type needs to be modeled.
+   *
+   * Define a new model with a schema to be inferred by the shape
+   * of the provided object type, or return the existing model if
+   * one is already defined with the given name.
+   *
+   * @param name Name of the model
+   * @param schema Object defining the schema of the model
+   * @param options Configuration for this model instance
+   */
+  async modelWithShape <T extends types.LooseObject = never> (
+    name: string,
+    schema: types.SchemaFromShape<T>,
+    options: types.ModelOptions = {}
+  ): Promise<ModelWithShape<T>> {
+    return new Model<types.SchemaFromShape<T>>(this, name, schema, options)
+  }
+
+  /**
    * Synchronously retrieve a model if it exists. If that model doesn't exist
    * an error will be thrown.
    *
@@ -156,10 +176,9 @@ export class Trilogy {
    * @throws if `name` has not already been defined
    */
   getModel <
-    T extends types.LooseObject = types.LooseObject,
-    Props extends types.ModelProps<T> = types.ModelProps<T>
-  > (name: string): Model<T, Props> | never {
-    const model = this.#definitions.get(name) as Model<T, Props>
+    T extends types.LooseObject = types.LooseObject
+  > (name: string): ModelWithShape<T> | never {
+    const model = this.#definitions.get(name) as ModelWithShape<T>
 
     invariant(
       model != null,
@@ -182,7 +201,7 @@ export class Trilogy {
     }
 
     const query = this.knex.schema.hasTable(name)
-    return getQueryResult<Driver, typeof query, types.ModelProps<types.ReturnDict>, boolean>(this, query)
+    return getQueryResult<Driver, typeof query, types.ModelProps<types.Schema>, boolean>(this, query)
   }
 
   /**
@@ -208,7 +227,7 @@ export class Trilogy {
    * @param query Query built with `knex`
    */
   async getRawResult <T = unknown> (query: knex.QueryBuilder | knex.Raw): Promise<T> {
-    return getQueryResult<Driver, typeof query, types.ModelProps<types.ReturnDict>, T>(this, query)
+    return getQueryResult<Driver, typeof query, types.ModelProps<types.Schema>, T>(this, query)
   }
 
   /**
@@ -315,7 +334,7 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   beforeCreate <
-    SchemaRaw extends types.Schema = types.Schema,
+    SchemaRaw extends types.Schema = types.SchemaBase,
     ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
   > (
     ...args: [fn: hooks.BeforeCreateCallback<ModelObject>] | [scope: string, fn: hooks.BeforeCreateCallback<ModelObject>]
@@ -349,8 +368,7 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   afterCreate <
-    SchemaRaw extends types.Schema = types.Schema,
-    ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
+    SchemaRaw extends types.Schema = types.SchemaBase
   > (
     ...args: [fn: hooks.AfterCreateCallback<SchemaRaw>] | [scope: string, fn: hooks.AfterCreateCallback<SchemaRaw>]
   ): types.Fn<[], boolean> {
@@ -388,8 +406,7 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   beforeUpdate <
-    SchemaRaw extends types.Schema = types.Schema,
-    ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
+    SchemaRaw extends types.Schema = types.SchemaBase
   > (
     ...args: [fn: hooks.BeforeUpdateCallback<SchemaRaw>] | [scope: string, fn: hooks.BeforeUpdateCallback<SchemaRaw>]
   ): types.Fn<[], boolean> {
@@ -422,8 +439,7 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   afterUpdate <
-    SchemaRaw extends types.Schema = types.Schema,
-    ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
+    SchemaRaw extends types.Schema = types.SchemaBase
   > (
     ...args: [fn: hooks.AfterUpdateCallback<SchemaRaw>] | [scope: string, fn: hooks.AfterUpdateCallback<SchemaRaw>]
   ): types.Fn<[], boolean> {
@@ -461,8 +477,7 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   beforeRemove <
-    SchemaRaw extends types.Schema = types.Schema,
-    ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
+    SchemaRaw extends types.Schema = types.SchemaBase
   > (
     ...args: [fn: hooks.BeforeRemoveCallback<SchemaRaw>] | [scope: string, fn: hooks.BeforeRemoveCallback<SchemaRaw>]
   ): types.Fn<[], boolean> {
@@ -494,8 +509,7 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   afterRemove <
-    SchemaRaw extends types.Schema = types.Schema,
-    ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
+    SchemaRaw extends types.Schema = types.SchemaBase
   > (
     ...args: [fn: hooks.AfterRemoveCallback<SchemaRaw>] | [scope: string, fn: hooks.AfterRemoveCallback<SchemaRaw>]
   ): types.Fn<[], boolean> {
@@ -532,7 +546,7 @@ export {
   HookCallback
 } from "./hooks"
 
-export { default as Model } from "./model"
+export { default as Model, ModelWithShape } from "./model"
 export * from "./types"
 
 /**

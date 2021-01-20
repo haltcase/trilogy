@@ -1,14 +1,3 @@
-export enum ColumnTypes {
-  increments = "increments",
-  array = "array",
-  object = "object",
-  json = "json",
-  string = "string",
-  number = "number",
-  boolean = "boolean",
-  date = "date"
-}
-
 export enum KnexNoArgs {
   primary = "primary",
   unique = "unique",

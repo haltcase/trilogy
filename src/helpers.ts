@@ -154,8 +154,7 @@ const getQueryAction = (str: string): string => {
 }
 
 const runQuery = async <
-  T extends types.LooseObject,
-  Props extends types.ModelProps<T>
+  Props extends types.ModelProps<types.Schema>
 > (
   instance: Trilogy,
   query: types.Query,
@@ -213,7 +212,7 @@ const runQuery = async <
 }
 
 export const executeQuery = async <
-  Props extends types.ModelProps<types.LooseObject> = types.ModelProps<types.LooseObject>,
+  Props extends types.ModelProps<types.Schema> = types.ModelProps<types.Schema>,
   Options extends Omit<types.QueryOptions<Props>, "needResponse"> = Omit<types.QueryOptions<Props>, "needResponse">
 > (
   instance: Trilogy,
@@ -229,7 +228,7 @@ export const executeQuery = async <
 export const getQueryResult = async <
   DriverType extends Driver,
   Query extends types.QueryLike = types.Query,
-  Props extends types.ModelProps<types.LooseObject> = types.ModelProps<types.LooseObject>,
+  Props extends types.ModelProps<types.Schema> = types.ModelProps<types.Schema>,
   R = types.QueryResult<DriverType, Query>,
   Options extends Omit<types.QueryOptions<Props>, "needResponse"> = Omit<types.QueryOptions<Props>, "needResponse">
 > (
@@ -243,24 +242,7 @@ export const getQueryResult = async <
   })
 }
 
-// export const getQueryResult = async <
-//   DriverType extends Driver,
-//   Query extends types.QueryLike = types.Query,
-//   T extends types.LooseObject = types.LooseObject,
-//   R = types.QueryResult<DriverType, Query>,
-//   D extends types.InferObjectShape<T> = types.InferObjectShape<T>
-// > (
-//   instance: Trilogy,
-//   query: Query,
-//   options: O.Omit<types.QueryOptions<T, D>, "needResponse"> = {}
-// ): Promise<R> => {
-//   return runQuery(instance, query as types.Query, {
-//     ...options,
-//     needResponse: true
-//   })
-// }
-
-export const findKey = (schema: types.SchemaNormalized): {
+export const findKey = (schema: types.SchemaNormalized<any>): {
   key: string
   hasIncrements: boolean
 } => {

@@ -1,33 +1,35 @@
-import test from "ava"
-import { connect } from "../src"
+import ava, { TestInterface } from "ava"
+import { connect, Model } from "../src"
 
 import { Person } from "./helpers/types"
 
+const test = ava as TestInterface<{ people: Model<Person> }>
+
 const db = connect(":memory:")
 
-const people = [
+const persons = [
   { name: "Dale", age: 30 },
   { name: "Lelu", age: 6 },
   { name: "Gurlak", age: 302 }
 ]
 
-test.before(async () => {
-  await db.model("people", {
+test.before(async t => {
+  t.context.people = await db.model("people", {
     name: String,
     age: Number
   })
 
-  await Promise.all(people.map(person => db.create("people", person)))
+  await Promise.all(persons.map(person => t.context.people.create(person)))
 })
 
 test.after.always(() => db.close())
 
 test.serial("decrements by 1 when no amount is provided", async t => {
   const values = await Promise.all(
-    people.map(({ name, age }, i) => {
-      people[i].age -= 1
-      return db.decrement("people.age", { name })
-        .then(() => db.get<number>("people.age", { name }))
+    persons.map(({ name, age }, i) => {
+      persons[i].age -= 1
+      return t.context.people.decrement("age", { name })
+        .then(() => t.context.people.get("age", { name }))
         .then(val => [age, val])
     })
   )
@@ -37,10 +39,10 @@ test.serial("decrements by 1 when no amount is provided", async t => {
 
 test.serial("decrements by a specified amount", async t => {
   const values = await Promise.all(
-    people.map(({ name, age }, i) => {
-      people[i].age -= 4
-      return db.decrement("people.age", { name }, 4)
-        .then(() => db.get<number>("people.age", { name }))
+    persons.map(({ name, age }, i) => {
+      persons[i].age -= 4
+      return t.context.people.decrement("age", { name }, 4)
+        .then(() => t.context.people.get("age", { name }))
         .then(val => [age, val])
     })
   )
@@ -49,21 +51,21 @@ test.serial("decrements by a specified amount", async t => {
 })
 
 test.serial("does not allow negative values when allowNegative is falsy", async t => {
-  await db.create("people", { name: "Benjamin Button", age: 100 })
-  await db.decrement("people.age", { name: "Benjamin Button" }, 200)
-  const res = await db.get<number>("people.age", { name: "Benjamin Button" })
+  await t.context.people.create({ name: "Benjamin Button", age: 100 })
+  await t.context.people.decrement("age", { name: "Benjamin Button" }, 200)
+  const res = await t.context.people.get("age", { name: "Benjamin Button" })
   t.is(res, 0)
 })
 
 test.serial("allows negative values when allowNegative is truthy", async t => {
-  await db.decrement("people.age", { name: "Lelu" }, 2, true)
-  const res = await db.get("people.age", { name: "Lelu" })
+  await t.context.people.decrement("age", { name: "Lelu" }, 2, true)
+  const res = await t.context.people.get("age", { name: "Lelu" })
   t.is(res, -1)
 })
 
 test.serial("does nothing when passed a zero value", async t => {
-  await db.decrement("people.age", { name: "Lelu" }, 0, true)
-  const res = await db.get("people.age", { name: "Lelu" })
+  await t.context.people.decrement("age", { name: "Lelu" }, 0, true)
+  const res = await t.context.people.get("age", { name: "Lelu" })
   t.is(res, -1)
 })
 

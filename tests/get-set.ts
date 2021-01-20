@@ -1,22 +1,26 @@
-import test from "ava"
-import { connect } from "../src"
+import ava, { TestInterface } from "ava"
+import { connect, ModelWithShape } from "../src"
 
-import { Person } from "./helpers/types"
+import { FirstSecond } from "./helpers/types"
+
+const test = ava as TestInterface<{
+  one: ModelWithShape<FirstSecond>
+}>
 
 const db = connect(":memory:")
 
-test.before(async () => {
-  await db.model("one", {
+test.before(async t => {
+  t.context.one = await db.modelWithShape("one", {
     first: String,
     second: String
   })
 
   await Promise.all([
-    db.create("one", {
+    t.context.one.create({
       first: "fee",
       second: "blah"
     }),
-    db.create("one", {
+    t.context.one.create({
       first: "shoot",
       second: "buckets"
     })
@@ -26,32 +30,34 @@ test.before(async () => {
 test.after.always(() => db.close())
 
 test("get() - retrieves a specific property of the object", async t => {
-  const res = await db.get("one.second", { first: "fee" })
+  const res = await t.context.one.get("second", { first: "fee" })
   t.is(res, "blah")
 })
 
 test("get() - is undefined when no value at the path exists", async t => {
-  const noRow = await db.get("one.second", { first: "worst" })
-  const noColumn = await db.get("one.third", { first: "fee" })
+  const noRow = await t.context.one.get("second", { first: "worst" })
   t.is(noRow, undefined)
+
+  // @ts-expect-error
+  const noColumn = await t.context.one.get("third", { first: "fee" })
   t.is(noColumn, undefined)
 })
 
 test("get() - returns the provided default value when target is undefined", async t => {
-  const noRow = await db.get("one.second", { first: "worst" }, "nothing")
+  const noRow = await t.context.one.get("second", { first: "worst" }, "nothing")
   t.is(noRow, "nothing")
 })
 
 test("set() - updates the target value", async t => {
   const expected = "some super new value"
-  await db.set("one.second", { first: "shoot" }, expected)
+  await t.context.one.set("second", { first: "shoot" }, expected)
 
-  const actual = await db.get("one.second", { first: "shoot" })
+  const actual = await t.context.one.get("second", { first: "shoot" })
   t.is(actual, expected)
 })
 
 test("model.get() & model.set()", async t => {
-  const people = await db.model<Person>("get_set_people", {
+  const people = await db.model("get_set_people", {
     name: String,
     age: Number
   })

@@ -1,8 +1,14 @@
-import { ColumnTypes } from "../../src/constants"
+import { Schema } from "../../src"
+import * as t from "../../src/column-types"
+
+export interface SqliteMaster {
+  tbl_name: string
+  sql: string
+}
 
 export interface Person4 {
-  name: ColumnTypes.string,
-  age: ColumnTypes.number
+  name: t.String
+  age: t.Number
 }
 
 export interface Person {
@@ -24,6 +30,15 @@ export interface FirstSecond {
   first: string
   second: string
 }
+
+export type FirstSecondSchema = Schema<FirstSecond>
+
+export interface FirstSecond2 {
+  first: string
+  second: number
+}
+
+export type FirstSecond2Schema = Schema<FirstSecond2>
 
 export interface Game {
   name: string

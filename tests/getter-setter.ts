@@ -1,22 +1,26 @@
-import test from "ava"
-import { connect } from "../src"
+import ava, { TestInterface } from "ava"
+import { connect, ModelWithShape } from "../src"
 import { Person } from "./helpers/types"
+
+const test = ava as TestInterface<{
+  people: ModelWithShape<Person>
+}>
 
 const db = connect(":memory:")
 
-test.before(async () => {
-  await db.model("people", {
+test.before(async t => {
+  t.context.people = await db.modelWithShape("people", {
     name: {
       type: String,
-      get: (name: string) => name.toUpperCase()
+      get: name => name.toUpperCase()
     },
     age: {
       type: Number,
-      set: (age: number) => age + 1
+      set: age => age + 1
     }
   })
 
-  await db.create("people", {
+  await t.context.people.create({
     name: "Joey Smith",
     age: 20
   })
@@ -26,8 +30,8 @@ test.after.always(() => db.close())
 
 test("getter only alters the returned value, not the stored value", async t => {
   const [upper, lower] = await Promise.all([
-    db.findOne("people", { name: "JOEY SMITH" }),
-    db.findOne("people", { name: "Joey Smith" })
+    t.context.people.findOne({ name: "JOEY SMITH" }),
+    t.context.people.findOne({ name: "Joey Smith" })
   ])
 
   t.is(typeof upper, "undefined")
@@ -36,66 +40,66 @@ test("getter only alters the returned value, not the stored value", async t => {
 
 test("setter alters the stored value after each update", async t => {
   // setters fire on object creation
-  const initial = await db.get("people.age", { name: "Joey Smith" })
+  const initial = await t.context.people.get("age", { name: "Joey Smith" })
   t.is(initial, 21)
 
-  await db.update("people", { name: "Joey Smith" }, { age: 25 })
-  t.is(await db.get("people.age", { name: "Joey Smith" }), 26)
-  await db.set("people.age", { name: "Joey Smith" }, 27)
-  t.is(await db.get("people.age", { name: "Joey Smith" }), 28)
+  await t.context.people.update({ name: "Joey Smith" }, { age: 25 })
+  t.is(await t.context.people.get("age", { name: "Joey Smith" }), 26)
+  await t.context.people.set("age", { name: "Joey Smith" }, 27)
+  t.is(await t.context.people.get("age", { name: "Joey Smith" }), 28)
 })
 
 test("getters & setters are not fired by `getRaw()` or `setRaw()`", async t => {
-  await db.create("people", {
+  await t.context.people.create({
     name: "John Doe",
     age: 44
   }, { raw: true })
 
-  const initial = await db.getRaw("people.name", { age: 44 })
+  const initial = await t.context.people.getRaw("name", { age: 44 })
   t.is(initial, "John Doe")
 
-  const affected = await db.findOne<Person>("people", { age: 44 })
-  t.is(affected.name, "JOHN DOE")
-  t.is(affected.age, 44)
+  const affected = await t.context.people.findOne({ age: 44 })
+  t.is(affected?.name, "JOHN DOE")
+  t.is(affected?.age, 44)
 
-  await db.setRaw("people.age", { name: "John Doe" }, 50)
-  const updated = await db.getRaw<Person>("people.age", { name: "John Doe" })
+  await t.context.people.setRaw("age", { name: "John Doe" }, 50)
+  const updated = await t.context.people.getRaw("age", { name: "John Doe" })
   t.is(updated, 50)
 
-  await db.update("people", { name: "John Doe" }, { age: 55 })
-  const final = await db.getRaw<Person, "age">("people.age", { name: "John Doe" })
+  await t.context.people.update({ name: "John Doe" }, { age: 55 })
+  const final = await t.context.people.getRaw("age", { name: "John Doe" })
   t.is(final, 56)
 })
 
 test("setters are not fired when `options.raw` is set", async t => {
   const options = { raw: true }
 
-  await db.create("people", {
+  await t.context.people.create({
     name: "Libby Wilson",
     age: 16
   }, options)
 
-  const first = await db.get("people.age", { name: "Libby Wilson" })
+  const first = await t.context.people.get("age", { name: "Libby Wilson" })
   t.is(first, 16)
 
-  await db.update("people", { name: "Libby Wilson" }, { age: 17 }, options)
-  const second = await db.get("people.age", { name: "Libby Wilson" })
+  await t.context.people.update({ name: "Libby Wilson" }, { age: 17 }, options)
+  const second = await t.context.people.get("age", { name: "Libby Wilson" })
   t.is(second, 17)
 })
 
 test("getters are not fired when `options.raw` is set", async t => {
   const options = { raw: true }
 
-  await db.create("people", {
+  await t.context.people.create({
     name: "A-A-ron",
     age: 99
   }, options)
 
   const [fired, bypassed] = await Promise.all([
-    db.findOne<Person>("people", { age: 99 }),
-    db.findOne<Person>("people", { age: 99 }, options)
+    t.context.people.findOne({ age: 99 }),
+    t.context.people.findOne({ age: 99 }, options)
   ])
 
-  t.is(fired.name, "A-A-RON")
-  t.is(bypassed.name, "A-A-ron")
+  t.is(fired?.name, "A-A-RON")
+  t.is(bypassed?.name, "A-A-ron")
 })

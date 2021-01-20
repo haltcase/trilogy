@@ -2,12 +2,13 @@ import { invariant } from "./util"
 import { normalizeCriteria } from "./helpers"
 
 import {
-  ModelProps,
   Fn,
   Criteria,
   CriteriaNormalized,
   CreateOptions,
-  UpdateOptions
+  UpdateOptions,
+  ModelProps,
+  SchemaBase
 } from "./types"
 
 export type HookOptions = CreateOptions | UpdateOptions | {}
@@ -54,11 +55,11 @@ export const EventCancellation = Symbol("trilogy.EventCancellation")
 /**
  * Base implementation of lifecycle hooks inherited by all model instances.
  */
-export class Hooks <Props extends ModelProps<any>> {
+export class Hooks <Props extends ModelProps<SchemaBase>> {
   readonly #onQuery = new Set<OnQueryCallback>()
   readonly #onQueryAll = new Set<OnQueryCallback>()
 
-  readonly #beforeCreate = new Set<BeforeCreateCallback<Props["objectOutput"]>>()
+  readonly #beforeCreate = new Set<BeforeCreateCallback<Props["objectInput"]>>()
   readonly #afterCreate = new Set<AfterCreateCallback<Props["objectOutput"]>>()
   readonly #beforeUpdate = new Set<BeforeUpdateCallback<Props["objectOutput"]>>()
   readonly #afterUpdate = new Set<AfterUpdateCallback<Props["objectOutput"]>>()
@@ -106,7 +107,7 @@ export class Hooks <Props extends ModelProps<any>> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  beforeCreate (fn: BeforeCreateCallback<Props["objectOutput"]>): () => boolean {
+  beforeCreate (fn: BeforeCreateCallback<Props["objectInput"]>): () => boolean {
     invariant(
       typeof fn === "function",
       "hook callbacks must be of type function"
@@ -223,7 +224,7 @@ export class Hooks <Props extends ModelProps<any>> {
   async _callHook <T = Props["objectOutput"]> (
     hook: Hook.OnQuery, arg: OnQueryContext
   ): Promise<HookResult>
-  async _callHook <T = Props["objectOutput"]> (
+  async _callHook <T = Props["objectInput"]> (
     hook: Hook.BeforeCreate, arg: T | Partial<T>, options?: CreateOptions
   ): Promise<HookResult>
   async _callHook <T = Props["objectOutput"]> (
@@ -242,7 +243,7 @@ export class Hooks <Props extends ModelProps<any>> {
     hook: Hook.AfterRemove, arg: T[], options?: {}
   ): Promise<HookResult>
 
-  async _callHook <T = Props["objectOutput"]> (
+  async _callHook <T = Props["objectInput"] | Props["objectOutput"]> (
     hook: Hook,
     arg: T | Partial<T> | [T | Partial<T>, Criteria<T>] | Criteria<T> | OnQueryContext,
     options?: HookOptions

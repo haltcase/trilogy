@@ -1,5 +1,8 @@
 import test from "ava"
 import { connect } from "../src"
+import * as T from "../src/column-types"
+
+import { FirstSecond2 } from "./helpers/types"
 
 const db = connect(":memory:")
 
@@ -15,9 +18,11 @@ const tables = [
 ]
 
 test.before(async () => {
-  await Promise.all(tables.map(table => {
+  const promises = tables.map(table => {
     return db.model(table.name, table.schema)
-  }))
+  })
+
+  await Promise.all(promises)
 })
 
 test.after.always(() => db.close())
@@ -30,11 +35,11 @@ test("create: inserts objects into the database", async t => {
   ]
 
   await Promise.all(
-    inserts.map(({ table, object }) => db.create(table, object))
+    inserts.map(({ table, object }) => db.getModel<FirstSecond2>(table).create(object))
   )
 
   const selects = await Promise.all(
-    inserts.map(({ table, object }) => db.find(table, object))
+    inserts.map(({ table, object }) => db.getModel<FirstSecond2>(table).find(object))
   )
 
   inserts.forEach(({ table, object }, i) => {
@@ -43,8 +48,6 @@ test("create: inserts objects into the database", async t => {
 })
 
 test("create: handles nil values correctly", async t => {
-  // in TypeScript code with a type provided, these are compile time errors
-
   const [one, two] = await Promise.all([
     db.model("people_one", {
       name: { type: String }
@@ -54,16 +57,47 @@ test("create: handles nil values correctly", async t => {
     })
   ])
 
+  // @ts-expect-error
   await one.create({ name: null })
+  // @ts-expect-error
   t.deepEqual(await one.findOne(), { name: null })
 
   await t.throwsAsync(
+    // @ts-expect-error
     two.create({ name: null }),
     { message: "people_two.name is not nullable but received nil" }
   )
 
   await t.throwsAsync(
+    // @ts-expect-error
     two.create({ name: undefined }),
     { message: "people_two.name is not nullable but received nil" }
   )
+})
+
+test("create: `increments` columns are inferred to be optional", async t => {
+  type Things1 = {
+    name: string,
+    id: "increments"
+  }
+
+  type Things2 = {
+    name: string,
+    id: T.Increments
+  }
+
+  const things1 = await db.modelWithShape<Things1>("things1", {
+    name: String,
+    id: "increments"
+  })
+
+  const things2 = await db.modelWithShape<Things2>("things1", {
+    name: String,
+    id: T.Increments
+  })
+
+  await t.notThrowsAsync(async () => {
+    await things1.create({ name: "one" })
+    await things2.create({ name: "one" })
+  })
 })

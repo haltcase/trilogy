@@ -1,7 +1,12 @@
-import test from "ava"
-import { connect } from "../src"
+import ava, { TestInterface } from "ava"
+import { connect, ModelWithShape } from "../src"
 
 import { Person, Person3 } from "./helpers/types"
+
+const test = ava as TestInterface<{
+  people: ModelWithShape<Person>,
+  others: ModelWithShape<Person>
+}>
 
 const db = connect(":memory:")
 
@@ -17,18 +22,21 @@ const morePeople = [
   { name: "Benjamin Button", age: 100 }
 ]
 
-test.before(async () => {
+test.before(async t => {
   const [people, others] = await Promise.all([
-    db.model<Person>("people", {
+    db.modelWithShape<Person>("people", {
       name: { type: String, primary: true },
       age: Number
     }),
 
-    db.model<Person>("others", {
+    db.modelWithShape<Person>("others", {
       name: { type: String, primary: true },
       age: Number
     })
   ])
+
+  t.context.people = people
+  t.context.others = others
 
   await Promise.all([
     ...somePeople.map(person => people.create(person)),
@@ -40,27 +48,27 @@ test.after.always(() => db.close())
 
 test.serial("removes an object from the specified model", async t => {
   await Promise.all(somePeople.map(async ({ name }) => {
-    await db.remove("others", { name })
-    const res = await db.findOne("others", { name })
+    await t.context.others.remove({ name })
+    const res = await t.context.others.findOne({ name })
     t.falsy(res)
   }))
 })
 
 test.serial("removes all objects from the specified model", async t => {
-  await db.clear("people")
+  await t.context.people.clear()
 
-  const quantity = await db.count("people")
+  const quantity = await t.context.people.count()
   t.falsy(quantity)
 
   const values = await Promise.all(
-    morePeople.map(({ name }) => db.findOne("people", { name }))
+    morePeople.map(({ name }) => t.context.people.findOne({ name }))
   )
 
   values.forEach(value => t.falsy(value))
 })
 
 test("allows for multiple where clauses", async t => {
-  const people = await db.model<Person3>("deletions_people", {
+  const people = await db.modelWithShape<Person3>("deletions_people", {
     age: Number,
     favoriteColor: String
   })

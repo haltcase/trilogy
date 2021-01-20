@@ -51,7 +51,7 @@
     "generic-pool": "^3.7.1",
     "knex": "^0.21.5",
     "runtypes": "^5.0.1",
-    "tslib": "^2.0.1"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "@citycide/changelog": "^2.0.0",
@@ -60,12 +60,12 @@
     "@types/rimraf": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^3.9.1",
     "@typescript-eslint/parser": "^3.9.1",
-    "@vuepress/plugin-back-to-top": "^1.5.3",
+    "@vuepress/plugin-back-to-top": "^1.5.4",
     "@zoltu/typescript-transformer-append-js-extension": "^1.0.1",
     "@types/sql.js": "^1.4.2",
     "ava": "^2.4.0",
     "cpy-cli": "^3.1.1",
-    "eslint": "^7.7.0",
+    "eslint": "^7.9.0",
     "eslint-config-standard-with-typescript": "^18.0.2",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",
@@ -77,9 +77,9 @@
     "ts-node": "^8.10.2",
     "tslint": "^5.20.1",
     "tslint-config-standard": "^9.0.0",
-    "ttypescript": "^1.5.10",
-    "typescript": "^4.0.2",
-    "vuepress": "^1.5.3"
+    "ttypescript": "^1.5.12",
+    "typescript": "^4.1.3",
+    "vuepress": "^1.5.4"
   },
   "ava": {
     "compileEnhancements": false,

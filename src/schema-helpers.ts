@@ -1,4 +1,5 @@
-import { ColumnTypes, IgnorableProps, KnexNoArgs } from "./constants"
+import * as ColumnType from "./column-types"
+import { IgnorableProps, KnexNoArgs } from "./constants"
 import { isWhereMultiple, isWhereTuple, findKey, executeQuery } from "./helpers"
 import {
   invariant,
@@ -81,8 +82,8 @@ export const createTimestampTrigger = async (model: Model<any, any>, column = "u
   return executeQuery(model.ctx, query, { model, internal: true })
 }
 
-const getDataType = (property: types.ColumnDescriptor): string | never => {
-  let type: string | types.ColumnDescriptor | undefined = property
+const getDataType = <T extends types.ColumnDescriptor<any>> (property: T): string | never => {
+  let type: types.Nullable<string | T> = property
 
   if (isFunction(property)) {
     type = property.name
@@ -95,7 +96,7 @@ const getDataType = (property: types.ColumnDescriptor): string | never => {
   if (isString(type)) {
     const lower = type.toLowerCase()
 
-    if (!(lower in ColumnTypes)) {
+    if (!(lower in ColumnType)) {
       return "string"
     }
 
@@ -105,8 +106,8 @@ const getDataType = (property: types.ColumnDescriptor): string | never => {
   invariant(false, "column type must be of type string")
 }
 
-export const toKnexSchema = <T extends types.LooseObject, Props extends types.ModelProps<T>> (
-  model: Model<T, Props>,
+export const toKnexSchema = <T extends types.Schema> (
+  model: Model<T>,
   options: types.ModelOptions
 ) => {
   return (table: knex.TableBuilder): void => {
@@ -204,11 +205,10 @@ export const createTrigger = async (
 }
 
 export const normalizeSchema = <
-  T extends types.LooseObject,
-  Props extends types.ModelProps<T> = types.ModelProps<T>,
-  O extends types.SchemaNormalized<Props["schema"]> = types.SchemaNormalized<Props["schema"]>
-> (schema: Props["schema"], options: types.ModelOptions): O => {
-  const keys: Array<keyof Props["schema"]> = Object.keys(schema)
+  T extends types.Schema,
+  O extends types.SchemaNormalized<T> = types.SchemaNormalized<T>
+> (schema: T, options: types.ModelOptions): O => {
+  const keys: Array<keyof T> = Object.keys(schema)
   invariant(keys.length > 0, "model schemas cannot be empty")
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -284,97 +284,10 @@ export const castValue = (value: unknown): number | string | never => {
   invariant(false, `Could not cast value of type ${type}`)
 }
 
-/*
-export const castToColumnDefinition = <T, D> (
-  model: Model<T, D>,
-  column: keyof T,
-  value: any,
-  options: { raw?: boolean } = { raw: false }
-): types.StorageType | never => {
-  const definition = model.schema[column]
-  invariant(
-    !((definition.notNullable ?? false) && value == null),
-    `${model.name}.${String(column)} is not nullable but received nil`
-  )
-
-  const type = getDataType(definition)
-  const cast = value !== null ? toInputType(type, value) : value
-
-  if (!options.raw && isFunction(definition.set)) {
-    return castValue(definition.set(cast))
-  }
-
-  return cast
-}
-
-export const castFromColumnDefinition = <T, D> (
-  model: Model<T, D>,
-  column: keyof T,
-  value: any,
-  options: { raw?: boolean } = { raw: false }
-): D[keyof D] => {
-  const definition = model.schema[column]
-  const type = getDataType(definition)
-
-  const cast = value !== null ? toReturnType(type, value) : value
-
-  if (!options.raw && isFunction(definition.get)) {
-    return definition.get(cast)
-  }
-
-  return cast
-}
-
-export const castToDefinition = <SchemaRaw extends types.SchemaRaw> (
-  model: Model<SchemaRaw>,
-  object: types.LooseObject | types.Criteria2 | types.CriteriaList,
-  options: { raw?: boolean }
-): types.CastToDefinition => {
-  if (isWhereTuple(object)) {
-    const clone = object.slice()
-    const valueIndex = clone.length - 1
-    clone[valueIndex] =
-      castToColumnDefinition(model, clone[0], clone[valueIndex], options)
-    return clone
-  }
-
-  if (isWhereMultiple(object)) {
-    return object.map(clause => castToDefinition(model, clause, options))
-  }
-
-  if (isObject(object)) {
-    return mapObj(object, (value, column) => {
-      return castToColumnDefinition(model, column as keyof SchemaRaw, value, options)
-    })
-  }
-
-  invariant(false, `invalid input type: '${typeof object}'`)
-}
-
-export const castFromDefinition = <SchemaRaw extends types.SchemaRaw> (
-  model: Model<SchemaRaw>,
-  object: types.LooseObject,
-  options: { raw?: boolean }
-): D => {
-  if (
-    object == null ||
-    (Array.isArray(object) && object.length < 1) ||
-    (isObject(object) && Object.keys(object).length < 1)
-  ) {
-    invariant(false, `cannot cast null or invalid object`)
-  }
-
-  return mapObj(object, (value, column) => {
-    return castFromColumnDefinition(model, column as keyof SchemaRaw, value, options)
-  })
-}
-*/
-
 export class Cast <
-  T extends types.LooseObject = types.LooseObject,
-  Props extends types.ModelProps<T> = types.ModelProps<T>,
+  Props extends types.ModelProps<types.Schema> = types.ModelProps<types.Schema>
 > {
-  constructor (private readonly model: Model<T, Props>) {
+  constructor (private readonly model: Model<Props["schema"]>) {
     this.model = model
   }
 
@@ -403,7 +316,10 @@ export class Cast <
     invariant(false, `invalid input type: '${typeof object}'`)
   }
 
-  fromDefinition (object: types.LooseObject, options: { raw?: boolean }): Props["objectOutput"] {
+  fromDefinition (
+    object: Props["objectOutput"],
+    options: { raw?: boolean }
+  ): Props["objectOutput"] {
     if (
       object == null ||
       (Array.isArray(object) && object.length < 1) ||
@@ -439,19 +355,22 @@ export class Cast <
   }
 
   fromColumnDefinition (
-    column: keyof Props["schema"],
+    column: keyof Props["objectOutput"],
     value: any,
     options: { raw?: boolean } = { raw: false }
-  ): Props["objectOutput"][keyof Props["objectOutput"]] {
-    const definition = this.model.schema[column]
+  ): types.ValueOf<Props["objectOutput"]> {
+    // TODO: get rid of this `any` cast?
+    const definition = this.model.schema[column as any]
     const type = getDataType(definition)
 
-    const cast = value !== null ? toReturnType(type, value) : value
+    const cast = value === null ? null : toReturnType(type, value)
 
     if (!options.raw && isFunction(definition.get)) {
-      return definition.get(cast)
+      // TODO: get rid of this `any` cast?
+      return definition.get(cast as any) as any
     }
 
-    return cast
+    // TODO: get rid of this `any` cast?
+    return cast as any
   }
 }

@@ -1,5 +1,11 @@
-import test from "ava"
-import { connect } from "../src"
+import ava, { TestInterface } from "ava"
+import { connect, ModelWithShape } from "../src"
+
+import { Person } from "./helpers/types"
+
+const test = ava as TestInterface<{
+  people: ModelWithShape<Person>
+}>
 
 const db = connect(":memory:")
 
@@ -9,13 +15,13 @@ const people = [
   { name: "Gurlak", age: 302 }
 ]
 
-test.before(async () => {
-  await db.model("people", {
+test.before(async t => {
+  t.context.people = await db.modelWithShape("people", {
     name: String,
     age: Number
   })
 
-  await Promise.all(people.map(person => db.create("people", person)))
+  await Promise.all(people.map(person => t.context.people.create(person)))
 })
 
 test.after.always(() => db.close())
@@ -24,37 +30,49 @@ test.serial("increments by 1 when no amount is provided", async t => {
   const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age += 1
-      return db.increment("people.age", { name })
-        .then(() => db.get<number>("people.age", { name }))
+      return t.context.people.increment("age", { name })
+        .then(() => t.context.people.get("age", { name }))
         .then(val => [age, val])
     })
   )
 
-  values.forEach(([age, val]) => t.is(val, age + 1))
+  values.forEach(([age, val]) => {
+    if (typeof age !== "number") {
+      return t.fail(`Expected 'age' to be a number and got '${typeof age}'`)
+    }
+
+    t.is(val, age + 1)
+  })
 })
 
 test.serial("increments by a specified amount", async t => {
   const values = await Promise.all(
     people.map(({ name, age }, i) => {
       people[i].age += 4
-      return db.increment("people.age", { name }, 4)
-        .then(() => db.get<number>("people.age", { name }))
+      return t.context.people.increment("age", { name }, 4)
+        .then(() => t.context.people.get("age", { name }))
         .then(val => [age, val])
     })
   )
 
-  values.forEach(([age, val]) => t.is(val, age + 4))
+  values.forEach(([age, val]) => {
+    if (typeof age !== "number") {
+      return t.fail(`Expected 'age' to be a number and got '${typeof age}'`)
+    }
+
+    t.is(val, age + 4)
+  })
 })
 
 test.serial("does nothing when passed a zero value", async t => {
-  await db.set("people.age", { name: "Lelu" }, 10)
-  const original = await db.get("people.age", { name: "Lelu" })
+  await t.context.people.set("age", { name: "Lelu" }, 10)
+  const original = await t.context.people.get("age", { name: "Lelu" })
   t.is(original, 10)
 
-  const affected = await db.increment("people.age", { name: "Lelu" }, 0)
+  const affected = await t.context.people.increment("age", { name: "Lelu" }, 0)
   t.is(affected.length, 0)
 
-  const final = await db.get("people.age", { name: "Lelu" })
+  const final = await t.context.people.get("age", { name: "Lelu" })
   t.is(final, 10)
 })
 

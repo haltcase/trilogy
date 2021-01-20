@@ -15,8 +15,11 @@ import {
 import * as types from "./types"
 import { Driver } from "./constants"
 
+export type ModelWithShape <T extends types.LooseObject> =
+  Model<types.SchemaFromShape<T>>
+
 const baseCount = async <
-  T extends types.LooseObject,
+  T extends types.Schema,
   Props extends types.ModelProps<T>
 > (
   model: Model<T, Props>,
@@ -41,15 +44,16 @@ const baseCount = async <
 
   if (options.group != null) query = query.groupBy(toArray(options.group))
 
-  // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+  // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
   const result = await helpers.getQueryResult<Driver, typeof query, Props, [{ count: number }] | undefined>(model.ctx, query, {
-    model
+    // TODO: get rid of this `any` cast
+    model: model as any
   })
   return Array.isArray(result) ? result[0].count : 0
 }
 
 const baseMinMax = async <
-  T extends types.LooseObject,
+  T extends types.Schema,
   Props extends types.ModelProps<T>
 > (
   model: Model<T, Props>,
@@ -69,30 +73,32 @@ const baseMinMax = async <
 
   if (options.group != null) query = query.groupBy(toArray(options.group))
 
-  // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+  // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
   const result = await helpers.getQueryResult<Driver, typeof query, Props, [Record<"min" | "max", number>] | undefined>(model.ctx, query, {
-    model: model
+    // TODO: get rid of this `any` cast
+    model: model as any
   })
   return Array.isArray(result) ? result[0][method] : undefined
 }
 
 const baseGet = async <
-  T extends types.LooseObject,
+  T extends types.Schema,
   Props extends types.ModelProps<T>,
-  K extends keyof Props["objectOutput"]
+  K extends keyof Props["objectOutput"],
+  V extends Props["objectOutput"][K]
 > (
   model: Model<T, Props>,
   column: K,
   criteria: types.Criteria<Props["objectOutput"]> | undefined,
-  defaultValue?: Props["objectOutput"][K],
+  defaultValue?: V,
   options?: types.LooseObject
-): Promise<Props["objectOutput"][K] | undefined> => {
-  const data = await model.findOneIn(column, criteria, options)
+): Promise<V | undefined> => {
+  const data = await model.findOneIn<K, V>(column, criteria, options)
   return data ?? defaultValue
 }
 
 const baseSet = async <
-  T extends types.LooseObject,
+  T extends types.Schema,
   Props extends types.ModelProps<T>,
   K extends keyof Props["objectOutput"]
 > (
@@ -123,11 +129,12 @@ const baseSet = async <
  * @internal
  */
 export default class Model <
-  T extends types.LooseObject = types.LooseObject,
-  Props extends types.ModelProps<T> = types.ModelProps<T>
+  // TODO: get rid of this `any`?
+  Schema extends types.Schema<any>,
+  Props extends types.ModelProps<Schema> = types.ModelProps<Schema>
 > extends Hooks<Props> {
-  schema: types.SchemaNormalized<Props["schema"]>
-  cast: Cast<T, Props>
+  schema: types.SchemaNormalized<Schema>
+  cast: Cast<Props>
 
   /**
    * @param ctx trilogy instance used as a context for the model
@@ -138,12 +145,24 @@ export default class Model <
   constructor (
     public ctx: Trilogy,
     public name: string,
-    schema: Props["schema"],
+    schema: Schema,
     public options: types.ModelOptions
   ) {
     super()
     this.schema = normalizeSchema(schema, options)
-    this.cast = new Cast(this)
+    this.cast = new Cast(this as any)
+  }
+
+  static withShape <
+    T extends types.LooseObject = never,
+    ModelSchema extends types.SchemaFromShape<T> = types.SchemaFromShape<T>
+  > (
+    ctx: Trilogy,
+    name: string,
+    schema: ModelSchema,
+    options: types.ModelOptions = {}
+  ): ModelWithShape<T> {
+    return new Model<types.SchemaFromShape<T>>(ctx, name, schema, options)
   }
 
   /**
@@ -158,7 +177,7 @@ export default class Model <
     options: types.CreateOptions = {}
   ): Promise<Props["objectOutput"] | undefined> {
     const { prevented } =
-      await this._callHook(Hook.BeforeCreate, object, options)
+      await this._callHook(Hook.BeforeCreate, object as Partial<Props["objectInput"]>, options)
 
     if (prevented) return
 
@@ -176,12 +195,14 @@ export default class Model <
     )
 
     await helpers.executeQuery<Props>(this.ctx, query, {
-      model: this
+      // TODO: get rid of this `any` cast
+      model: this as any
     })
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const result = await helpers.getQueryResult<Driver, typeof returning, Props, types.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, returning, {
-      model: this,
+      // TODO: get rid of this `any` cast
+      model: this as any,
       internal: true
     })
     await cleanup()
@@ -217,9 +238,10 @@ export default class Model <
     if (options.limit != null) query = query.limit(options.limit)
     if (options.skip != null) query = query.offset(options.skip)
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const result = await helpers.getQueryResult<Driver, typeof query, Props, types.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, query, {
-      model: this
+      // TODO: get rid of this `any` cast
+      model: this as any
     })
 
     if (!Array.isArray(result)) {
@@ -240,7 +262,7 @@ export default class Model <
    * @param options
    */
   async findIn (
-    column: keyof Props["schema"],
+    column: keyof Props["objectOutput"],
     criteria?: types.Criteria<Props["objectOutput"]>,
     options?: types.FindOptions
   ): Promise<Array<types.ValueOf<Props["objectOutput"]>>> {
@@ -277,9 +299,10 @@ export default class Model <
     if (order != null) query = helpers.buildOrder(query, order)
     if (options.skip != null) query = query.offset(options.skip)
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const response = await helpers.getQueryResult<Driver, typeof query, Props, types.Listable<Props["objectOutput"]>>(this.ctx, query, {
-      model: this
+      // TODO: get rid of this `any` cast
+      model: this as any
     })
 
     const result = firstOrValue<Props["objectOutput"]>(response)
@@ -358,11 +381,13 @@ export default class Model <
     let query = this.ctx.knex(this.name).update(typedData)
     query = helpers.buildWhere(query, typedCriteria)
 
-    await helpers.executeQuery<Props>(this.ctx, query, { model: this })
+    // TODO: get rid of this `any` cast
+    await helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      model: this,
+      // TODO: get rid of this `any` cast
+      model: this as any,
       internal: true
     })
 
@@ -411,7 +436,7 @@ export default class Model <
    */
   async get <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
     column: K, criteria?: types.Criteria<Props["objectOutput"]>, defaultValue?: V
-  ): Promise<Props["objectOutput"][K] | undefined> {
+  ): Promise<V | undefined> {
     return baseGet(this, column, criteria, defaultValue)
   }
 
@@ -482,12 +507,14 @@ export default class Model <
     let query = this.ctx.knex(this.name).increment(column as string, amount)
     query = helpers.buildWhere(query, criteria)
 
-    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this })
+    // TODO: get rid of this `any` cast
+    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
     if (affected === 0) return []
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      model: this,
+      // TODO: get rid of this `any` cast
+      model: this as any,
       internal: true
     })
 
@@ -533,12 +560,14 @@ export default class Model <
       criteria
     )
 
-    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this })
+    // TODO: get rid of this `any` cast
+    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
     if (affected === 0) return []
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      model: this,
+      // TODO: get rid of this `any` cast
+      model: this as any,
       internal: true
     })
 
@@ -578,14 +607,16 @@ export default class Model <
     query = helpers.buildWhere(query, criteria)
 
     const deleteCount = await helpers.executeQuery<Props>(this.ctx, query, {
-      model: this
+      // TODO: get rid of this `any` cast
+      model: this as any
     })
 
     if (deleteCount === 0) return []
 
-    // TODO: please, for the love of all in the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
+    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
     const deleted = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      model: this,
+      // TODO: get rid of this `any` cast
+      model: this as any,
       internal: true
     })
 
@@ -599,7 +630,8 @@ export default class Model <
    */
   async clear (): Promise<number> {
     const query = this.ctx.knex(this.name).truncate()
-    return helpers.executeQuery<Props>(this.ctx, query, { model: this })
+    // TODO: get rid of this `any` cast
+    return helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
   }
 
   /**
@@ -609,7 +641,7 @@ export default class Model <
    * @param options
    */
   async count (
-    criteria?: types.Criteria<Props["objectOutput"]>,
+    criteria?: types.Criteria<Props["objectInput"]>,
     options: types.AggregateOptions = {}
   ): Promise<number> {
     return baseCount(this, "*", criteria, options)
@@ -624,8 +656,8 @@ export default class Model <
    * @param options
    */
   async countIn (
-    column: types.StringKeys<Props["objectOutput"]>,
-    criteria?: types.Criteria<Props["objectOutput"]>,
+    column: types.StringKeys<Props["objectInput"]>,
+    criteria?: types.Criteria<Props["objectInput"]>,
     options: types.AggregateOptions = {}
   ): Promise<number> {
     return baseCount(this, column, criteria, options)

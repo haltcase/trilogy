@@ -57,7 +57,7 @@ test("hooks.onQuery: receives executed queries (internal as option)", async t =>
 test("hooks.beforeCreate: receives the object to be created", async t => {
   const db = connect(":memory:")
 
-  const users = await db.model<User>("users", {
+  const users = await db.model("users", {
     name: String,
     rank: { type: Number, set: (rank: number) => rank * 2 }
   })
@@ -85,7 +85,7 @@ test("hooks.beforeCreate: receives the object to be created", async t => {
 test("hooks.afterCreate: receives the object after its creation", async t => {
   const db = connect(":memory:")
 
-  const users = await db.model<User>("users", {
+  const users = await db.model("users", {
     name: String,
     rank: { type: Number, set: (rank: number) => rank * 2 }
   })
@@ -113,7 +113,7 @@ test("hooks.afterCreate: receives the object after its creation", async t => {
 test("hooks.beforeUpdate: receives upcoming changes & criteria", async t => {
   const db = connect(":memory:")
 
-  const users = await db.model<User>("users", {
+  const users = await db.model("users", {
     name: String,
     rank: { type: Number, set: (rank: number) => rank * 2 }
   })
@@ -140,7 +140,7 @@ test("hooks.beforeUpdate: receives upcoming changes & criteria", async t => {
 test("hooks.afterUpdate: receives updated objects", async t => {
   const db = connect(":memory:")
 
-  const users = await db.model<User>("users", {
+  const users = await db.model("users", {
     name: String,
     rank: { type: Number, set: (rank: number) => rank * 2 }
   })
@@ -177,7 +177,7 @@ test("hooks.afterUpdate: receives updated objects", async t => {
 test("hooks.beforeRemove: receives criteria for objects to be removed", async t => {
   const db = connect(":memory:")
 
-  const users = await db.model<User>("users", {
+  const users = await db.model("users", {
     name: String,
     rank: Number
   })
@@ -201,7 +201,7 @@ test("hooks.beforeRemove: receives criteria for objects to be removed", async t 
 test("hooks.afterRemove: receives criteria for objects to be removed", async t => {
   const db = connect(":memory:")
 
-  const users = await db.model<User>("users", {
+  const users = await db.model("users", {
     name: String,
     rank: Number
   })

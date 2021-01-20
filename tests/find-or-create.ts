@@ -1,14 +1,12 @@
 import test from "ava"
 import { connect } from "../src"
 
-import { Game } from "./helpers/types"
-
 const db = connect(":memory:")
 
 test.after.always(() => db.close())
 
 test("creates missing objects or returns an existing one", async t => {
-  const games = await db.model<Game>("games", {
+  const games = await db.model("games", {
     name: { type: String, primary: true },
     last_played: Date,
     genre: String
