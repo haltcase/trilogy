@@ -1,15 +1,10 @@
 import { invariant } from "./util"
 import { normalizeCriteria } from "./helpers"
 
-import {
-  Fn,
-  Criteria,
-  CriteriaNormalized,
-  CreateOptions,
-  UpdateOptions,
-  ModelProps,
-  SchemaBase
-} from "./types"
+import { Criteria, CriteriaNormalized } from "./types/criteria"
+import { ModelProps, ModelRecord, Schema } from "./types/schemas"
+import { Fn } from "./types/utils"
+import { CreateOptions, UpdateOptions, } from "./types/validators"
 
 export type HookOptions = CreateOptions | UpdateOptions | {}
 
@@ -20,14 +15,14 @@ export interface OnQueryOptions {
 export type OnQueryContext = [string, boolean]
 
 export type OnQueryCallback = Fn<[string]>
-export type BeforeCreateCallback <D> = Fn<[D | Partial<D>, CreateOptions]>
-export type AfterCreateCallback <D> = Fn<[D, CreateOptions]>
-export type BeforeUpdateCallback <D> = Fn<[D | Partial<D>, CriteriaNormalized<D>, UpdateOptions]>
-export type AfterUpdateCallback <D> = Fn<[D[], UpdateOptions]>
-export type BeforeRemoveCallback <D> = Fn<[CriteriaNormalized<D>, {}]>
-export type AfterRemoveCallback <D> = Fn<[D[], {}]>
+export type BeforeCreateCallback <D extends ModelRecord> = Fn<[D | Partial<D>, CreateOptions]>
+export type AfterCreateCallback <D extends ModelRecord> = Fn<[D, CreateOptions]>
+export type BeforeUpdateCallback <D extends ModelRecord> = Fn<[D | Partial<D>, CriteriaNormalized<D>, UpdateOptions]>
+export type AfterUpdateCallback <D extends ModelRecord> = Fn<[D[], UpdateOptions]>
+export type BeforeRemoveCallback <D extends ModelRecord> = Fn<[CriteriaNormalized<D>, {}]>
+export type AfterRemoveCallback <D extends ModelRecord> = Fn<[D[], {}]>
 
-export type HookCallback <D> =
+export type HookCallback <D extends ModelRecord> =
   | OnQueryCallback
   | BeforeCreateCallback<D>
   | AfterCreateCallback<D>
@@ -55,7 +50,7 @@ export const EventCancellation = Symbol("trilogy.EventCancellation")
 /**
  * Base implementation of lifecycle hooks inherited by all model instances.
  */
-export class Hooks <Props extends ModelProps<SchemaBase>> {
+export class Hooks <Props extends ModelProps<Schema>> {
   readonly #onQuery = new Set<OnQueryCallback>()
   readonly #onQueryAll = new Set<OnQueryCallback>()
 
@@ -148,7 +143,7 @@ export class Hooks <Props extends ModelProps<SchemaBase>> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  beforeUpdate (fn: BeforeUpdateCallback<Props["objectOutput"]>): () => boolean {
+  beforeUpdate (fn: BeforeUpdateCallback<Props["objectInput"]>): () => boolean {
     invariant(
       typeof fn === "function",
       "hook callbacks must be of type function"
@@ -189,7 +184,7 @@ export class Hooks <Props extends ModelProps<SchemaBase>> {
    *
    * @returns Unsubscribe function that removes the subscriber when called
    */
-  beforeRemove (fn: BeforeRemoveCallback<Props["objectOutput"]>): () => boolean {
+  beforeRemove (fn: BeforeRemoveCallback<Props["objectInput"]>): () => boolean {
     invariant(
       typeof fn === "function",
       "hook callbacks must be of type function"
@@ -224,26 +219,26 @@ export class Hooks <Props extends ModelProps<SchemaBase>> {
   async _callHook <T = Props["objectOutput"]> (
     hook: Hook.OnQuery, arg: OnQueryContext
   ): Promise<HookResult>
-  async _callHook <T = Props["objectInput"]> (
+  async _callHook <T extends ModelRecord = Props["objectInput"]> (
     hook: Hook.BeforeCreate, arg: T | Partial<T>, options?: CreateOptions
   ): Promise<HookResult>
   async _callHook <T = Props["objectOutput"]> (
     hook: Hook.AfterCreate, arg: T, options?: CreateOptions
   ): Promise<HookResult>
-  async _callHook <T = Props["objectOutput"]> (
+  async _callHook <T extends ModelRecord = Props["objectOutput"]> (
     hook: Hook.BeforeUpdate, arg: [T | Partial<T>, Criteria<T>], options?: UpdateOptions
   ): Promise<HookResult>
   async _callHook <T = Props["objectOutput"]> (
     hook: Hook.AfterUpdate, arg: T[], options?: UpdateOptions
   ): Promise<HookResult>
-  async _callHook <T = Props["objectOutput"]> (
+  async _callHook <T extends ModelRecord = Props["objectOutput"]> (
     hook: Hook.BeforeRemove, arg: Criteria<T>, options?: {}
   ): Promise<HookResult>
   async _callHook <T = Props["objectOutput"]> (
     hook: Hook.AfterRemove, arg: T[], options?: {}
   ): Promise<HookResult>
 
-  async _callHook <T = Props["objectInput"] | Props["objectOutput"]> (
+  async _callHook <T extends ModelRecord = Props["objectInput"] | Props["objectOutput"]> (
     hook: Hook,
     arg: T | Partial<T> | [T | Partial<T>, Criteria<T>] | Criteria<T> | OnQueryContext,
     options?: HookOptions

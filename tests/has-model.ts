@@ -1,9 +1,9 @@
 import test from "ava"
-import { connect } from "../src"
+import { connect, ColumnType } from "../src"
 
 const db = connect(":memory:")
 
-const schema = { name: String }
+const schema = { name: ColumnType.String }
 
 const tables = [
   { name: "one", schema },

@@ -51,7 +51,8 @@
     "generic-pool": "^3.7.1",
     "knex": "^0.21.5",
     "runtypes": "^5.0.1",
-    "tslib": "^2.1.0"
+    "tslib": "^2.1.0",
+    "type-fest": "^0.20.2"
   },
   "devDependencies": {
     "@citycide/changelog": "^2.0.0",

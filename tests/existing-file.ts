@@ -1,7 +1,7 @@
 import ava, { TestInterface } from "ava"
 import { join, basename } from "path"
 
-import { connect, ModelWithShape } from "../src"
+import { connect, ColumnType, ModelWithShape } from "../src"
 
 type Data = {
   item: string,
@@ -15,8 +15,8 @@ const db = connect(filePath)
 
 test.before("insert default data", async t => {
   t.context.data = await db.modelWithShape("data", {
-    item: String,
-    price: String
+    item: ColumnType.String,
+    price: ColumnType.String
   })
 
   await t.context.data.create({ item: "freedom", price: "not free" })

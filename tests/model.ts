@@ -1,6 +1,5 @@
 import test from "ava"
-import { connect } from "../src"
-import * as ColumnType from "../src/column-types"
+import { connect, ColumnType } from "../src"
 
 import { SqliteMaster } from "./helpers/types"
 
@@ -10,8 +9,8 @@ test.after.always(() => db.close())
 
 test("creates a new model definition", async t => {
   await db.model("teams", {
-    name: String,
-    playoffs: { type: Boolean, defaultTo: false }
+    name: ColumnType.String,
+    playoffs: { type: ColumnType.Boolean, defaultTo: false }
   })
 
   t.true(await db.hasModel("teams"))
@@ -19,8 +18,8 @@ test("creates a new model definition", async t => {
 
 test("defines a model with a uniquely constrained property", async t => {
   const sodas = await db.model("sodas", {
-    name: { type: String, unique: true },
-    flavor: String
+    name: { type: ColumnType.String, unique: true },
+    flavor: ColumnType.String
   })
 
   const object = { name: "coke", flavor: "awesome" }
@@ -32,8 +31,8 @@ test("defines a model with a uniquely constrained property", async t => {
 
 test("defines a model with a single named index", async t => {
   await db.model("sodas2", {
-    name: { type: String, index: "idx_name" },
-    flavor: String
+    name: { type: ColumnType.String, index: "idx_name" },
+    flavor: ColumnType.String
   })
 
   const query = db.knex.raw('SELECT * FROM sqlite_master WHERE type = "index"')
@@ -44,8 +43,8 @@ test("defines a model with a single named index", async t => {
 
 test("defines a model with multiple indices", async t => {
   const schema = {
-    name: String,
-    flavor: String
+    name: ColumnType.String,
+    flavor: ColumnType.String
   }
 
   await db.model("sodas_single", schema, {

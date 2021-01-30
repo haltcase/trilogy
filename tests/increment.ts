@@ -1,5 +1,5 @@
 import ava, { TestInterface } from "ava"
-import { connect, ModelWithShape } from "../src"
+import { connect, ColumnType, ModelWithShape } from "../src"
 
 import { Person } from "./helpers/types"
 
@@ -17,8 +17,8 @@ const people = [
 
 test.before(async t => {
   t.context.people = await db.modelWithShape("people", {
-    name: String,
-    age: Number
+    name: ColumnType.String,
+    age: ColumnType.Number
   })
 
   await Promise.all(people.map(person => t.context.people.create(person)))
@@ -78,8 +78,8 @@ test.serial("does nothing when passed a zero value", async t => {
 
 test("allows for multiple where clauses", async t => {
   const people = await db.model("increment_people", {
-    age: Number,
-    name: String
+    age: ColumnType.Number,
+    name: ColumnType.String
   })
 
   const list = [

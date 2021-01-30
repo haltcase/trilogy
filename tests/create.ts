@@ -1,14 +1,13 @@
 import test from "ava"
-import { connect } from "../src"
-import * as T from "../src/column-types"
+import { connect, ColumnType } from "../src"
 
 import { FirstSecond2 } from "./helpers/types"
 
 const db = connect(":memory:")
 
 const schema = {
-  first: String,
-  second: Number
+  first: ColumnType.String,
+  second: ColumnType.Number
 }
 
 const tables = [
@@ -35,11 +34,11 @@ test("create: inserts objects into the database", async t => {
   ]
 
   await Promise.all(
-    inserts.map(({ table, object }) => db.getModel<FirstSecond2>(table).create(object))
+    inserts.map(({ table, object }) => db.getModelWithShape<FirstSecond2>(table).create(object))
   )
 
   const selects = await Promise.all(
-    inserts.map(({ table, object }) => db.getModel<FirstSecond2>(table).find(object))
+    inserts.map(({ table, object }) => db.getModelWithShape<FirstSecond2>(table).find(object))
   )
 
   inserts.forEach(({ table, object }, i) => {
@@ -50,10 +49,10 @@ test("create: inserts objects into the database", async t => {
 test("create: handles nil values correctly", async t => {
   const [one, two] = await Promise.all([
     db.model("people_one", {
-      name: { type: String }
+      name: { type: ColumnType.String }
     }),
     db.model("people_two", {
-      name: { type: String, notNullable: true }
+      name: { type: ColumnType.String, notNullable: true }
     })
   ])
 
@@ -83,17 +82,17 @@ test("create: `increments` columns are inferred to be optional", async t => {
 
   type Things2 = {
     name: string,
-    id: T.Increments
+    id: ColumnType.Increments
   }
 
   const things1 = await db.modelWithShape<Things1>("things1", {
-    name: String,
+    name: ColumnType.String,
     id: "increments"
   })
 
   const things2 = await db.modelWithShape<Things2>("things1", {
-    name: String,
-    id: T.Increments
+    name: ColumnType.String,
+    id: ColumnType.Increments
   })
 
   await t.notThrowsAsync(async () => {

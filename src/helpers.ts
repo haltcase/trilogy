@@ -1,36 +1,30 @@
-import { Driver } from "./constants"
-import { castValue } from "./schema-helpers"
-import { writeDatabase } from "./sqljs-handler"
-import * as util from "./util"
-
 import * as knex from "knex"
 
+import { Driver } from "./constants"
+import { castValue } from "./schema-helpers"
+import { parseResponse, writeDatabase } from "./sqljs-handler"
+import * as util from "./util"
+
 import { Trilogy } from "."
+import { Model } from "./model"
 import { Hook, OnQueryContext } from "./hooks"
-import * as types from "./types"
+
+import {
+  Criteria,
+  WhereEqual,
+  WhereList,
+  WhereListNormalized,
+  WhereObject,
+  WhereOperator,
+  WhereNormalized,
+  WhereTuple
+} from "./types/criteria"
+
+import { Query, QueryLike, QueryOptions, QueryResult } from "./types/queries"
+import { ModelRecord, ResolveModelSchema, Schema } from "./types/schemas"
+import { Const, Nullable } from "./types/utils"
 
 const HasTableSubstring = "from sqlite_master where type = 'table'"
-
-export const parseResponse = (
-  contents: types.SqlJsResponse
-): types.LooseObject[] => {
-  if (contents?.length < 1) return []
-
-  const [{ columns, values }] = contents
-  const results = []
-
-  for (let i = 0; i < values.length; i++) {
-    const line: types.LooseObject = {}
-
-    for (let j = 0; j < columns.length; j++) {
-      line[columns[j]] = values[i][j]
-    }
-
-    results.push(line)
-  }
-
-  return results
-}
 
 export const buildOrder = <T = any, U = any> (
   partial: knex.QueryBuilder<T, U>,
@@ -47,34 +41,36 @@ export const buildOrder = <T = any, U = any> (
     if (order.length === 1) {
       return partial.orderBy(order[0])
     } else if (order.length === 2) {
-      return partial.orderBy(order[0], order[1])
+      return partial.orderBy(...order)
     }
   }
 
   return partial
 }
 
-export const buildWhere = <T = any, U = any> (
-  partial: knex.QueryBuilder<T, U>,
-  where: types.CriteriaBase | types.CriteriaList | undefined,
+export const buildWhere = <T extends ModelRecord = ModelRecord> (
+  partial: knex.QueryBuilder<any, any>,
+  where: Criteria<T> | undefined,
   inner?: boolean
-): knex.QueryBuilder<T, U> => {
-  if (where === undefined) return partial
+): knex.QueryBuilder<any, any> => {
+  if (where === undefined) {
+    return partial
+  }
 
   if (isWhereTuple(where)) {
     const i = where.length - 1
     const cast = where
-    cast[i] = castValue(where[i])
+    ;(cast[i] as any) = castValue(where[i])
 
     if (cast.length === 2) {
-      return partial.where(...cast)
+      return partial.where(...cast as [any, any])
     } else if (cast.length === 3) {
-      return partial.where(...cast)
+      return partial.where(...cast as [any, any, any])
     }
   }
 
-  if (inner == null && isWhereMultiple(where)) {
-    return where.reduce<knex.QueryBuilder<T, U>>((accumulator, clause) => {
+  if (inner == null && isWhereList(where)) {
+    return where.reduce<knex.QueryBuilder<any, any>>((accumulator, clause) => {
       return buildWhere(accumulator, clause, true)
     }, partial)
   }
@@ -87,49 +83,65 @@ export const buildWhere = <T = any, U = any> (
   util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
-export const isWhereTuple = (
-  where: any
-): where is types.Criteria2 | types.Criteria3 => {
-  return (
+export function isWhereTupleImpl <T> (length: 2): (where: any) => where is WhereEqual<any>
+export function isWhereTupleImpl <T> (length: 3): (where: any) => where is WhereOperator<any>
+export function isWhereTupleImpl <T extends WhereTuple<any>> (length: 2 | 3): (where: any) => where is T {
+  return (where: any): where is T =>
     Array.isArray(where) &&
-    (where.length === 2 || where.length === 3) &&
+    where.length === length &&
     typeof where[0] === "string"
-  )
 }
 
-export const isWhereMultiple = (where: any): where is types.CriteriaList => {
+export const isWhereEqual = isWhereTupleImpl(2)
+export const isWhereOperator = isWhereTupleImpl(3)
+
+export const isWhereTuple = (where: any): where is WhereTuple<any> =>
+  isWhereEqual(where) || isWhereOperator(where)
+
+export const isWhereList = (where: any): where is WhereList<any> => {
   return (
     Array.isArray(where) &&
     where.every(item => isWhereTuple(item) || util.isObject(item))
   )
 }
 
-export const isValidWhere = (where: any): where is types.CriteriaBase => {
+export const isWhereListNormalized = (where: any): where is WhereListNormalized<any> => {
   return (
-    isWhereTuple(where) ||
-    util.isObject(where) ||
-    isWhereMultiple(where)
+    Array.isArray(where) &&
+    where.every(item => (isWhereTuple(item) && item.length == 2) || util.isObject(item))
   )
 }
 
-export function normalizeCriteria <D> (
-  where: types.CriteriaObj<D> | types.Criteria2<D>
-): types.CriteriaObj<D>
-export function normalizeCriteria <D> (
-  where: types.Criteria3<D>
-): types.Criteria3<D>
-export function normalizeCriteria <D> (
-  where: types.CriteriaList<D>
-): types.CriteriaListNormalized<D>
-export function normalizeCriteria <D> (
-  where: types.CriteriaBase<D>
-): types.CriteriaBaseNormalized<D>
-export function normalizeCriteria <D> (
-  where: types.Criteria<D>
-): types.CriteriaNormalized<D>
-export function normalizeCriteria <D> (
-  where: unknown
+export const isValidCriteria = (where: any): where is Criteria<ModelRecord> => {
+  return (
+    isWhereTuple(where) ||
+    util.isObject(where) ||
+    isWhereList(where)
+  )
+}
+
+export function normalizeCriteria <T> (
+  where: null | undefined
+): null
+export function normalizeCriteria <T extends ModelRecord> (
+  where: WhereObject<T> | WhereEqual<T>
+): WhereObject<T>
+export function normalizeCriteria <T extends ModelRecord> (
+  where: WhereOperator<T>
+): WhereOperator<T>
+export function normalizeCriteria <T extends ModelRecord> (
+  where: WhereList<T>
+): WhereListNormalized<T>
+export function normalizeCriteria <T extends ModelRecord> (
+  where: Criteria<T>
+): WhereNormalized<T>
+export function normalizeCriteria <T extends ModelRecord, WhereType> (
+  where: Nullable<Const<WhereType>>
 ): unknown {
+  if (where == null) {
+    return null
+  }
+
   if (isWhereTuple(where)) {
     return (
       where.length === 2
@@ -138,7 +150,7 @@ export function normalizeCriteria <D> (
     )
   }
 
-  if (isWhereMultiple(where)) {
+  if (isWhereList(where)) {
     return where.map(rule => normalizeCriteria(rule))
   }
 
@@ -154,12 +166,12 @@ const getQueryAction = (str: string): string => {
 }
 
 const runQuery = async <
-  Props extends types.ModelProps<types.Schema>
+  QueryModel extends Model<Schema>
 > (
   instance: Trilogy,
-  query: types.Query,
-  options: types.QueryOptions<Props> = {}
-): Promise<types.Query | number | boolean | unknown[]> => {
+  query: Query,
+  options: QueryOptions<QueryModel> = {}
+): Promise<Query | number | boolean | unknown[]> => {
   const {
     bindings,
     sql: sqlString
@@ -212,11 +224,11 @@ const runQuery = async <
 }
 
 export const executeQuery = async <
-  Props extends types.ModelProps<types.Schema> = types.ModelProps<types.Schema>,
-  Options extends Omit<types.QueryOptions<Props>, "needResponse"> = Omit<types.QueryOptions<Props>, "needResponse">
+  QueryModel extends Model<any, any> = Model<Schema>,
+  Options extends Omit<QueryOptions<QueryModel>, "needResponse"> = Omit<QueryOptions<QueryModel>, "needResponse">
 > (
   instance: Trilogy,
-  query: types.Query,
+  query: Query,
   options: Options = {} as Options
 ): Promise<number> => {
   return runQuery(instance, query, {
@@ -227,22 +239,22 @@ export const executeQuery = async <
 
 export const getQueryResult = async <
   DriverType extends Driver,
-  Query extends types.QueryLike = types.Query,
-  Props extends types.ModelProps<types.Schema> = types.ModelProps<types.Schema>,
-  R = types.QueryResult<DriverType, Query>,
-  Options extends Omit<types.QueryOptions<Props>, "needResponse"> = Omit<types.QueryOptions<Props>, "needResponse">
+  Q extends QueryLike = Query,
+  QueryModel extends Model<any, any> = Model<Schema>,
+  R = QueryResult<DriverType, Query>,
+  Options extends Omit<QueryOptions<QueryModel>, "needResponse"> = Omit<QueryOptions<QueryModel>, "needResponse">
 > (
   instance: Trilogy,
-  query: Query,
+  query: Q,
   options: Options = {} as Options
 ): Promise<R> => {
-  return runQuery(instance, query as types.Query, {
+  return runQuery(instance, query as Query, {
     ...options,
     needResponse: true
   })
 }
 
-export const findKey = (schema: types.SchemaNormalized<any>): {
+export const findKey = (schema: ResolveModelSchema<any>): {
   key: string
   hasIncrements: boolean
 } => {

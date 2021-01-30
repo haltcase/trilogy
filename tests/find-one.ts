@@ -1,5 +1,5 @@
 import ava, { TestInterface } from "ava"
-import { connect, ModelWithShape } from "../src"
+import { connect, ColumnType, ModelWithShape } from "../src"
 
 import { FirstSecond } from "./helpers/types"
 
@@ -11,8 +11,8 @@ const db = connect(":memory:")
 
 test.before(async t => {
   t.context.first = await db.modelWithShape("first", {
-    first: String,
-    second: String
+    first: ColumnType.String,
+    second: ColumnType.String
   })
 
   await t.context.first.create({
@@ -36,8 +36,8 @@ test("allows retrieving a specific property", async t => {
 
 test("allows for multiple where clauses", async t => {
   const people = await db.model("findOne_people", {
-    age: Number,
-    gender: String
+    age: ColumnType.Number,
+    gender: ColumnType.String
   })
 
   const list = [
@@ -59,8 +59,8 @@ test("allows for multiple where clauses", async t => {
 
 test("findOneIn() variant extracts & returns the specified column", async t => {
   const people = await db.model("findOne_people2", {
-    age: Number,
-    gender: String
+    age: ColumnType.Number,
+    gender: ColumnType.String
   })
 
   const list = [

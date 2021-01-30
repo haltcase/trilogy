@@ -1,5 +1,5 @@
 import ava, { TestInterface } from "ava"
-import { connect, ModelWithShape } from "../src"
+import { connect, ColumnType, ModelWithShape } from "../src"
 
 import { FirstSecond } from "./helpers/types"
 
@@ -11,8 +11,8 @@ const db = connect(":memory:")
 
 test.before(async t => {
   t.context.one = await db.modelWithShape("one", {
-    first: String,
-    second: String
+    first: ColumnType.String,
+    second: ColumnType.String
   })
 
   await Promise.all([
@@ -58,8 +58,8 @@ test("set() - updates the target value", async t => {
 
 test("model.get() & model.set()", async t => {
   const people = await db.model("get_set_people", {
-    name: String,
-    age: Number
+    name: ColumnType.String,
+    age: ColumnType.Number
   })
 
   const persons = [

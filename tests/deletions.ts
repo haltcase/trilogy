@@ -1,5 +1,5 @@
 import ava, { TestInterface } from "ava"
-import { connect, ModelWithShape } from "../src"
+import { connect, ColumnType, ModelWithShape } from "../src"
 
 import { Person, Person3 } from "./helpers/types"
 
@@ -25,13 +25,13 @@ const morePeople = [
 test.before(async t => {
   const [people, others] = await Promise.all([
     db.modelWithShape<Person>("people", {
-      name: { type: String, primary: true },
-      age: Number
+      name: { type: ColumnType.String, primary: true },
+      age: ColumnType.Number
     }),
 
     db.modelWithShape<Person>("others", {
-      name: { type: String, primary: true },
-      age: Number
+      name: { type: ColumnType.String, primary: true },
+      age: ColumnType.Number
     })
   ])
 
@@ -69,8 +69,8 @@ test.serial("removes all objects from the specified model", async t => {
 
 test("allows for multiple where clauses", async t => {
   const people = await db.modelWithShape<Person3>("deletions_people", {
-    age: Number,
-    favoriteColor: String
+    age: ColumnType.Number,
+    favoriteColor: ColumnType.String
   })
 
   const list = [

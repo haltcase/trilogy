@@ -1,9 +1,13 @@
-import * as types from "./types"
+import { Fn, LooseObject, Nullable } from "./types/utils"
 
-export const mapObj = <T extends types.LooseObject, R extends T> (
+export const mapObj = <
+  T extends LooseObject,
+  F extends Fn<[value: T[keyof T], key: keyof T], any>,
+  R extends ReturnType<F> = ReturnType<F>
+> (
   collection: T,
-  fn: (value: T[keyof T], key: keyof T) => R[keyof R]
-): R => {
+  fn: F
+): Record<keyof T, R> => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const result = {} as R
 
@@ -14,14 +18,14 @@ export const mapObj = <T extends types.LooseObject, R extends T> (
   return result
 }
 
-export const isObject = (value: any): value is types.LooseObject =>
+export const isObject = (value: any): value is LooseObject =>
   (value?.constructor === Object) || false
 
 export const isFunction = (value: any): value is Function => typeof value === "function"
 export const isString = (value: any): value is string => typeof value === "string"
 export const isNumber = (value: any): value is number => typeof value === "number"
 
-export const isEmpty = (value: any): value is types.Nullable<{} | []> => {
+export const isEmpty = (value: any): value is Nullable<{} | []> => {
   if (value == null) return true
   if (Array.isArray(value)) return value.length === 0
   if (isObject(value)) return Object.keys(value).length === 0

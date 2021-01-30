@@ -4,16 +4,24 @@ import { openSync, closeSync, mkdirSync } from "fs"
 import * as pool from "generic-pool"
 import knex from "knex"
 import { SqlJs } from "sql.js/module"
+import { } from "type-fest"
 
-import Model, { ModelWithShape } from "./model"
+import { Model } from "./model"
 import { executeQuery, getQueryResult } from "./helpers"
 import { toKnexSchema } from "./schema-helpers"
 import { pureConnect } from "./sqljs-handler"
 import { invariant } from "./util"
 
 import * as hooks from "./hooks"
-import * as types from "./types"
 import { Driver } from "./constants"
+
+import { ModelProps, ModelRecord, Schema, SchemaFromShape } from "./types/schemas"
+import { Compulsory, Const, Fn } from "./types/utils"
+import { ModelOptions, TrilogyOptions } from "./types/validators"
+
+export type TrilogyOptionsNormalized = Compulsory<TrilogyOptions & {
+  connection: { filename: string }
+}>
 
 const ensureExists = (atPath: string): void => {
   try {
@@ -21,9 +29,9 @@ const ensureExists = (atPath: string): void => {
   } catch {}
 }
 
-const initOptions = (path: string, options: types.TrilogyOptions): types.TrilogyOptionsNormalized => ({
+const initOptions = (path: string, options: TrilogyOptions): TrilogyOptionsNormalized => ({
   ...{ client: "sqlite3" as const, dir: process.cwd() },
-  ...types.TrilogyOptions.check(options),
+  ...TrilogyOptions.check(options),
   ...{ connection: { filename: path } }
 })
 
@@ -53,7 +61,7 @@ export class Trilogy {
   /**
    * Normalized configuration of this trilogy instance.
    */
-  options: types.TrilogyOptionsNormalized
+  options: TrilogyOptionsNormalized
 
   /**
    * Connection pool for managing a sql.js instance.
@@ -68,7 +76,7 @@ export class Trilogy {
    * @param path File path or `':memory:'` for in-memory storage
    * @param options Configuration for this trilogy instance
    */
-  constructor (path: string, options: types.TrilogyOptions = {}) {
+  constructor (path: string, options: TrilogyOptions = {}) {
     invariant(path, "trilogy constructor must be provided a file path")
 
     const obj = this.options = initOptions(path, options)
@@ -115,10 +123,10 @@ export class Trilogy {
    * @param schema Object defining the schema of the model
    * @param options Configuration for this model instance
    */
-  async model <T extends types.Schema = types.SchemaBase> (
+  async model <T extends Schema> (
     name: string,
-    schema: T,
-    options: types.ModelOptions = {}
+    schema: Const<T>,
+    options: ModelOptions = {}
   ): Promise<Model<T>> {
     if (this.#definitions.has(name)) {
       return this.#definitions.get(name) as Model<T>
@@ -129,7 +137,7 @@ export class Trilogy {
 
     const opts = toKnexSchema(
       model,
-      types.ModelOptions.check(options)
+      ModelOptions.check(options)
     )
     const check = this.knex.schema.hasTable(name)
     const query = this.knex.schema.createTable(name, opts)
@@ -159,12 +167,15 @@ export class Trilogy {
    * @param schema Object defining the schema of the model
    * @param options Configuration for this model instance
    */
-  async modelWithShape <T extends types.LooseObject = never> (
+  async modelWithShape <
+    T extends ModelRecord = never,
+    ModelSchema extends Schema = SchemaFromShape<T>
+  > (
     name: string,
-    schema: types.SchemaFromShape<T>,
-    options: types.ModelOptions = {}
-  ): Promise<ModelWithShape<T>> {
-    return new Model<types.SchemaFromShape<T>>(this, name, schema, options)
+    schema: Const<ModelSchema>,
+    options: ModelOptions = {}
+  ): Promise<Model<ModelSchema>> {
+    return new Model<ModelSchema>(this, name, schema, options)
   }
 
   /**
@@ -175,10 +186,30 @@ export class Trilogy {
    *
    * @throws if `name` has not already been defined
    */
-  getModel <
-    T extends types.LooseObject = types.LooseObject
-  > (name: string): ModelWithShape<T> | never {
-    const model = this.#definitions.get(name) as ModelWithShape<T>
+  getModel <T extends Schema, Props extends ModelProps<T> = ModelProps<T>> (name: string): Model<T, Props> | never {
+    const model = this.#definitions.get(name) as Model<T, Props>
+
+    invariant(
+      model != null,
+      `no model defined by the name '${name}'`
+    )
+
+    return model
+  }
+
+  /**
+   * Synchronously retrieve a model if it exists. If that model doesn't exist
+   * an error will be thrown.
+   *
+   * @param name Name of the model
+   *
+   * @throws if `name` has not already been defined
+   */
+  getModelWithShape <
+    T extends ModelRecord = never,
+    ModelSchema extends Schema = SchemaFromShape<T>
+  > (name: string): Model<ModelSchema> | never {
+    const model = this.#definitions.get(name) as Model<ModelSchema>
 
     invariant(
       model != null,
@@ -201,7 +232,7 @@ export class Trilogy {
     }
 
     const query = this.knex.schema.hasTable(name)
-    return getQueryResult<Driver, typeof query, types.ModelProps<types.Schema>, boolean>(this, query)
+    return getQueryResult<Driver, typeof query, Model<Schema>, boolean>(this, query)
   }
 
   /**
@@ -227,7 +258,7 @@ export class Trilogy {
    * @param query Query built with `knex`
    */
   async getRawResult <T = unknown> (query: knex.QueryBuilder | knex.Raw): Promise<T> {
-    return getQueryResult<Driver, typeof query, types.ModelProps<types.Schema>, T>(this, query)
+    return getQueryResult<Driver, typeof query, Model<Schema>, T>(this, query)
   }
 
   /**
@@ -270,9 +301,9 @@ export class Trilogy {
    */
   onQuery (
     ...args:
-    | [hooks.OnQueryCallback, hooks.OnQueryOptions?]
-    | [string, hooks.OnQueryCallback, hooks.OnQueryOptions?]
-  ): types.Fn<[], boolean> {
+      | [fn: hooks.OnQueryCallback, options?: hooks.OnQueryOptions]
+      | [scope: string, fn: hooks.OnQueryCallback, options?: hooks.OnQueryOptions]
+  ): Fn<[], boolean> {
     let fn: hooks.OnQueryCallback = () => {}
     let location = ""
     let options: hooks.OnQueryOptions = {
@@ -307,7 +338,7 @@ export class Trilogy {
     }
 
     // all queries run across all defined models
-    const unsubs: Array<types.Fn<[], boolean>> =
+    const unsubs: Array<Fn<[], boolean>> =
       Array.from(new Array(this.#definitions.size))
 
     let i = -1
@@ -334,19 +365,21 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   beforeCreate <
-    SchemaRaw extends types.Schema = types.SchemaBase,
-    ModelObject extends types.InferObjectShape<SchemaRaw> = types.InferObjectShape<SchemaRaw>
+    T extends Schema = Schema,
+    Props extends ModelProps<T> = ModelProps<T>
   > (
-    ...args: [fn: hooks.BeforeCreateCallback<ModelObject>] | [scope: string, fn: hooks.BeforeCreateCallback<ModelObject>]
-  ): types.Fn<[], boolean> {
+    ...args:
+      | [fn: hooks.BeforeCreateCallback<ModelRecord>]
+      | [scope: string, fn: hooks.BeforeCreateCallback<Props["objectInput"]>]
+  ): Fn<[], boolean> {
     if (args.length === 2) {
       // all creations run on the model identified by `scope`
       const [location, fn] = args
-      return this.getModel<SchemaRaw>(location).beforeCreate(fn as any)
+      return this.getModel<T, Props>(location).beforeCreate(fn)
     } else {
       // all creations run across all defined models
       const [fn] = args
-      const unsubs: Array<types.Fn<[], boolean>> =
+      const unsubs: Array<Fn<[], boolean>> =
         Array.from(new Array(this.#definitions.size))
 
       let i = -1
@@ -368,18 +401,21 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   afterCreate <
-    SchemaRaw extends types.Schema = types.SchemaBase
+    T extends Schema = Schema,
+    Props extends ModelProps<T> = ModelProps<T>
   > (
-    ...args: [fn: hooks.AfterCreateCallback<SchemaRaw>] | [scope: string, fn: hooks.AfterCreateCallback<SchemaRaw>]
-  ): types.Fn<[], boolean> {
+    ...args:
+      | [fn: hooks.AfterCreateCallback<ModelRecord>]
+      | [scope: string, fn: hooks.AfterCreateCallback<Props["objectOutput"]>]
+  ): Fn<[], boolean> {
     if (args.length === 2) {
       // all creations run on the model identified by `scope`
       const [location, fn] = args
-      return this.getModel<SchemaRaw>(location).afterCreate(fn as any)
+      return this.getModel<T, Props>(location).afterCreate(fn)
     } else {
       // all creations run across all defined models
       const [fn] = args
-      const unsubs: Array<types.Fn<[], boolean>> =
+      const unsubs: Array<Fn<[], boolean>> =
         Array.from(new Array(this.#definitions.size))
 
       let i = -1
@@ -406,23 +442,26 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   beforeUpdate <
-    SchemaRaw extends types.Schema = types.SchemaBase
+    T extends Schema = Schema,
+    Props extends ModelProps<T> = ModelProps<T>
   > (
-    ...args: [fn: hooks.BeforeUpdateCallback<SchemaRaw>] | [scope: string, fn: hooks.BeforeUpdateCallback<SchemaRaw>]
-  ): types.Fn<[], boolean> {
+    ...args:
+      | [fn: hooks.BeforeUpdateCallback<ModelRecord>]
+      | [scope: string, fn: hooks.BeforeUpdateCallback<Props["objectInput"]>]
+  ): Fn<[], boolean> {
     if (args.length === 2) {
       // all updates run on the model identified by `scope`
       const [location, fn] = args
-      return this.getModel<SchemaRaw>(location).beforeUpdate(fn as any)
+      return this.getModel<T, Props>(location).beforeUpdate(fn)
     } else {
       // all updates run across all defined models
       const [fn] = args
-      const unsubs: Array<types.Fn<[], boolean>> =
+      const unsubs: Array<Fn<[], boolean>> =
         Array.from(new Array(this.#definitions.size))
 
       let i = -1
-      this.#definitions.forEach(model => {
-        unsubs[++i] = model.beforeUpdate(fn as any)
+      this.#definitions.forEach((model: Model<SchemaFromShape<ModelRecord>>) => {
+        unsubs[++i] = model.beforeUpdate(fn)
       })
 
       return (): boolean => unsubs.every(unsub => unsub())
@@ -439,18 +478,21 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   afterUpdate <
-    SchemaRaw extends types.Schema = types.SchemaBase
+    T extends Schema = Schema,
+    Props extends ModelProps<T> = ModelProps<T>
   > (
-    ...args: [fn: hooks.AfterUpdateCallback<SchemaRaw>] | [scope: string, fn: hooks.AfterUpdateCallback<SchemaRaw>]
-  ): types.Fn<[], boolean> {
+    ...args:
+      | [fn: hooks.AfterUpdateCallback<ModelRecord>]
+      | [scope: string, fn: hooks.AfterUpdateCallback<Props["objectOutput"]>]
+  ): Fn<[], boolean> {
     if (args.length === 2) {
       // all updates run on the model identified by `scope`
       const [location, fn] = args
-      return this.getModel<SchemaRaw>(location).afterUpdate(fn as any)
+      return this.getModel<T, Props>(location).afterUpdate(fn)
     } else {
       // all updates run across all defined models
       const [fn] = args
-      const unsubs: Array<types.Fn<[], boolean>> =
+      const unsubs: Array<Fn<[], boolean>> =
         Array.from(new Array(this.#definitions.size))
 
       let i = -1
@@ -477,23 +519,26 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   beforeRemove <
-    SchemaRaw extends types.Schema = types.SchemaBase
+    T extends Schema = Schema,
+    Props extends ModelProps<T> = ModelProps<T>
   > (
-    ...args: [fn: hooks.BeforeRemoveCallback<SchemaRaw>] | [scope: string, fn: hooks.BeforeRemoveCallback<SchemaRaw>]
-  ): types.Fn<[], boolean> {
+    ...args:
+      | [fn: hooks.BeforeRemoveCallback<ModelRecord>]
+      | [scope: string, fn: hooks.BeforeRemoveCallback<Props["objectInput"]>]
+  ): Fn<[], boolean> {
     if (args.length === 2) {
       // all removals run on the model identified by `scope`
       const [location, fn] = args
-      return this.getModel<SchemaRaw>(location).beforeRemove(fn as any)
+      return this.getModel<T, Props>(location).beforeRemove(fn)
     } else {
       // all removals run across all defined models
       const [fn] = args
-      const unsubs: Array<types.Fn<[], boolean>> =
+      const unsubs: Array<Fn<[], boolean>> =
         Array.from(new Array(this.#definitions.size))
 
       let i = -1
-      this.#definitions.forEach(model => {
-        unsubs[++i] = model.beforeRemove(fn as any)
+      this.#definitions.forEach((model: Model<SchemaFromShape<ModelRecord>>) => {
+        unsubs[++i] = model.beforeRemove(fn)
       })
 
       return (): boolean => unsubs.every(unsub => unsub())
@@ -509,18 +554,21 @@ export class Trilogy {
    * @returns Unsubscribe function that removes the subscriber when called
    */
   afterRemove <
-    SchemaRaw extends types.Schema = types.SchemaBase
+    T extends Schema = Schema,
+    Props extends ModelProps<T> = ModelProps<T>
   > (
-    ...args: [fn: hooks.AfterRemoveCallback<SchemaRaw>] | [scope: string, fn: hooks.AfterRemoveCallback<SchemaRaw>]
-  ): types.Fn<[], boolean> {
+    ...args:
+      | [fn: hooks.AfterRemoveCallback<ModelRecord>]
+      | [scope: string, fn: hooks.AfterRemoveCallback<Props["objectOutput"]>]
+  ): Fn<[], boolean> {
     if (args.length === 2) {
       // all removals run on the model identified by `scope`
       const [location, fn] = args
-      return this.getModel<SchemaRaw>(location).afterRemove(fn as any)
+      return this.getModel<T, Props>(location).afterRemove(fn)
     } else {
       // all removals run across all defined models
       const [fn] = args
-      const unsubs: Array<types.Fn<[], boolean>> =
+      const unsubs: Array<Fn<[], boolean>> =
         Array.from(new Array(this.#definitions.size))
 
       let i = -1
@@ -546,8 +594,9 @@ export {
   HookCallback
 } from "./hooks"
 
-export { default as Model, ModelWithShape } from "./model"
-export * from "./types"
+export { Model, ModelWithShape } from "./model"
+export * as ColumnType from "./types/column-types"
+export * from "./types/schemas"
 
 /**
  * Initialize a new datastore instance, creating a SQLite database file at
@@ -556,5 +605,5 @@ export * from "./types"
  * @param path File path or `':memory:'` for memory-only storage
  * @param options Configuration for this trilogy instance
  */
-export const connect = (path: string, options?: types.TrilogyOptions): Trilogy =>
+export const connect = (path: string, options?: TrilogyOptions): Trilogy =>
   new Trilogy(path, options)

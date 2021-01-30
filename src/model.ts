@@ -1,6 +1,8 @@
-import { Trilogy } from "."
-import { Hooks, Hook } from "./hooks"
+import { ValueOf } from "type-fest"
 
+import { Trilogy } from "."
+import { Driver } from "./constants"
+import { Hook, Hooks } from "./hooks"
 import * as helpers from "./helpers"
 import {
   createTrigger,
@@ -8,36 +10,37 @@ import {
   TriggerEvent,
   Cast
 } from "./schema-helpers"
-import {
-  invariant, isString, isObject, toArray, firstOrValue
-} from "./util"
 
-import * as types from "./types"
-import { Driver } from "./constants"
+import { firstOrValue, invariant, isObject, isString, toArray } from "./util"
 
-export type ModelWithShape <T extends types.LooseObject> =
-  Model<types.SchemaFromShape<T>>
+import { Criteria, WhereObject } from "./types/criteria"
+import { ModelProps, ModelRecord, ResolveModelSchema, Schema, SchemaFromShape } from "./types/schemas"
+import { Const, Listable, LooseObject, Nullable } from "./types/utils"
+import * as validators from "./types/validators"
 
-const baseCount = async <
-  T extends types.Schema,
-  Props extends types.ModelProps<T>
-> (
-  model: Model<T, Props>,
-  column: keyof Props["schema"],
-  criteria?: types.Criteria<Props["objectInput"]>,
-  options: types.AggregateOptions = {}
+/**
+ *
+ */
+export type ModelWithShape <T extends ModelRecord> =
+  Model<SchemaFromShape<T>>
+
+const baseCount = async <Context extends Model<any, any>> (
+  model: Context,
+  column: keyof Context["_props"]["schema"],
+  criteria?: Criteria<Context["_props"]["objectInput"]>,
+  options: validators.AggregateOptions = {}
 ): Promise<number> => {
   invariant(
     column != null && isString(column),
     `invalid column: expected string, got ${typeof column}`
   )
 
-  types.AggregateOptions.check(options)
+  validators.AggregateOptions.check(options)
 
-  const val = `${String(column)} as count`
+  const val = `${column} as count`
   const builder = model.ctx.knex(model.name)
   let query = options.distinct ? builder.countDistinct(val) : builder.count(val)
-  query = helpers.buildWhere(query, model.cast.toDefinition(
+  query = helpers.buildWhere(query, model.cast.serialize(
     criteria ?? {},
     { raw: true, ...options }
   ))
@@ -45,28 +48,24 @@ const baseCount = async <
   if (options.group != null) query = query.groupBy(toArray(options.group))
 
   // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-  const result = await helpers.getQueryResult<Driver, typeof query, Props, [{ count: number }] | undefined>(model.ctx, query, {
-    // TODO: get rid of this `any` cast
-    model: model as any
+  const result = await helpers.getQueryResult<Driver, typeof query, Context, [{ count: number }] | undefined>(model.ctx, query, {
+    model
   })
   return Array.isArray(result) ? result[0].count : 0
 }
 
-const baseMinMax = async <
-  T extends types.Schema,
-  Props extends types.ModelProps<T>
-> (
-  model: Model<T, Props>,
+const baseMinMax = async <Context extends Model<any, any>> (
+  model: Context,
   method: "min" | "max",
-  column: keyof Props["objectOutput"],
-  criteria?: types.Criteria<Props["objectOutput"]>,
-  options: types.AggregateOptions = {}
+  column: keyof Context["_props"]["objectOutput"],
+  criteria?: Criteria<Context["_props"]["objectOutput"]>,
+  options: validators.AggregateOptions = {}
 ): Promise<number | undefined> => {
-  types.AggregateOptions.check(options)
+  validators.AggregateOptions.check(options)
 
-  const val = `${String(column)} as ${method}`
+  const val = `${column} as ${method}`
   let query = model.ctx.knex(model.name)[method](val)
-  query = helpers.buildWhere(query, model.cast.toDefinition(
+  query = helpers.buildWhere(query, model.cast.serialize(
     criteria ?? {},
     { raw: true, ...options }
   ))
@@ -74,48 +73,45 @@ const baseMinMax = async <
   if (options.group != null) query = query.groupBy(toArray(options.group))
 
   // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-  const result = await helpers.getQueryResult<Driver, typeof query, Props, [Record<"min" | "max", number>] | undefined>(model.ctx, query, {
-    // TODO: get rid of this `any` cast
-    model: model as any
+  const result = await helpers.getQueryResult<Driver, typeof query, Context, [Record<"min" | "max", number>] | undefined>(model.ctx, query, {
+    model
   })
   return Array.isArray(result) ? result[0][method] : undefined
 }
 
 const baseGet = async <
-  T extends types.Schema,
-  Props extends types.ModelProps<T>,
-  K extends keyof Props["objectOutput"],
-  V extends Props["objectOutput"][K]
+  Context extends Model<any, any>,
+  K extends keyof Context["_props"]["objectOutput"],
+  V extends Context["_props"]["objectOutput"][K]
 > (
-  model: Model<T, Props>,
+  model: Context,
   column: K,
-  criteria: types.Criteria<Props["objectOutput"]> | undefined,
+  criteria: Criteria<Context["_props"]["objectOutput"]> | undefined,
   defaultValue?: V,
-  options?: types.LooseObject
+  options?: LooseObject
 ): Promise<V | undefined> => {
   const data = await model.findOneIn<K, V>(column, criteria, options)
   return data ?? defaultValue
 }
 
 const baseSet = async <
-  T extends types.Schema,
-  Props extends types.ModelProps<T>,
-  K extends keyof Props["objectOutput"]
+  Context extends Model<any, any>,
+  K extends keyof Context["_props"]["objectOutput"]
 > (
-  model: Model<T, Props>,
+  model: Context,
   column: K,
-  criteria: types.Criteria<Props["objectOutput"]> | undefined,
-  value?: Props["objectOutput"][K],
-  options?: types.LooseObject
-): Promise<Array<Props["objectOutput"]>> => {
+  criteria: Criteria<Context["_props"]["objectOutput"]> | undefined,
+  value?: Context["_props"]["objectOutput"][K],
+  options?: LooseObject
+): Promise<Array<Context["_props"]["objectOutput"]>> => {
   invariant(
-    model.schema[column as string],
-    `no column by the name '${String(column)}' is defined in '${model.name}'`
+    model.schema[column],
+    `no column by the name '${column}' is defined in '${model.name}'`
   )
 
   return model.update(criteria, {
     [column]: value
-  } as Partial<Props["objectOutput"]>, options)
+  }, options)
 }
 
 /**
@@ -128,60 +124,39 @@ const baseSet = async <
  *
  * @internal
  */
-export default class Model <
-  // TODO: get rid of this `any`?
-  Schema extends types.Schema<any>,
-  Props extends types.ModelProps<Schema> = types.ModelProps<Schema>
+export class Model <
+  ModelSchema extends Schema,
+  Props extends ModelProps<ModelSchema> = ModelProps<ModelSchema>
 > extends Hooks<Props> {
-  schema: types.SchemaNormalized<Schema>
-  cast: Cast<Props>
-
   /**
-   * @param ctx trilogy instance used as a context for the model
-   * @param name Name associated with this model and used in the backend
-   * @param schema An object defining the fields & types of objects
-   * @param options
+   * @internal
    */
+  _props!: Props
+
+  schema: ResolveModelSchema<ModelSchema>
+  cast: Cast<this>
+
   constructor (
     public ctx: Trilogy,
     public name: string,
-    schema: Schema,
-    public options: types.ModelOptions
+    schema: Const<ModelSchema>,
+    public options: validators.ModelOptions = {}
   ) {
     super()
     this.schema = normalizeSchema(schema, options)
-    this.cast = new Cast(this as any)
+    this.cast = new Cast(this)
   }
 
-  static withShape <
-    T extends types.LooseObject = never,
-    ModelSchema extends types.SchemaFromShape<T> = types.SchemaFromShape<T>
-  > (
-    ctx: Trilogy,
-    name: string,
-    schema: ModelSchema,
-    options: types.ModelOptions = {}
-  ): ModelWithShape<T> {
-    return new Model<types.SchemaFromShape<T>>(ctx, name, schema, options)
-  }
-
-  /**
-   * Create an object on the given model. `object` should match the model's
-   * defined schema but values will cast into types as needed.
-   *
-   * @param object Data to insert
-   * @param options
-   */
   async create (
     object: Props["objectInput"],
-    options: types.CreateOptions = {}
+    options: validators.CreateOptions = {}
   ): Promise<Props["objectOutput"] | undefined> {
     const { prevented } =
-      await this._callHook(Hook.BeforeCreate, object as Partial<Props["objectInput"]>, options)
+      await this._callHook(Hook.BeforeCreate, object, options)
 
     if (prevented) return
 
-    const insertion = this.cast.toDefinition(object, options)
+    const insertion = this.cast.serialize(object, options)
 
     const [returning, cleanup] =
       await createTrigger(this, TriggerEvent.Insert)
@@ -194,22 +169,20 @@ export default class Model <
         .replace(/^insert/i, "INSERT OR IGNORE")
     )
 
-    await helpers.executeQuery<Props>(this.ctx, query, {
-      // TODO: get rid of this `any` cast
-      model: this as any
+    await helpers.executeQuery<this>(this.ctx, query, {
+      model: this
     })
 
-    // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const result = await helpers.getQueryResult<Driver, typeof returning, Props, types.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, returning, {
-      // TODO: get rid of this `any` cast
-      model: this as any,
+    type ReturnType = Nullable<Listable<Props["objectOutput"]>>
+    const result = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+      model: this,
       internal: true
     })
     await cleanup()
 
     const created = result == null || (Array.isArray(result) && result.length < 1)
       ? undefined
-      : this.cast.fromDefinition(firstOrValue(result), options)
+      : this.cast.deserialize(firstOrValue(result), options)
 
     await this._callHook(Hook.AfterCreate, created, options)
     return created
@@ -222,15 +195,15 @@ export default class Model <
    * @param options
    */
   async find (
-    criteria?: types.Criteria<Props["objectOutput"]>,
-    options: types.FindOptions = {}
+    criteria?: Criteria<Props["objectOutput"]>,
+    options: validators.FindOptions = {}
   ): Promise<Array<Props["objectOutput"]>> {
-    types.FindOptions.check(options)
+    validators.FindOptions.check(options)
 
     const order = options.random ? "random" : options.order
     let query = this.ctx.knex(this.name).select()
-    query = helpers.buildWhere(query, this.cast.toDefinition(
-      criteria ?? {},
+    query = helpers.buildWhere(query, this.cast.serialize(
+      criteria,
       { raw: true, ...options }
     ))
 
@@ -239,9 +212,9 @@ export default class Model <
     if (options.skip != null) query = query.offset(options.skip)
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const result = await helpers.getQueryResult<Driver, typeof query, Props, types.Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>>(this.ctx, query, {
-      // TODO: get rid of this `any` cast
-      model: this as any
+    type ReturnType = Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>
+    const result = await helpers.getQueryResult<Driver, typeof query, this, ReturnType>(this.ctx, query, {
+      model: this
     })
 
     if (!Array.isArray(result)) {
@@ -249,7 +222,7 @@ export default class Model <
     }
 
     return result.map(object => {
-      return this.cast.fromDefinition(object, options)
+      return this.cast.deserialize(object, options)
     })
   }
 
@@ -263,12 +236,12 @@ export default class Model <
    */
   async findIn (
     column: keyof Props["objectOutput"],
-    criteria?: types.Criteria<Props["objectOutput"]>,
-    options?: types.FindOptions
-  ): Promise<Array<types.ValueOf<Props["objectOutput"]>>> {
+    criteria?: Criteria<Props["objectOutput"]>,
+    options?: validators.FindOptions
+  ): Promise<Array<ValueOf<Props["objectOutput"]>>> {
     const result = await this.find(criteria, options)
     return result.map(object => {
-      return this.cast.fromColumnDefinition(
+      return this.cast.deserializeColumn(
         column,
         object[column],
         options
@@ -284,14 +257,14 @@ export default class Model <
    * @param options
    */
   async findOne (
-    criteria?: types.Criteria<Props["objectOutput"]>,
-    options: types.FindOptions = {}
+    criteria?: Criteria<Props["objectOutput"]>,
+    options: validators.FindOptions = {}
   ): Promise<Props["objectOutput"] | undefined> {
-    types.FindOptions.check(options)
+    validators.FindOptions.check(options)
 
     const order = options.random ? "random" : options.order
     let query = this.ctx.knex(this.name).first()
-    query = helpers.buildWhere(query, this.cast.toDefinition(
+    query = helpers.buildWhere(query, this.cast.serialize(
       criteria ?? {},
       { raw: true, ...options }
     ))
@@ -300,15 +273,15 @@ export default class Model <
     if (options.skip != null) query = query.offset(options.skip)
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const response = await helpers.getQueryResult<Driver, typeof query, Props, types.Listable<Props["objectOutput"]>>(this.ctx, query, {
-      // TODO: get rid of this `any` cast
-      model: this as any
+    type ReturnType = Listable<Props["objectOutput"]>
+    const response = await helpers.getQueryResult<Driver, typeof query, this, ReturnType>(this.ctx, query, {
+      model: this
     })
 
     const result = firstOrValue<Props["objectOutput"]>(response)
     if (result == null) return undefined
 
-    return this.cast.fromDefinition(result, options)
+    return this.cast.deserialize(result, options)
   }
 
   /**
@@ -321,8 +294,8 @@ export default class Model <
    */
   async findOneIn <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V = Props["objectOutput"][K]> (
     column: K,
-    criteria?: types.Criteria<Props["objectOutput"]>,
-    options: types.FindOptions = {}
+    criteria?: Criteria<Props["objectOutput"]>,
+    options: validators.FindOptions = {}
   ): Promise<V | undefined> {
     return this.findOne(criteria, options)
       .then(object => object != null ? object[column] as V : undefined)
@@ -339,9 +312,9 @@ export default class Model <
    * @param options
    */
   async findOrCreate (
-    criteria: types.CriteriaObj<Props["objectOutput"]>,
+    criteria: WhereObject<Props["objectOutput"]>,
     creation: Partial<Props["objectOutput"]> = {},
-    options?: types.FindOptions
+    options?: validators.FindOptions
   ): Promise<Props["objectOutput"] | undefined> {
     return (
       await this.findOne(criteria, options) ??
@@ -359,11 +332,11 @@ export default class Model <
    * @param options
    */
   async update (
-    criteria: types.Criteria<Props["objectOutput"]> = {},
+    criteria: Criteria<Props["objectOutput"]> = {},
     data: Partial<Props["objectOutput"]> = {},
-    options: types.UpdateOptions = {}
+    options: validators.UpdateOptions = {}
   ): Promise<Array<Props["objectOutput"]>> {
-    types.UpdateOptions.check(options)
+    validators.UpdateOptions.check(options)
 
     if (Object.keys(data).length < 1) return []
 
@@ -375,24 +348,23 @@ export default class Model <
 
     if (prevented) return []
 
-    const typedData = this.cast.toDefinition(data, options)
-    const typedCriteria = this.cast.toDefinition(criteria, options)
+    const typedData = this.cast.serialize(data, options)
+    const typedCriteria = this.cast.serialize(criteria, options)
 
     let query = this.ctx.knex(this.name).update(typedData)
     query = helpers.buildWhere(query, typedCriteria)
 
-    // TODO: get rid of this `any` cast
-    await helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
+    await helpers.executeQuery<this>(this.ctx, query, { model: this })
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      // TODO: get rid of this `any` cast
-      model: this as any,
+    type ReturnType = Array<Props["objectOutput"]>
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+      model: this,
       internal: true
     })
 
     const updated = updatedRaw.map(object => {
-      return this.cast.fromDefinition(object, options)
+      return this.cast.deserialize(object, options)
     })
 
     await cleanup()
@@ -410,9 +382,9 @@ export default class Model <
    * @param options
    */
   async updateOrCreate (
-    criteria: types.CriteriaObj<Props["objectOutput"]>,
+    criteria: WhereObject<Props["objectOutput"]>,
     data: Partial<Props["objectOutput"]>,
-    options: types.UpdateOptions & types.CreateOptions = {}
+    options: validators.UpdateOptions & validators.CreateOptions = {}
   ): Promise<Array<Props["objectOutput"]>> {
     const found = await this.find(criteria, options)
 
@@ -435,7 +407,7 @@ export default class Model <
    * @param defaultValue Value returned if the result doesn't exist
    */
   async get <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
-    column: K, criteria?: types.Criteria<Props["objectOutput"]>, defaultValue?: V
+    column: K, criteria?: Criteria<Props["objectOutput"]>, defaultValue?: V
   ): Promise<V | undefined> {
     return baseGet(this, column, criteria, defaultValue)
   }
@@ -449,7 +421,7 @@ export default class Model <
    * @param value Value returned if the result doesn't exist
    */
   async set <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
-    column: K, criteria: types.Criteria<Props["objectOutput"]>, value: V
+    column: K, criteria: Criteria<Props["objectOutput"]>, value: V
   ): Promise<Array<Props["objectOutput"]>> {
     return baseSet(this, column, criteria, value)
   }
@@ -462,7 +434,7 @@ export default class Model <
    * @param defaultValue Value returned if the result doesn't exist
    */
   async getRaw <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
-    column: K, criteria: types.Criteria<Props["objectOutput"]>, defaultValue?: V
+    column: K, criteria: Criteria<Props["objectOutput"]>, defaultValue?: V
   ): Promise<Props["objectOutput"][K] | undefined> {
     return baseGet(this, column, criteria, defaultValue, { raw: true })
   }
@@ -475,7 +447,7 @@ export default class Model <
    * @param value Value returned if the result doesn't exist
    */
   async setRaw <K extends keyof Props["objectOutput"] = keyof Props["objectOutput"], V extends Props["objectOutput"][K] = Props["objectOutput"][K]> (
-    column: K, criteria: types.Criteria<Props["objectOutput"]>, value: V
+    column: K, criteria: Criteria<Props["objectOutput"]>, value: V
   ): Promise<Array<Props["objectOutput"]>> {
     return baseSet(this, column, criteria, value, { raw: true })
   }
@@ -490,11 +462,11 @@ export default class Model <
    */
   async increment (
     column: keyof Props["objectOutput"],
-    criteria?: types.Criteria<Props["objectOutput"]>,
+    criteria?: Criteria<Props["objectOutput"]>,
     amount?: number
   ): Promise<Array<Props["objectOutput"]>> {
     const { prevented } =
-      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<Props["objectOutput"]>])
+      await this._callHook(Hook.BeforeUpdate, [{}, criteria as Criteria<Props["objectOutput"]>])
 
     if (prevented) return []
 
@@ -504,22 +476,21 @@ export default class Model <
 
     const [returning, cleanup] = await createTrigger(this, TriggerEvent.Update)
 
-    let query = this.ctx.knex(this.name).increment(column as string, amount)
+    let query = this.ctx.knex(this.name).increment(column, amount)
     query = helpers.buildWhere(query, criteria)
 
-    // TODO: get rid of this `any` cast
-    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
+    const affected = await helpers.executeQuery<this>(this.ctx, query, { model: this })
     if (affected === 0) return []
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      // TODO: get rid of this `any` cast
-      model: this as any,
+    type ReturnType = Array<Props["objectOutput"]>
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+      model: this,
       internal: true
     })
 
     const updated = updatedRaw.map(object => {
-      return this.cast.fromDefinition(object, {})
+      return this.cast.deserialize(object, {})
     })
 
     await cleanup()
@@ -537,12 +508,12 @@ export default class Model <
    */
   async decrement (
     column: keyof Props["objectOutput"],
-    criteria?: types.Criteria<Props["objectOutput"]>,
+    criteria?: Criteria<Props["objectOutput"]>,
     amount?: number,
     allowNegative?: boolean
   ): Promise<Array<Props["objectOutput"]>> {
     const { prevented } =
-      await this._callHook(Hook.BeforeUpdate, [{}, criteria as types.Criteria<Props["objectOutput"]>])
+      await this._callHook(Hook.BeforeUpdate, [{}, criteria as Criteria<Props["objectOutput"]>])
 
     if (prevented) return []
 
@@ -560,19 +531,18 @@ export default class Model <
       criteria
     )
 
-    // TODO: get rid of this `any` cast
-    const affected = await helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
+    const affected = await helpers.executeQuery<this>(this.ctx, query, { model: this })
     if (affected === 0) return []
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      // TODO: get rid of this `any` cast
-      model: this as any,
+    type ReturnType = Array<Props["objectOutput"]>
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+      model: this,
       internal: true
     })
 
     const updated = updatedRaw.map(object => {
-      return this.cast.fromDefinition(object, {})
+      return this.cast.deserialize(object, {})
     })
 
     await cleanup()
@@ -590,14 +560,14 @@ export default class Model <
    *
    * @param criteria Criteria used to restrict selection
    */
-  async remove (criteria: types.Criteria<Props["objectOutput"]>): Promise<Array<Props["objectOutput"]>> {
+  async remove (criteria: Criteria<Props["objectOutput"]>): Promise<Array<Props["objectOutput"]>> {
     const { prevented } =
       await this._callHook(Hook.BeforeRemove, criteria)
 
     if (prevented) return []
 
     if (
-      !helpers.isValidWhere(criteria) ||
+      !helpers.isValidCriteria(criteria) ||
       (isObject(criteria) && !Object.keys(criteria).length)
     ) return []
 
@@ -606,17 +576,15 @@ export default class Model <
     let query = this.ctx.knex(this.name).del()
     query = helpers.buildWhere(query, criteria)
 
-    const deleteCount = await helpers.executeQuery<Props>(this.ctx, query, {
-      // TODO: get rid of this `any` cast
-      model: this as any
+    const deleteCount = await helpers.executeQuery<this>(this.ctx, query, {
+      model: this
     })
 
     if (deleteCount === 0) return []
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    const deleted = await helpers.getQueryResult<Driver, typeof returning, Props, Array<Props["objectOutput"]>>(this.ctx, returning, {
-      // TODO: get rid of this `any` cast
-      model: this as any,
+    const deleted = await helpers.getQueryResult<Driver, typeof returning, this, Array<Props["objectOutput"]>>(this.ctx, returning, {
+      model: this,
       internal: true
     })
 
@@ -630,8 +598,7 @@ export default class Model <
    */
   async clear (): Promise<number> {
     const query = this.ctx.knex(this.name).truncate()
-    // TODO: get rid of this `any` cast
-    return helpers.executeQuery<Props>(this.ctx, query, { model: this as any })
+    return helpers.executeQuery<this>(this.ctx, query, { model: this })
   }
 
   /**
@@ -641,8 +608,8 @@ export default class Model <
    * @param options
    */
   async count (
-    criteria?: types.Criteria<Props["objectInput"]>,
-    options: types.AggregateOptions = {}
+    criteria?: Criteria<Props["objectInput"]>,
+    options: validators.AggregateOptions = {}
   ): Promise<number> {
     return baseCount(this, "*", criteria, options)
   }
@@ -656,11 +623,11 @@ export default class Model <
    * @param options
    */
   async countIn (
-    column: types.StringKeys<Props["objectInput"]>,
-    criteria?: types.Criteria<Props["objectInput"]>,
-    options: types.AggregateOptions = {}
+    column: keyof Props["objectInput"],
+    criteria?: Criteria<Props["objectInput"]>,
+    options: validators.AggregateOptions = {}
   ): Promise<number> {
-    return baseCount(this, column, criteria, options)
+    return baseCount(this, column as string, criteria, options)
   }
 
   /**
@@ -673,8 +640,8 @@ export default class Model <
    */
   async min (
     column: keyof Props["objectOutput"],
-    criteria?: types.Criteria<Props["objectOutput"]>,
-    options: types.AggregateOptions = {}
+    criteria?: Criteria<Props["objectOutput"]>,
+    options: validators.AggregateOptions = {}
   ): Promise<number | undefined> {
     return baseMinMax(this, "min", column, criteria, options)
   }
@@ -689,8 +656,8 @@ export default class Model <
    */
   async max (
     column: keyof Props["objectOutput"],
-    criteria?: types.Criteria<Props["objectOutput"]>,
-    options?: types.AggregateOptions
+    criteria?: Criteria<Props["objectOutput"]>,
+    options?: validators.AggregateOptions
   ): Promise<number | undefined> {
     return baseMinMax(this, "max", column, criteria, options)
   }

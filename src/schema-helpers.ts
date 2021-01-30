@@ -1,6 +1,8 @@
-import * as ColumnType from "./column-types"
+import * as knex from "knex"
+import { ValueOf } from "type-fest"
+
 import { IgnorableProps, KnexNoArgs } from "./constants"
-import { isWhereMultiple, isWhereTuple, findKey, executeQuery } from "./helpers"
+import { findKey, executeQuery, isWhereList, isWhereEqual, isWhereOperator } from "./helpers"
 import {
   invariant,
   isFunction,
@@ -10,9 +12,25 @@ import {
   toArray
 } from "./util"
 
-import * as knex from "knex"
-import Model from "./model"
-import * as types from "./types"
+import * as ColumnType from "./types/column-types"
+import { Query } from "./types/queries"
+
+import {
+  ColumnDescriptor,
+  ModelProps,
+  ModelRecord,
+  ResolveModelSchema,
+  ModelType,
+  Schema,
+  SerializedType,
+  CastToDefinition
+} from "./types/schemas"
+
+import { Const, Listable, Nullable } from "./types/utils"
+import * as validators from "./types/validators"
+
+import { Model } from "./model"
+import { Criteria, Where, WhereList } from "./types/criteria"
 
 const TimestampTriggerTemplate = `
 create trigger if not exists :name: after update on :modelName: begin
@@ -48,7 +66,10 @@ export const toKnexMethod = (
   }
 }
 
-const createIndices = (table: knex.TableBuilder, value: types.Index): void => {
+const createIndices = (
+  table: knex.TableBuilder,
+  value: validators.Index
+): void => {
   if (isString(value)) {
     table.index([value])
   } else if (Array.isArray(value)) {
@@ -64,7 +85,10 @@ const createIndices = (table: knex.TableBuilder, value: types.Index): void => {
   }
 }
 
-export const createTimestampTrigger = async (model: Model<any, any>, column = "updated_at"): Promise<unknown> => {
+export const createTimestampTrigger = async (
+  model: Model<any>,
+  column = "updated_at"
+): Promise<unknown> => {
   const { key, hasIncrements } = findKey(model.schema)
 
   if (!key && !hasIncrements) {
@@ -82,8 +106,10 @@ export const createTimestampTrigger = async (model: Model<any, any>, column = "u
   return executeQuery(model.ctx, query, { model, internal: true })
 }
 
-const getDataType = <T extends types.ColumnDescriptor<any>> (property: T): string | never => {
-  let type: types.Nullable<string | T> = property
+const getDataType = <
+  T extends ColumnDescriptor<any>
+> (property: T): string | never => {
+  let type: Nullable<string | T> = property
 
   if (isFunction(property)) {
     type = property.name
@@ -106,9 +132,9 @@ const getDataType = <T extends types.ColumnDescriptor<any>> (property: T): strin
   invariant(false, "column type must be of type string")
 }
 
-export const toKnexSchema = <T extends types.Schema> (
+export const toKnexSchema = <T extends Schema> (
   model: Model<T>,
-  options: types.ModelOptions
+  options: validators.ModelOptions
 ) => {
   return (table: knex.TableBuilder): void => {
     // every property of `model.schema` is a column
@@ -127,7 +153,7 @@ export const toKnexSchema = <T extends types.Schema> (
         continue
       }
 
-      const props = types.ColumnDescriptor.check(descriptor)
+      const props = validators.ColumnDescriptor.check(descriptor)
 
       if ("nullable" in props) {
         if ("notNullable" in props) {
@@ -156,7 +182,7 @@ export const toKnexSchema = <T extends types.Schema> (
       } else if (key === "index" && value != null) {
         createIndices(table, value as Exclude<(typeof options)["index"], undefined>)
       } else {
-        (table as any)[key](value)
+        ;(table as any)[key](value)
       }
     }
   }
@@ -165,7 +191,7 @@ export const toKnexSchema = <T extends types.Schema> (
 export const createTrigger = async (
   model: Model<any, any>,
   event: TriggerEvent
-): Promise<[types.Query, () => Promise<any[]>]> => {
+): Promise<[Query, () => Promise<any[]>]> => {
   const keys = Object.keys(model.schema)
   const tableName = `${model.name}_returning_temp`
   const triggerName = `on_${event}_${model.name}`
@@ -205,14 +231,14 @@ export const createTrigger = async (
 }
 
 export const normalizeSchema = <
-  T extends types.Schema,
-  O extends types.SchemaNormalized<T> = types.SchemaNormalized<T>
-> (schema: T, options: types.ModelOptions): O => {
-  const keys: Array<keyof T> = Object.keys(schema)
+  ModelSchema extends Schema,
+  Resolved extends ResolveModelSchema<ModelSchema> = ResolveModelSchema<ModelSchema>
+> (schema: Const<ModelSchema>, options: validators.ModelOptions): Resolved => {
+  const keys: Array<keyof ModelSchema> = Object.keys(schema)
   invariant(keys.length > 0, "model schemas cannot be empty")
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const result = {} as O
+  const result = {} as Resolved
   for (const key of keys) {
     const descriptor = schema[key]
     const type = typeof descriptor
@@ -223,14 +249,14 @@ export const normalizeSchema = <
   }
 
   if (options.timestamps) {
-    ;(result as any).created_at = { type: Date }
-    ;(result as any).updated_at = { type: Date }
+    ;(result as any).created_at = { type: ColumnType.Date }
+    ;(result as any).updated_at = { type: ColumnType.Date }
   }
 
   return result
 }
 
-export const toInputType = (type: string, value: any): types.StorageType | never => {
+export const toInputType = (type: string, value: any): SerializedType | never => {
   switch (type) {
     case "string":
       return String(value)
@@ -249,7 +275,7 @@ export const toInputType = (type: string, value: any): types.StorageType | never
   }
 }
 
-export const toReturnType = (type: string, value: any): types.ReturnType | never => {
+export const toReturnType = (type: string, value: any): ModelType | never => {
   switch (type) {
     case "string":
       return String(value)
@@ -285,41 +311,73 @@ export const castValue = (value: unknown): number | string | never => {
 }
 
 export class Cast <
-  Props extends types.ModelProps<types.Schema> = types.ModelProps<types.Schema>
+  Context extends Model<any, any> = Model<Schema, ModelProps<Schema>>,
+  // ObjectInput extends ModelRecord = Context["_props"]["objectInput"],
+  ObjectOutput extends ModelRecord = Context["_props"]["objectOutput"]
 > {
-  constructor (private readonly model: Model<Props["schema"]>) {
+  constructor (private readonly model: Context) {
     this.model = model
   }
 
-  toDefinition (
-    object: types.LooseObject | types.Criteria2 | types.CriteriaList,
+  /**
+   * Serialize a record (or set of criteria), preparing it for insertion or
+   * comparison.
+   *
+   * @param object Criteria or record to cast
+   * @param options Options for configuring the cast
+   */
+  serialize (
+    object: Where<ObjectOutput>,
     options: { raw?: boolean }
-  ): types.CastToDefinition {
-    if (isWhereTuple(object)) {
-      const clone = object.slice()
-      const valueIndex = clone.length - 1
-      clone[valueIndex] =
-        this.toColumnDefinition(clone[0], clone[valueIndex], options)
-      return clone
+  ): CastToDefinition
+  serialize (
+    object: WhereList<ObjectOutput>,
+    options: { raw?: boolean }
+  ): CastToDefinition[]
+  serialize (
+    object: Nullable<Criteria<ObjectOutput>>,
+    options: { raw?: boolean }
+  ): Listable<CastToDefinition> {
+    if (object == null) {
+      return null
     }
 
-    if (isWhereMultiple(object)) {
-      return object.map(clause => this.toDefinition(clause, options))
+    if (isWhereEqual(object)) {
+      const serialized = this.serializeColumn(object[0], object[1], options)
+      return {
+        [object[0]]: serialized
+      }
+    }
+
+    if (isWhereOperator(object)) {
+      const serialized = this.serializeColumn(object[0], object[2], options)
+      return [String(object[0]), object[1], serialized]
+    }
+
+    if (isWhereList(object)) {
+      return object.map(clause => this.serialize(clause, options))
     }
 
     if (isObject(object)) {
-      return mapObj(object, (value, column) => {
-        return this.toColumnDefinition(column, value, options) as any
-      })
+      return mapObj(object, (value, column) =>
+        this.serializeColumn(column, value, options)
+      )
     }
 
     invariant(false, `invalid input type: '${typeof object}'`)
   }
 
-  fromDefinition (
-    object: Props["objectOutput"],
+  /**
+   * Cast a record from the model's representation back to its runtime
+   * equivalent.
+   *
+   * @param object Record to cast
+   * @param options Options for configuring the cast
+   */
+  deserialize (
+    object: Partial<ObjectOutput>,
     options: { raw?: boolean }
-  ): Props["objectOutput"] {
+  ): ObjectOutput {
     if (
       object == null ||
       (Array.isArray(object) && object.length < 1) ||
@@ -329,15 +387,22 @@ export class Cast <
     }
 
     return mapObj(object, (value, column) => {
-      return this.fromColumnDefinition(column, value, options)
+      return this.deserializeColumn(column, value, options) as any
     })
   }
 
-  toColumnDefinition (
-    column: keyof Props["schema"],
+  /**
+   * Serialize `value` for storage.
+   *
+   * @param column Name of the property to cast toward
+   * @param value Input value to be cast
+   * @param options Options for configuring the cast
+   */
+  serializeColumn <K extends keyof ObjectOutput> (
+    column: K,
     value: any,
     options: { raw?: boolean } = { raw: false }
-  ): types.StorageType {
+  ): SerializedType {
     const definition = this.model.schema[column]
     invariant(
       !(definition.notNullable && value == null),
@@ -354,23 +419,31 @@ export class Cast <
     return cast
   }
 
-  fromColumnDefinition (
-    column: keyof Props["objectOutput"],
+  /**
+   * Cast `value` back to its runtime type, defined in the model by the
+   * property `column`.
+   *
+   * @param column Name of the property to cast from
+   * @param value Return value to be cast
+   * @param options Options for configuring the cast
+   */
+  deserializeColumn <
+    K extends keyof ObjectOutput,
+    V extends ValueOf<ObjectOutput, K> = ValueOf<ObjectOutput, K>
+  > (
+    column: K,
     value: any,
     options: { raw?: boolean } = { raw: false }
-  ): types.ValueOf<Props["objectOutput"]> {
-    // TODO: get rid of this `any` cast?
-    const definition = this.model.schema[column as any]
+  ): V | null {
+    const definition = this.model.schema[column]
     const type = getDataType(definition)
 
     const cast = value === null ? null : toReturnType(type, value)
 
     if (!options.raw && isFunction(definition.get)) {
-      // TODO: get rid of this `any` cast?
-      return definition.get(cast as any) as any
+      return definition.get(cast)
     }
 
-    // TODO: get rid of this `any` cast?
-    return cast as any
+    return cast as V
   }
 }

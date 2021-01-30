@@ -1,5 +1,5 @@
 import ava, { TestInterface } from "ava"
-import { connect, ModelWithShape } from "../src"
+import { connect, ColumnType, ModelWithShape } from "../src"
 import { Person } from "./helpers/types"
 
 const test = ava as TestInterface<{
@@ -9,13 +9,13 @@ const test = ava as TestInterface<{
 const db = connect(":memory:")
 
 test.before(async t => {
-  t.context.people = await db.modelWithShape("people", {
+  t.context.people = await db.modelWithShape<Person>("people", {
     name: {
-      type: String,
+      type: ColumnType.String,
       get: name => name.toUpperCase()
     },
     age: {
-      type: Number,
+      type: ColumnType.Number,
       set: age => age + 1
     }
   })

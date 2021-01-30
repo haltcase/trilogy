@@ -1,24 +1,47 @@
-import test from "ava"
-import { connect } from "../src"
+import ava, { TestInterface } from "ava"
+import { connect, ColumnType, ModelWithShape } from "../src"
 
 import { Person2 } from "./helpers/types"
 
+type One = {
+  first?: string,
+  second?: string,
+  third?: boolean,
+  array?: any[]
+}
+
+const test = ava as TestInterface<{
+  one: ModelWithShape<One>
+}>
+
 const db = connect(":memory:")
 
-test.before(async () => {
-  await db.model("one", {
-    first: String,
-    second: String,
-    third: Boolean,
-    array: Array
+test.before(async t => {
+  t.context.one = await db.modelWithShape<One>("one", {
+    first: {
+      type: ColumnType.String,
+      nullable: true
+    },
+    second: {
+      type: ColumnType.String,
+      nullable: true
+    },
+    third: {
+      type: ColumnType.Boolean,
+      nullable: true
+    },
+    array: {
+      type: ColumnType.Array,
+      nullable: true
+    },
   })
 
   await Promise.all([
-    db.create("one", {
+    t.context.one.create({
       first: "fee",
       second: "blah"
     }),
-    db.create("one", {
+    t.context.one.create({
       third: false,
       array: [1, 2, 3]
     })
@@ -28,21 +51,21 @@ test.before(async () => {
 test.after.always(() => db.close())
 
 test("changes the value of an existing key", async t => {
-  await db.update("one", { first: "fee" }, { second: "blurg" })
-  const res = await db.get("one.second", { first: "fee" })
+  await t.context.one.update({ first: "fee" }, { second: "blurg" })
+  const res = await t.context.one.get("second", { first: "fee" })
   t.is(res, "blurg")
 })
 
 test("handles model type definitons correctly", async t => {
-  await db.update("one", { third: false }, { array: [4, 5, 6] })
-  const res = await db.get("one.array", { third: false })
+  await t.context.one.update({ third: false }, { array: [4, 5, 6] })
+  const res = await t.context.one.get("array", { third: false })
   t.deepEqual(res, [4, 5, 6])
 })
 
 test("allows for using multiple where clauses", async t => {
-  const people = await db.model<Person2>("update_people", {
-    age: Number,
-    gender: String
+  const people = await db.modelWithShape<Person2>("update_people", {
+    age: ColumnType.Number,
+    gender: ColumnType.String
   })
 
   const list = [

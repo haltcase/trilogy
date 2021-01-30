@@ -1,7 +1,5 @@
 import test from "ava"
-import { connect, EventCancellation } from "../src"
-
-import { User } from "./helpers/types"
+import { connect, ColumnType, EventCancellation } from "../src"
 
 const onlyNonInternalRegex =
   /^\s*INSERT OR IGNORE into `objects` \(`name`\) values \('desk'\)/
@@ -19,7 +17,7 @@ test("hooks.onQuery: receives executed queries (internal as option)", async t =>
   const db = connect(":memory:")
 
   const objects = await db.model("objects", {
-    name: String
+    name: ColumnType.String
   })
 
   const internalCheck = () => {
@@ -58,8 +56,8 @@ test("hooks.beforeCreate: receives the object to be created", async t => {
   const db = connect(":memory:")
 
   const users = await db.model("users", {
-    name: String,
-    rank: { type: Number, set: (rank: number) => rank * 2 }
+    name: ColumnType.String,
+    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
   })
 
   const unsub = users.beforeCreate(user => {
@@ -86,8 +84,8 @@ test("hooks.afterCreate: receives the object after its creation", async t => {
   const db = connect(":memory:")
 
   const users = await db.model("users", {
-    name: String,
-    rank: { type: Number, set: (rank: number) => rank * 2 }
+    name: ColumnType.String,
+    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
   })
 
   const unsub = users.afterCreate(user => {
@@ -114,8 +112,8 @@ test("hooks.beforeUpdate: receives upcoming changes & criteria", async t => {
   const db = connect(":memory:")
 
   const users = await db.model("users", {
-    name: String,
-    rank: { type: Number, set: (rank: number) => rank * 2 }
+    name: ColumnType.String,
+    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
   })
 
   await users.create({
@@ -141,8 +139,8 @@ test("hooks.afterUpdate: receives updated objects", async t => {
   const db = connect(":memory:")
 
   const users = await db.model("users", {
-    name: String,
-    rank: { type: Number, set: (rank: number) => rank * 2 }
+    name: ColumnType.String,
+    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
   })
 
   await Promise.all([
@@ -178,8 +176,8 @@ test("hooks.beforeRemove: receives criteria for objects to be removed", async t 
   const db = connect(":memory:")
 
   const users = await db.model("users", {
-    name: String,
-    rank: Number
+    name: ColumnType.String,
+    rank: ColumnType.Number
   })
 
   const unsub = users.beforeRemove(criteria => {
@@ -202,8 +200,8 @@ test("hooks.afterRemove: receives criteria for objects to be removed", async t =
   const db = connect(":memory:")
 
   const users = await db.model("users", {
-    name: String,
-    rank: Number
+    name: ColumnType.String,
+    rank: ColumnType.Number
   })
 
   await Promise.all([
@@ -235,7 +233,7 @@ test("hooks.beforeCreate: creation can be canceled", async t => {
   const db = connect(":memory:")
 
   const numbers = await db.model("numbers", {
-    number: Number
+    number: ColumnType.Number
   })
 
   // casually preventing any objects from being created
@@ -254,7 +252,7 @@ test("hooks.beforeUpdate: updates can be canceled", async t => {
   const db = connect(":memory:")
 
   const numbers = await db.model("numbers", {
-    number: Number
+    number: ColumnType.Number
   })
 
   const ns = [1, 2, 3, 4, 5, 6]
@@ -278,7 +276,7 @@ test("hooks.beforeRemove: removals can be canceled", async t => {
   const db = connect(":memory:")
 
   const numbers = await db.model("numbers", {
-    number: Number
+    number: ColumnType.Number
   })
 
   const ns = [1, 2, 3, 4, 5, 6]

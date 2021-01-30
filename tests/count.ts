@@ -1,5 +1,5 @@
 import ava, { TestInterface } from "ava"
-import { connect, ModelWithShape } from "../src"
+import { connect, ModelWithShape, ColumnType } from "../src"
 
 import { Person } from "./helpers/types"
 
@@ -16,9 +16,9 @@ const persons = [
 ]
 
 test.before(async t => {
-  t.context.people = await db.modelWithShape<Person>("people", {
-    name: String,
-    age: Number
+  t.context.people = await db.model("people", {
+    name: ColumnType.String,
+    age: ColumnType.Number
   })
 
   t.context.people.create({
@@ -33,7 +33,7 @@ test.after.always(() => db.close())
 
 test("returns the number of models when parameter count === 0", async t => {
   t.is(await t.context.people.count(), 1)
-  await db.model("count_crayons", { color: String })
+  await db.model("count_crayons", { color: ColumnType.String })
   t.is(await t.context.people.count(), 2)
 })
 
@@ -59,7 +59,7 @@ test("allows for multiple where clauses", async t => {
 test("countIn() variant counts on the given column", async t => {
   const db = connect(":memory:")
 
-  interface Person {
+  type Person = {
     name: string
     // allow null in order to test that null values
     // in the target column aren't counted
@@ -67,8 +67,8 @@ test("countIn() variant counts on the given column", async t => {
   }
 
   const people = await db.modelWithShape<Person>("people", {
-    name: { type: String, primary: true },
-    age: Number
+    name: { type: ColumnType.String, primary: true },
+    age: ColumnType.Number
   })
 
   await Promise.all(persons.map(async person => people.create(person)))

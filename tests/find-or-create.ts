@@ -1,5 +1,5 @@
 import test from "ava"
-import { connect } from "../src"
+import { connect, ColumnType } from "../src"
 
 const db = connect(":memory:")
 
@@ -7,9 +7,9 @@ test.after.always(() => db.close())
 
 test("creates missing objects or returns an existing one", async t => {
   const games = await db.model("games", {
-    name: { type: String, primary: true },
-    last_played: Date,
-    genre: String
+    name: { type: ColumnType.String, primary: true },
+    last_played: ColumnType.Date,
+    genre: ColumnType.String
   })
 
   t.is(await games.count({ genre: "FPS" }), 0)
