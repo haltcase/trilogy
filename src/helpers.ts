@@ -83,20 +83,19 @@ export const buildWhere = <T extends ModelRecord = ModelRecord> (
   util.invariant(false, `invalid where clause type: '${typeof where}'`)
 }
 
-export function isWhereTupleImpl <T> (length: 2): (where: any) => where is WhereEqual<any>
-export function isWhereTupleImpl <T> (length: 3): (where: any) => where is WhereOperator<any>
-export function isWhereTupleImpl <T extends WhereTuple<any>> (length: 2 | 3): (where: any) => where is T {
+export function isWhereTupleImpl (length: [2]): (where: any) => where is WhereEqual<any>
+export function isWhereTupleImpl (length: [3]): (where: any) => where is WhereOperator<any>
+export function isWhereTupleImpl (length: [2, 3]): (where: any) => where is WhereTuple<any>
+export function isWhereTupleImpl <T extends WhereTuple<any>> (lengths: [2] | [3] | [2, 3]): (where: any) => where is T {
   return (where: any): where is T =>
     Array.isArray(where) &&
-    where.length === length &&
+    lengths.some(length => length === where.length) &&
     typeof where[0] === "string"
 }
 
-export const isWhereEqual = isWhereTupleImpl(2)
-export const isWhereOperator = isWhereTupleImpl(3)
-
-export const isWhereTuple = (where: any): where is WhereTuple<any> =>
-  isWhereEqual(where) || isWhereOperator(where)
+export const isWhereEqual = isWhereTupleImpl([2])
+export const isWhereOperator = isWhereTupleImpl([3])
+export const isWhereTuple = isWhereTupleImpl([2, 3])
 
 export const isWhereList = (where: any): where is WhereList<any> => {
   return (
@@ -108,7 +107,7 @@ export const isWhereList = (where: any): where is WhereList<any> => {
 export const isWhereListNormalized = (where: any): where is WhereListNormalized<any> => {
   return (
     Array.isArray(where) &&
-    where.every(item => (isWhereTuple(item) && item.length == 2) || util.isObject(item))
+    where.every(item => isWhereOperator(item) || util.isObject(item))
   )
 }
 
