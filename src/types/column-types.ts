@@ -13,6 +13,7 @@ export type String = typeof String
 export type ColumnType =
   | null
   | undefined
+  /* eslint-disable-next-line @typescript-eslint/array-type */
   | Array
   | Boolean
   | Date
@@ -22,6 +23,7 @@ export type ColumnType =
   | Object
   | String
 
+/* eslint-disable @typescript-eslint/no-redeclare */
 export const Array = "array" as const
 export const Boolean = "boolean" as const
 export const Date = "date" as const
@@ -30,3 +32,4 @@ export const Json = "json" as const
 export const Number = "number" as const
 export const Object = "object" as const
 export const String = "string" as const
+/* eslint-enable @typescript-eslint/no-redeclare */

@@ -59,6 +59,7 @@ export type CastToDefinition <T extends SerializedRecord = SerializedRecord> =
  * @example RuntimeSchemaType<number> -> ColumnType.Number
  */
 export type RuntimeSchemaType <TStatic, D extends ModelRecord = ModelRecord> =
+  /* eslint-disable @typescript-eslint/indent */
   // maintain nullability of the given type
   (null extends TStatic ? null : never) | (
   TStatic extends undefined ? undefined :
@@ -75,6 +76,7 @@ export type RuntimeSchemaType <TStatic, D extends ModelRecord = ModelRecord> =
   // anything else is an error
   never
 )
+/* eslint-enable @typescript-eslint/indent */
 
 /**
  * Convert a runtime type to its static equivalent.
@@ -82,21 +84,21 @@ export type RuntimeSchemaType <TStatic, D extends ModelRecord = ModelRecord> =
  * @example StaticSchemaType<"increments"> -> number
  */
 export type StaticSchemaType <TRuntime extends ColumnType, ElementType = unknown> = {
-  array: ElementType[],
-  boolean: boolean,
-  date: Date,
-  number: number,
-  object: Record<string, ElementType>,
-  string: string,
-  increments: number,
+  array: ElementType[]
+  boolean: boolean
+  date: Date
+  number: number
+  object: Record<string, ElementType>
+  string: string
+  increments: number
   json: Record<string, ElementType> | ElementType[]
 }[NonNullable<TRuntime>]
 
-type ColumnDescriptorNullable = {
+interface ColumnDescriptorNullable {
   nullable?: boolean
 }
 
-type ColumnDescriptorNotNullable = {
+interface ColumnDescriptorNotNullable {
   notNullable?: boolean
 }
 
@@ -114,45 +116,45 @@ export type ColumnDescriptor <
   /**
    * The value type stored in this column.
    */
-  type: T,
+  type: T
 
   /**
    * Default value to use when input is absent.
    */
-  defaultTo?: S,
+  defaultTo?: S
 
   /**
    * Specifies the property to be indexed with the provided name.
    */
-  index?: string,
+  index?: string
 
   /**
    * Whether to force `null` inputs to raise errors.
    * Works inversely to `nullable`.
    */
-  notNullable?: boolean,
+  notNullable?: boolean
 
   /**
    * Whether to allow `null` as a value.
    * Works inversely to `nonNullable`.
    */
-  nullable?: boolean,
+  nullable?: boolean
 
   /**
    * Whether to set this property as the primary key for the model.
    */
-  primary?: boolean,
+  primary?: boolean
 
   /**
    * Whether the property is required to be unique.
    */
-  unique?: boolean,
+  unique?: boolean
 
   /**
    * Function executed on selects, receives the raw value and
    * should return a new value to be returned instead.
    */
-  get?: (value: Nullable<S>) => S,
+  get?: (value: Nullable<S>) => S
 
   /**
    * Function executed on inserts, receives the input value and
@@ -203,10 +205,10 @@ type StaticFromSchemaDefinitionImpl <T extends Schema> = {
  */
 export type StaticFromSchema <T extends Schema> =
   T extends SchemaFromDefinition<string> ? StaticFromSchemaDefinitionImpl<T> :
-  T extends SchemaFromShape<infer Shape> ? {
-    [Key in keyof Shape]: TryStatic<Shape[Key]>
-  } :
-  never
+    T extends SchemaFromShape<infer Shape> ? {
+      [Key in keyof Shape]: TryStatic<Shape[Key]>
+    } :
+      never
 
 /**
  * Schemas are objects where the values describe the data type
@@ -217,10 +219,9 @@ export type Schema =
   | SchemaFromShape<any>
 
 export type ExtractSchemaShape <ModelSchema extends SchemaFromDefinition<string>> = Widen<{
-  [Key in keyof ModelSchema]:
-    ModelSchema[Key] extends ColumnDescriptor<infer U, infer _>
-      ? TryStatic<U>
-      : TryStatic<ModelSchema[Key]>
+  [Key in keyof ModelSchema]: ModelSchema[Key] extends ColumnDescriptor<infer U, infer _>
+    ? TryStatic<U>
+    : TryStatic<ModelSchema[Key]>
 }>[typeof type]
 
 export type OptionalColumnKinds =
@@ -257,14 +258,14 @@ export type RequiredSchemaKeys <ModelSchema extends SchemaFromDefinition> =
 
 type ResolveSchemaFromDefinitionImpl <ModelSchema extends SchemaFromDefinition> = {
   [Key in keyof ModelSchema]:
-    ModelSchema[Key] extends Record<string, any>
-      ? ColumnDescriptor<
-          ModelSchema[Key]["type"],
-          unknown extends ModelSchema[Key]["_staticType"]
-            ? TryStatic<ModelSchema[Key]["type"]>
-            : ModelSchema[Key]["_staticType"]
-        >
-      : ColumnDescriptor<RuntimeSchemaType<ModelSchema[Key]>, TryStatic<ModelSchema[Key]>>
+  ModelSchema[Key] extends Record<string, any>
+    ? ColumnDescriptor<
+        ModelSchema[Key]["type"],
+        unknown extends ModelSchema[Key]["_staticType"]
+          ? TryStatic<ModelSchema[Key]["type"]>
+          : ModelSchema[Key]["_staticType"]
+      >
+    : ColumnDescriptor<RuntimeSchemaType<ModelSchema[Key]>, TryStatic<ModelSchema[Key]>>
 }
 
 type ResolveSchemaFromShapeImpl <ModelSchema extends SchemaFromShape<any>> = {
@@ -301,7 +302,7 @@ export type ResolveObjectOutput <ModelSchema extends Schema> =
       ? ResolveObjectShapeImpl<T>
       : never
 
-export type ModelProps <ModelSchema extends Schema> = {
+export interface ModelProps <ModelSchema extends Schema> {
   schema: ResolveModelSchema<ModelSchema>
   objectInput: ResolveObjectInput<ModelSchema>
   objectOutput: ResolveObjectOutput<ModelSchema>

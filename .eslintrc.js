@@ -1,4 +1,4 @@
-const [, , error] = [0, 1, 2]
+const [off, , error] = [0, 1, 2]
 
 module.exports = {
   root: true,
@@ -9,10 +9,7 @@ module.exports = {
     project: "./tsconfig.json"
   },
   rules: {
-    quotes: [error, "double", {
-      avoidEscape: true,
-      allowTemplateLiterals: true
-    }],
+    quotes: off,
     "no-void": [error, {
       allowAsStatement: true
     }],
@@ -22,6 +19,12 @@ module.exports = {
     }],
     "@typescript-eslint/explicit-function-return-type": [error, {
       allowTypedFunctionExpressions: true
+    }],
+    "@typescript-eslint/indent": [error, 2, {
+      ignoredNodes: ["TSTypeParameterInstantiation"]
+    }],
+    "@typescript-eslint/no-unused-vars": [error, {
+      varsIgnorePattern: "^_"
     }],
     "@typescript-eslint/quotes": [error, "double", {
       avoidEscape: true,

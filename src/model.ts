@@ -63,7 +63,7 @@ const baseMinMax = async <Context extends Model<any, any>> (
 ): Promise<number | undefined> => {
   validators.AggregateOptions.check(options)
 
-  const val = `${column} as ${method}`
+  const val = `${String(column)} as ${method}`
   let query = model.ctx.knex(model.name)[method](val)
   query = helpers.buildWhere(query, model.cast.serialize(
     criteria ?? {},
@@ -106,7 +106,7 @@ const baseSet = async <
 ): Promise<Array<Context["_props"]["objectOutput"]>> => {
   invariant(
     model.schema[column],
-    `no column by the name '${column}' is defined in '${model.name}'`
+    `no column by the name '${String(column)}' is defined in '${model.name}'`
   )
 
   return model.update(criteria, {

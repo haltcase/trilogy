@@ -120,7 +120,7 @@ export const isValidCriteria = (where: any): where is Criteria<ModelRecord> => {
   )
 }
 
-export function normalizeCriteria <T> (
+export function normalizeCriteria (
   where: null | undefined
 ): null
 export function normalizeCriteria <T extends ModelRecord> (
@@ -135,7 +135,7 @@ export function normalizeCriteria <T extends ModelRecord> (
 export function normalizeCriteria <T extends ModelRecord> (
   where: Criteria<T>
 ): WhereNormalized<T>
-export function normalizeCriteria <T extends ModelRecord, WhereType> (
+export function normalizeCriteria <_ extends ModelRecord, WhereType> (
   where: Nullable<Const<WhereType>>
 ): unknown {
   if (where == null) {
