@@ -309,11 +309,11 @@ export class Cast <
    * @param options Options for configuring the cast
    */
   serialize (
-    object: Where<ObjectOutput>,
+    object: Nullable<Where<ObjectOutput>>,
     options: { raw?: boolean }
   ): CastToDefinition
   serialize (
-    object: WhereList<ObjectOutput>,
+    object: Nullable<WhereList<ObjectOutput>>,
     options: { raw?: boolean }
   ): CastToDefinition[]
   serialize (

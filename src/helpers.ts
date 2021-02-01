@@ -50,10 +50,10 @@ export const buildOrder = <T = any, U = any> (
 
 export const buildWhere = <T extends ModelRecord = ModelRecord> (
   partial: knex.QueryBuilder<any, any>,
-  where: Criteria<T> | undefined,
+  where: Nullable<Criteria<T>>,
   inner?: boolean
 ): knex.QueryBuilder<any, any> => {
-  if (where === undefined) {
+  if (where == null) {
     return partial
   }
 
