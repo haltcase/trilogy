@@ -237,15 +237,14 @@ export class Model <
     column: keyof Props["objectOutput"],
     criteria?: Criteria<Props["objectOutput"]>,
     options?: validators.FindOptions
-  ): Promise<Array<ValueOf<Props["objectOutput"]>>> {
+  ): Promise<Array<ValueOf<Props["objectOutput"]> | null>> {
     const result = await this.find(criteria, options)
-    return result.map(object => {
-      return this.cast.deserializeColumn(
+    return result.map(object =>
+      this.cast.deserializeColumn(
         column,
         object[column],
         options
-      )
-    })
+      ))
   }
 
   /**
@@ -317,7 +316,7 @@ export class Model <
   ): Promise<Props["objectOutput"] | undefined> {
     return (
       await this.findOne(criteria, options) ??
-      // TODO: get rid of this `any` cast
+      // TODO: get rid of this `any` cast?
       this.create({ ...criteria, ...creation } as any)
     )
   }
