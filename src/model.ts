@@ -1,13 +1,12 @@
 import { ValueOf } from "type-fest"
 
 import { Trilogy } from "."
-import { Driver } from "./constants"
+import { Driver, TriggerEvent } from "./constants"
 import { Hook, Hooks } from "./hooks"
 import * as helpers from "./helpers"
 import {
   createTrigger,
   normalizeSchema,
-  TriggerEvent,
   Cast
 } from "./schema-helpers"
 

@@ -1,7 +1,7 @@
 import * as knex from "knex"
 import { ValueOf } from "type-fest"
 
-import { IgnorableProps, KnexNoArgs } from "./constants"
+import { IgnorableProps, KnexNoArgs, KnexMethod, TriggerEvent } from "./constants"
 import { findKey, executeQuery, isWhereList, isWhereEqual, isWhereOperator } from "./helpers"
 import {
   invariant,
@@ -26,11 +26,13 @@ import {
   CastToDefinition
 } from "./types/schemas"
 
-import { Const, Listable, Nullable } from "./types/utils"
+import { Const, Fn, Listable, Nullable } from "./types/utils"
 import * as validators from "./types/validators"
 
 import { Model } from "./model"
 import { Criteria, Where, WhereList } from "./types/criteria"
+
+type ColumnTypeString = NonNullable<ColumnType.ColumnType>
 
 const TimestampTriggerTemplate = `
 create trigger if not exists :name: after update on :modelName: begin
@@ -39,32 +41,44 @@ create trigger if not exists :name: after update on :modelName: begin
 end
 `
 
-export enum TriggerEvent {
-  Insert = "insert",
-  Update = "update",
-  Delete = "delete"
+const KnexMethodMap: Record<ColumnTypeString, KnexMethod> = {
+  string: KnexMethod.text,
+  array: KnexMethod.text,
+  object: KnexMethod.text,
+  json: KnexMethod.text,
+  number: KnexMethod.integer,
+  boolean: KnexMethod.integer,
+  date: KnexMethod.dateTime,
+  increments: KnexMethod.increments
 }
 
-export const toKnexMethod = (
-  type: string
-): "text" | "integer" | "dateTime" | "increments" | never => {
-  switch (type) {
-    case "string":
-    case "array":
-    case "object":
-    case "json":
-      return "text"
-    case "number":
-    case "boolean":
-      return "integer"
-    case "date":
-      return "dateTime"
-    case "increments":
-      return "increments"
-    default:
-      invariant(false, `invalid column type definition: ${type}`)
-  }
+const SerializerMap: Record<ColumnTypeString, Fn<any, SerializedType>> = {
+  string: value => String(value),
+  array: value => JSON.stringify(value),
+  object: value => JSON.stringify(value),
+  json: value => JSON.stringify(value),
+  number: value => Number(value),
+  boolean: value => Number(value),
+  increments: value => Number(value),
+  date: value => (value as Date).toISOString()
 }
+
+const DeserializerMap: Record<ColumnTypeString, Fn<any, ModelType>> = {
+  string: value => String(value),
+  array: value => JSON.parse(value),
+  object: value => JSON.parse(value),
+  json: value => JSON.parse(value),
+  number: value => Number(value),
+  increments: value => Number(value),
+  boolean: value => Boolean(value),
+  date: value => new Date(value)
+}
+
+const isKnownColumnType = (type: string): type is ColumnTypeString =>
+  type in ColumnType
+
+export const toKnexMethod = (type: ColumnTypeString): KnexMethod | never =>
+  KnexMethodMap[type]
 
 const createIndices = (
   table: knex.TableBuilder,
@@ -108,7 +122,7 @@ export const createTimestampTrigger = async (
 
 const getDataType = <
   T extends ColumnDescriptor<any>
-> (property: T): string | never => {
+> (property: T): ColumnTypeString | never => {
   let type: Nullable<string | T> = property
 
   if (isFunction(property)) {
@@ -122,7 +136,8 @@ const getDataType = <
   if (isString(type)) {
     const lower = type.toLowerCase()
 
-    if (!(lower in ColumnType)) {
+    if (!isKnownColumnType(lower)) {
+      // TODO: throw an error here?
       return "string"
     }
 
@@ -256,44 +271,11 @@ export const normalizeSchema = <
   return result
 }
 
-export const toInputType = (type: string, value: any): SerializedType | never => {
-  switch (type) {
-    case "string":
-      return String(value)
-    case "array":
-    case "object":
-    case "json":
-      return JSON.stringify(value)
-    case "number":
-    case "boolean":
-    case "increments":
-      return Number(value)
-    case "date":
-      return (value as Date).toISOString()
-    default:
-      invariant(false, `invalid type on insert to database: ${type}`)
-  }
-}
+export const serializeValue = (type: ColumnTypeString, value: any): SerializedType =>
+  SerializerMap[type](value)
 
-export const toReturnType = (type: string, value: any): ModelType | never => {
-  switch (type) {
-    case "string":
-      return String(value)
-    case "array":
-    case "object":
-    case "json":
-      return JSON.parse(value)
-    case "number":
-    case "increments":
-      return Number(value)
-    case "boolean":
-      return Boolean(value)
-    case "date":
-      return new Date(value)
-    default:
-      invariant(false, `invalid type returned from database: ${type}`)
-  }
-}
+export const deserializeValue = (type: ColumnTypeString, value: any): ModelType | never =>
+  DeserializerMap[type](value)
 
 export const castValue = (value: unknown): number | string | never => {
   const type = typeof value
@@ -410,7 +392,7 @@ export class Cast <
     )
 
     const type = getDataType(definition)
-    const cast = value !== null ? toInputType(type, value) : value
+    const cast = value !== null ? serializeValue(type, value) : value
 
     if (!options.raw && isFunction(definition.set)) {
       return castValue(definition.set(cast))
@@ -438,7 +420,7 @@ export class Cast <
     const definition = this.model.schema[column]
     const type = getDataType(definition)
 
-    const cast = value === null ? null : toReturnType(type, value)
+    const cast = value === null ? null : deserializeValue(type, value)
 
     if (!options.raw && isFunction(definition.get)) {
       return definition.get(cast)
