@@ -17,14 +17,14 @@ const tables = [
 ]
 
 test.before(async () => {
-  const promises = tables.map(table => {
+  const promises = tables.map(async table => {
     return db.model(table.name, table.schema)
   })
 
   await Promise.all(promises)
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("create: inserts objects into the database", async t => {
   const inserts = [
@@ -34,14 +34,14 @@ test("create: inserts objects into the database", async t => {
   ]
 
   await Promise.all(
-    inserts.map(({ table, object }) => db.getModelWithShape<FirstSecond2>(table).create(object))
+    inserts.map(async ({ table, object }) => db.getModelWithShape<FirstSecond2>(table).create(object))
   )
 
   const selects = await Promise.all(
-    inserts.map(({ table, object }) => db.getModelWithShape<FirstSecond2>(table).find(object))
+    inserts.map(async ({ table, object }) => db.getModelWithShape<FirstSecond2>(table).find(object))
   )
 
-  inserts.forEach(({ table, object }, i) => {
+  inserts.forEach(({ object }, i) => {
     t.deepEqual(selects[i], [object])
   })
 })
@@ -76,12 +76,12 @@ test("create: handles nil values correctly", async t => {
 
 test("create: `increments` columns are inferred to be optional", async t => {
   type Things1 = {
-    name: string,
+    name: string
     id: "increments"
   }
 
   type Things2 = {
-    name: string,
+    name: string
     id: ColumnType.Increments
   }
 

@@ -20,13 +20,13 @@ test("hooks.onQuery: receives executed queries (internal as option)", async t =>
     name: ColumnType.String
   })
 
-  const internalCheck = () => {
+  const internalCheck = (): (query: string) => void => {
     let i = 0
-    return (query: string) =>
+    return (query: string): void =>
       t.regex(query, expectations[i++])
   }
 
-  const defaultCheck = (query: string) => {
+  const defaultCheck = (query: string): void => {
     t.regex(query, onlyNonInternalRegex)
   }
 
@@ -57,7 +57,7 @@ test("hooks.beforeCreate: receives the object to be created", async t => {
 
   const users = await db.model("users", {
     name: ColumnType.String,
-    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
+    rank: { type: ColumnType.Number, set: (rank: number): number => rank * 2 }
   })
 
   const unsub = users.beforeCreate(user => {
@@ -85,7 +85,7 @@ test("hooks.afterCreate: receives the object after its creation", async t => {
 
   const users = await db.model("users", {
     name: ColumnType.String,
-    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
+    rank: { type: ColumnType.Number, set: (rank: number): number => rank * 2 }
   })
 
   const unsub = users.afterCreate(user => {
@@ -113,7 +113,7 @@ test("hooks.beforeUpdate: receives upcoming changes & criteria", async t => {
 
   const users = await db.model("users", {
     name: ColumnType.String,
-    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
+    rank: { type: ColumnType.Number, set: (rank: number): number => rank * 2 }
   })
 
   await users.create({
@@ -140,7 +140,7 @@ test("hooks.afterUpdate: receives updated objects", async t => {
 
   const users = await db.model("users", {
     name: ColumnType.String,
-    rank: { type: ColumnType.Number, set: (rank: number) => rank * 2 }
+    rank: { type: ColumnType.Number, set: (rank: number): number => rank * 2 }
   })
 
   await Promise.all([
@@ -240,7 +240,7 @@ test("hooks.beforeCreate: creation can be canceled", async t => {
   const unsub = numbers.beforeCreate(() => EventCancellation)
 
   await Promise.all(
-    [1, 2, 3, 4, 5, 6].map(n => numbers.create({ number: n }))
+    [1, 2, 3, 4, 5, 6].map(async n => numbers.create({ number: n }))
   )
 
   unsub()
@@ -257,19 +257,19 @@ test("hooks.beforeUpdate: updates can be canceled", async t => {
 
   const ns = [1, 2, 3, 4, 5, 6]
 
-  await Promise.all(ns.map(n => numbers.create({ number: n })))
+  await Promise.all(ns.map(async n => numbers.create({ number: n })))
 
   // casually preventing any objects from being updated
   const unsub = numbers.beforeUpdate(() => EventCancellation)
 
   const updates = await Promise.all(
-    ns.map(n => numbers.update({ number: n }, { number: n * 2 }))
+    ns.map(async n => numbers.update({ number: n }, { number: n * 2 }))
   )
 
   unsub()
 
   t.deepEqual(updates, [[], [], [], [], [], []])
-  t.deepEqual((await numbers.find()).sort(), ns.map(n => ({ number: n })))
+  t.deepEqual((await numbers.find()).sort((a, b) => b.number - a.number), ns.map(n => ({ number: n })))
 })
 
 test("hooks.beforeRemove: removals can be canceled", async t => {
@@ -281,17 +281,17 @@ test("hooks.beforeRemove: removals can be canceled", async t => {
 
   const ns = [1, 2, 3, 4, 5, 6]
 
-  await Promise.all(ns.map(n => numbers.create({ number: n })))
+  await Promise.all(ns.map(async n => numbers.create({ number: n })))
 
   // casually preventing any objects from being removed
   const unsub = numbers.beforeRemove(() => EventCancellation)
 
   const removals = await Promise.all(
-    ns.map(n => numbers.remove({ number: n }))
+    ns.map(async n => numbers.remove({ number: n }))
   )
 
   unsub()
 
   t.deepEqual(removals, [[], [], [], [], [], []])
-  t.deepEqual((await numbers.find()).sort(), ns.map(n => ({ number: n })))
+  t.deepEqual((await numbers.find()).sort((a, b) => b.number - a.number), ns.map(n => ({ number: n })))
 })

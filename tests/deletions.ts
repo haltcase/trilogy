@@ -4,7 +4,7 @@ import { connect, ColumnType, ModelWithShape } from "../src"
 import { Person, Person3 } from "./helpers/types"
 
 const test = ava as TestInterface<{
-  people: ModelWithShape<Person>,
+  people: ModelWithShape<Person>
   others: ModelWithShape<Person>
 }>
 
@@ -39,12 +39,12 @@ test.before(async t => {
   t.context.others = others
 
   await Promise.all([
-    ...somePeople.map(person => people.create(person)),
-    ...morePeople.map(person => others.create(person))
+    ...somePeople.map(async person => people.create(person)),
+    ...morePeople.map(async person => others.create(person))
   ])
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test.serial("removes an object from the specified model", async t => {
   await Promise.all(somePeople.map(async ({ name }) => {
@@ -61,7 +61,7 @@ test.serial("removes all objects from the specified model", async t => {
   t.falsy(quantity)
 
   const values = await Promise.all(
-    morePeople.map(({ name }) => t.context.people.findOne({ name }))
+    morePeople.map(async ({ name }) => t.context.people.findOne({ name }))
   )
 
   values.forEach(value => t.falsy(value))
@@ -80,7 +80,7 @@ test("allows for multiple where clauses", async t => {
     { age: 40, favoriteColor: "gray" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const removed = await people.remove([
     ["age", "<", 45],

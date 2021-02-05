@@ -26,7 +26,7 @@ test.before(async t => {
   })
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("getter only alters the returned value, not the stored value", async t => {
   const [upper, lower] = await Promise.all([

@@ -19,17 +19,17 @@ test.before(async t => {
     age: ColumnType.Number
   })
 
-  await Promise.all(persons.map(person => t.context.people.create(person)))
+  await Promise.all(persons.map(async person => t.context.people.create(person)))
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test.serial("decrements by 1 when no amount is provided", async t => {
   const values = await Promise.all(
-    persons.map(({ name, age }, i) => {
+    persons.map(async ({ name, age }, i) => {
       persons[i].age -= 1
       return t.context.people.decrement("age", { name })
-        .then(() => t.context.people.get("age", { name }))
+        .then(async () => t.context.people.get("age", { name }))
         .then(val => [age, val])
     })
   )
@@ -39,10 +39,10 @@ test.serial("decrements by 1 when no amount is provided", async t => {
 
 test.serial("decrements by a specified amount", async t => {
   const values = await Promise.all(
-    persons.map(({ name, age }, i) => {
+    persons.map(async ({ name, age }, i) => {
       persons[i].age -= 4
       return t.context.people.decrement("age", { name }, 4)
-        .then(() => t.context.people.get("age", { name }))
+        .then(async () => t.context.people.get("age", { name }))
         .then(val => [age, val])
     })
   )
@@ -82,7 +82,7 @@ test("allows for multiple where clauses", async t => {
     { age: 49, name: "Jane" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   await people.decrement("age", [
     ["age", ">", 45],
@@ -90,7 +90,7 @@ test("allows for multiple where clauses", async t => {
   ])
 
   const results = await Promise.all(
-    list.map(({ name }) => people.get("age", { name }))
+    list.map(async ({ name }) => people.get("age", { name }))
   )
 
   t.deepEqual(results, [31, 41, 50, 49])

@@ -12,12 +12,12 @@ const tables = [
 ]
 
 test.before(async () => {
-  await Promise.all(tables.map(table => {
+  await Promise.all(tables.map(async table => {
     return db.model(table.name, table.schema)
   }))
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("is true for existing tables", async t => {
   await Promise.all(

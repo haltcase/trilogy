@@ -4,9 +4,9 @@ import { connect, ColumnType, ModelWithShape } from "../src"
 import { Person2 } from "./helpers/types"
 
 type One = {
-  first?: string,
-  second?: string,
-  third?: boolean,
+  first?: string
+  second?: string
+  third?: boolean
   array?: any[]
 }
 
@@ -33,7 +33,7 @@ test.before(async t => {
     array: {
       type: ColumnType.Array,
       nullable: true
-    },
+    }
   })
 
   await Promise.all([
@@ -48,7 +48,7 @@ test.before(async t => {
   ])
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("changes the value of an existing key", async t => {
   await t.context.one.update({ first: "fee" }, { second: "blurg" })
@@ -75,7 +75,7 @@ test("allows for using multiple where clauses", async t => {
     { age: 49, gender: "female" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const affected = await people.update([
     ["age", ">", 45],

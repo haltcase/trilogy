@@ -3,7 +3,7 @@ import { connect, ColumnType } from "../src"
 
 const db = connect(":memory:")
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("creates missing objects or returns an existing one", async t => {
   const games = await db.model("games", {
@@ -31,6 +31,8 @@ test("creates missing objects or returns an existing one", async t => {
   t.deepEqual(fresh, existing2)
   t.is(await games.count({ genre: "FPS" }), 1)
 
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   t.is(fresh!.last_played.toISOString(), existing1!.last_played.toISOString())
   t.is(fresh!.last_played.toISOString(), existing2!.last_played.toISOString())
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 })

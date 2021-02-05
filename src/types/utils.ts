@@ -25,15 +25,6 @@ export type DistinctArrayTuple <T, V = any> =
         ? V[]
         : V
 
-export type Compute <T extends any, Seen extends any = T> =
-  T extends keyof any | (() => any) | unknown | boolean
-    ? T
-    : {
-        [K in keyof T]: T[K] extends Seen   // `Seen` handles circular type refs
-          ? T[K]                            // we've seen this type, don't compute
-          : Compute<T[K], T[K] | Seen>      // 1st time seeing this, save & compute
-      } & {}
-
 export type Fn <T extends any[], R = any> =
   (...args: T) => R
 

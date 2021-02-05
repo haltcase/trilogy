@@ -3,7 +3,7 @@ import { connect, ColumnType } from "../src"
 
 const db = connect(":memory:")
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("retrieves rows as arrays of objects", async t => {
   const keepers = await db.model("keepers", {
@@ -14,7 +14,7 @@ test("retrieves rows as arrays of objects", async t => {
   const items = ["fee", "fi", "fo", "fum"]
 
   await Promise.all(
-    items.map(v => keepers.create({ first: v, second: "blah" }))
+    items.map(async v => keepers.create({ first: v, second: "blah" }))
   )
 
   const results = await keepers.find()
@@ -36,7 +36,7 @@ test("allows for multiple where clauses", async t => {
     { age: 49, gender: "female" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const found = await people.find([
     ["age", ">", 50],
@@ -58,7 +58,7 @@ test("2 element tuple works within multiple where clauses", async t => {
     { age: 20, gender: "female" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const results = await people.find([
     ["age", 20],
@@ -81,7 +81,7 @@ test("findIn() variant extracts the given column from all found objects", async 
     { age: 20, gender: "female" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const results = await people.findIn("gender")
   t.deepEqual(results, ["male", "female"])

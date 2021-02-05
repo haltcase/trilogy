@@ -6,7 +6,7 @@ import * as rimraf from "rimraf"
 
 import { connect, Trilogy } from "../src"
 
-const getPath = (name: any) =>
+const getPath = (name: string): string =>
   join(__dirname, `${basename(`${__filename}-${name}`, ".ts")}.db`)
 
 const [js, native] = [getPath("sqljs"), getPath("native")]

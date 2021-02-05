@@ -27,7 +27,7 @@ test.before(async t => {
   ])
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("get() - retrieves a specific property of the object", async t => {
   const res = await t.context.one.get("second", { first: "fee" })
@@ -68,7 +68,7 @@ test("model.get() & model.set()", async t => {
     { name: "Gurlak", age: 302 }
   ]
 
-  await Promise.all(persons.map(p => people.create(p)))
+  await Promise.all(persons.map(async p => people.create(p)))
 
   const actual = await people.get("age", { name: "Dale" })
   t.is(actual, 30)

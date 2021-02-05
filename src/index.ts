@@ -147,7 +147,8 @@ export class Trilogy {
         await query
       }
     } else {
-      if (!await getQueryResult<Driver.js, typeof check>(this, check)) {
+      const exists = await getQueryResult<Driver.js, typeof check>(this, check)
+      if (typeof exists === "boolean" && !exists) {
         await executeQuery(this, query)
       }
     }
@@ -301,8 +302,8 @@ export class Trilogy {
    */
   onQuery (
     ...args:
-      | [fn: hooks.OnQueryCallback, options?: hooks.OnQueryOptions]
-      | [scope: string, fn: hooks.OnQueryCallback, options?: hooks.OnQueryOptions]
+    | [fn: hooks.OnQueryCallback, options?: hooks.OnQueryOptions]
+    | [scope: string, fn: hooks.OnQueryCallback, options?: hooks.OnQueryOptions]
   ): Fn<[], boolean> {
     let fn: hooks.OnQueryCallback = () => {}
     let location = ""
@@ -369,8 +370,8 @@ export class Trilogy {
     Props extends ModelProps<T> = ModelProps<T>
   > (
     ...args:
-      | [fn: hooks.BeforeCreateCallback<ModelRecord>]
-      | [scope: string, fn: hooks.BeforeCreateCallback<Props["objectInput"]>]
+    | [fn: hooks.BeforeCreateCallback<ModelRecord>]
+    | [scope: string, fn: hooks.BeforeCreateCallback<Props["objectInput"]>]
   ): Fn<[], boolean> {
     if (args.length === 2) {
       // all creations run on the model identified by `scope`
@@ -405,8 +406,8 @@ export class Trilogy {
     Props extends ModelProps<T> = ModelProps<T>
   > (
     ...args:
-      | [fn: hooks.AfterCreateCallback<ModelRecord>]
-      | [scope: string, fn: hooks.AfterCreateCallback<Props["objectOutput"]>]
+    | [fn: hooks.AfterCreateCallback<ModelRecord>]
+    | [scope: string, fn: hooks.AfterCreateCallback<Props["objectOutput"]>]
   ): Fn<[], boolean> {
     if (args.length === 2) {
       // all creations run on the model identified by `scope`
@@ -446,8 +447,8 @@ export class Trilogy {
     Props extends ModelProps<T> = ModelProps<T>
   > (
     ...args:
-      | [fn: hooks.BeforeUpdateCallback<ModelRecord>]
-      | [scope: string, fn: hooks.BeforeUpdateCallback<Props["objectInput"]>]
+    | [fn: hooks.BeforeUpdateCallback<ModelRecord>]
+    | [scope: string, fn: hooks.BeforeUpdateCallback<Props["objectInput"]>]
   ): Fn<[], boolean> {
     if (args.length === 2) {
       // all updates run on the model identified by `scope`
@@ -482,8 +483,8 @@ export class Trilogy {
     Props extends ModelProps<T> = ModelProps<T>
   > (
     ...args:
-      | [fn: hooks.AfterUpdateCallback<ModelRecord>]
-      | [scope: string, fn: hooks.AfterUpdateCallback<Props["objectOutput"]>]
+    | [fn: hooks.AfterUpdateCallback<ModelRecord>]
+    | [scope: string, fn: hooks.AfterUpdateCallback<Props["objectOutput"]>]
   ): Fn<[], boolean> {
     if (args.length === 2) {
       // all updates run on the model identified by `scope`
@@ -523,8 +524,8 @@ export class Trilogy {
     Props extends ModelProps<T> = ModelProps<T>
   > (
     ...args:
-      | [fn: hooks.BeforeRemoveCallback<ModelRecord>]
-      | [scope: string, fn: hooks.BeforeRemoveCallback<Props["objectInput"]>]
+    | [fn: hooks.BeforeRemoveCallback<ModelRecord>]
+    | [scope: string, fn: hooks.BeforeRemoveCallback<Props["objectInput"]>]
   ): Fn<[], boolean> {
     if (args.length === 2) {
       // all removals run on the model identified by `scope`
@@ -558,8 +559,8 @@ export class Trilogy {
     Props extends ModelProps<T> = ModelProps<T>
   > (
     ...args:
-      | [fn: hooks.AfterRemoveCallback<ModelRecord>]
-      | [scope: string, fn: hooks.AfterRemoveCallback<Props["objectOutput"]>]
+    | [fn: hooks.AfterRemoveCallback<ModelRecord>]
+    | [scope: string, fn: hooks.AfterRemoveCallback<Props["objectOutput"]>]
   ): Fn<[], boolean> {
     if (args.length === 2) {
       // all removals run on the model identified by `scope`

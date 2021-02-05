@@ -4,7 +4,7 @@ import { normalizeCriteria } from "./helpers"
 import { Criteria, CriteriaNormalized } from "./types/criteria"
 import { ModelProps, ModelRecord, Schema } from "./types/schemas"
 import { Fn } from "./types/utils"
-import { CreateOptions, UpdateOptions, } from "./types/validators"
+import { CreateOptions, UpdateOptions } from "./types/validators"
 
 export type HookOptions = CreateOptions | UpdateOptions | {}
 
@@ -216,7 +216,7 @@ export class Hooks <Props extends ModelProps<Schema>> {
    *
    * @internal
    */
-  async _callHook <T = Props["objectOutput"]> (
+  async _callHook (
     hook: Hook.OnQuery, arg: OnQueryContext
   ): Promise<HookResult>
   async _callHook <T extends ModelRecord = Props["objectInput"]> (

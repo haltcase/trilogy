@@ -21,7 +21,7 @@ test.before(async t => {
     age: ColumnType.Number
   })
 
-  t.context.people.create({
+  await t.context.people.create({
     name: "Bo",
     age: 29
   })
@@ -29,7 +29,7 @@ test.before(async t => {
   await Promise.all(persons.map(async person => t.context.people.create(person)))
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("returns the number of models when parameter count === 0", async t => {
   t.is(await t.context.people.count(), 1)

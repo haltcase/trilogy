@@ -17,6 +17,7 @@ module.exports = {
       assertionStyle: "as",
       objectLiteralTypeAssertions: "allow-as-parameter"
     }],
+    "@typescript-eslint/consistent-type-definitions": off,
     "@typescript-eslint/explicit-function-return-type": [error, {
       allowTypedFunctionExpressions: true
     }],

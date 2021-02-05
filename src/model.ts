@@ -157,6 +157,11 @@ export class Model <
 
     const insertion = this.cast.serialize(object, options)
 
+    if (insertion == null) {
+      // TODO: throw error?
+      return
+    }
+
     const [returning, cleanup] =
       await createTrigger(this, TriggerEvent.Insert)
 
@@ -260,6 +265,10 @@ export class Model <
   ): Promise<Props["objectOutput"] | undefined> {
     validators.FindOptions.check(options)
 
+    if (criteria === undefined) {
+      return
+    }
+
     const order = options.random ? "random" : options.order
     let query = this.ctx.knex(this.name).first()
     query = helpers.buildWhere(query, this.cast.serialize(
@@ -348,6 +357,11 @@ export class Model <
 
     const typedData = this.cast.serialize(data, options)
     const typedCriteria = this.cast.serialize(criteria, options)
+
+    if (typedData == null) {
+      // TODO: throw error?
+      return []
+    }
 
     let query = this.ctx.knex(this.name).update(typedData)
     query = helpers.buildWhere(query, typedCriteria)

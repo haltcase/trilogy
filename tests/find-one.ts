@@ -21,7 +21,7 @@ test.before(async t => {
   })
 })
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("retrieves a single object", async t => {
   const expected = { first: "fee", second: "blah" }
@@ -47,7 +47,7 @@ test("allows for multiple where clauses", async t => {
     { age: 49, gender: "female" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const found = await people.findOne([
     ["age", ">", 50],
@@ -70,7 +70,7 @@ test("findOneIn() variant extracts & returns the specified column", async t => {
     { age: 49, gender: "female" }
   ]
 
-  await Promise.all(list.map(p => people.create(p)))
+  await Promise.all(list.map(async p => people.create(p)))
 
   const found = await people.findOneIn("age", [
     ["age", ">", 50],

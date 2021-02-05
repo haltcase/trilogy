@@ -5,7 +5,7 @@ import { SqliteMaster } from "./helpers/types"
 
 const db = connect(":memory:")
 
-test.after.always(() => db.close())
+test.after.always(async () => db.close())
 
 test("creates a new model definition", async t => {
   await db.model("teams", {
@@ -90,20 +90,20 @@ test("defines a model with multiple indices", async t => {
   t.is(object[1].sql, "CREATE INDEX `idx_flvr_name` on `sodas_object` (`flavor`, `name`)")
 })
 
-test("accepts column types as built-in JS type constructors", async t => {
+test("accepts column types as built-in JS type constructors", async () => {
   type Builtins = {
-    name: string,
-    name2: string,
-    age: number,
-    age2: number,
-    birthdate: Date,
-    birthdate2: Date,
-    adult: boolean,
-    adult2: boolean,
-    friends: string[],
-    friends2: string[],
-    other: Record<string, number>,
-    loose: object,
+    name: string
+    name2: string
+    age: number
+    age2: number
+    birthdate: Date
+    birthdate2: Date
+    adult: boolean
+    adult2: boolean
+    friends: string[]
+    friends2: string[]
+    other: Record<string, number>
+    loose: object
   }
 
   const builtins = await db.modelWithShape<Builtins>("types_builtin", {
@@ -142,20 +142,20 @@ test("accepts column types as built-in JS type constructors", async t => {
   })
 })
 
-test("accepts column types as known constant strings", async t => {
+test("accepts column types as known constant strings", async () => {
   type Constants = {
-    name: ColumnType.String,
-    name2: ColumnType.String,
-    age: ColumnType.Number,
-    age2: ColumnType.Number,
-    birthdate: ColumnType.Date,
-    birthdate2: ColumnType.Date,
-    adult: ColumnType.Boolean,
-    adult2: ColumnType.Boolean,
-    friends: ColumnType.Array,
-    friends2: string[],
-    other: Record<string, number>,
-    loose: ColumnType.Object,
+    name: ColumnType.String
+    name2: ColumnType.String
+    age: ColumnType.Number
+    age2: ColumnType.Number
+    birthdate: ColumnType.Date
+    birthdate2: ColumnType.Date
+    adult: ColumnType.Boolean
+    adult2: ColumnType.Boolean
+    friends: ColumnType.Array
+    friends2: string[]
+    other: Record<string, number>
+    loose: ColumnType.Object
     json: ColumnType.Json
   }
 

@@ -4,7 +4,7 @@ import { join, basename } from "path"
 import { connect, ColumnType, ModelWithShape } from "../src"
 
 type Data = {
-  item: string,
+  item: string
   price: string
 }
 
