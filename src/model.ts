@@ -146,6 +146,13 @@ export class Model <
     this.cast = new Cast(this)
   }
 
+  /**
+   * Create an object on the given model. `object` should match the model's
+   * defined schema but values will cast into types as needed.
+   *
+   * @param object Data to insert
+   * @param options
+   */
   async create (
     object: Props["objectInput"],
     options: validators.CreateOptions = {}
