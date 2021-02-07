@@ -184,8 +184,8 @@ export class Model <
       model: this
     })
 
-    type ReturnType = Nullable<Listable<Props["objectOutput"]>>
-    const result = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+    type Result = Nullable<Listable<Props["objectOutput"]>>
+    const result = await helpers.getQueryResult<Driver, typeof returning, this, Result>(this.ctx, returning, {
       model: this,
       internal: true
     })
@@ -223,8 +223,8 @@ export class Model <
     if (options.skip != null) query = query.offset(options.skip)
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    type ReturnType = Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>
-    const result = await helpers.getQueryResult<Driver, typeof query, this, ReturnType>(this.ctx, query, {
+    type Result = Nullable<Props["objectOutput"] | Array<Props["objectOutput"]>>
+    const result = await helpers.getQueryResult<Driver, typeof query, this, Result>(this.ctx, query, {
       model: this
     })
 
@@ -287,8 +287,8 @@ export class Model <
     if (options.skip != null) query = query.offset(options.skip)
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    type ReturnType = Listable<Props["objectOutput"]>
-    const response = await helpers.getQueryResult<Driver, typeof query, this, ReturnType>(this.ctx, query, {
+    type Result = Listable<Props["objectOutput"]>
+    const response = await helpers.getQueryResult<Driver, typeof query, this, Result>(this.ctx, query, {
       model: this
     })
 
@@ -376,8 +376,8 @@ export class Model <
     await helpers.executeQuery<this>(this.ctx, query, { model: this })
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    type ReturnType = Array<Props["objectOutput"]>
-    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+    type Result = Array<Props["objectOutput"]>
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, Result>(this.ctx, returning, {
       model: this,
       internal: true
     })
@@ -502,8 +502,8 @@ export class Model <
     if (affected === 0) return []
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    type ReturnType = Array<Props["objectOutput"]>
-    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+    type Result = Array<Props["objectOutput"]>
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, Result>(this.ctx, returning, {
       model: this,
       internal: true
     })
@@ -554,8 +554,8 @@ export class Model <
     if (affected === 0) return []
 
     // TODO: please, for the love of the cosmos, give me https://github.com/microsoft/TypeScript/pull/26349
-    type ReturnType = Array<Props["objectOutput"]>
-    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, ReturnType>(this.ctx, returning, {
+    type Result = Array<Props["objectOutput"]>
+    const updatedRaw = await helpers.getQueryResult<Driver, typeof returning, this, Result>(this.ctx, returning, {
       model: this,
       internal: true
     })
