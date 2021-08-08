@@ -10,7 +10,7 @@ import { pureConnect } from './sqljs-handler'
 import { invariant, makeDirPath } from './util'
 
 import { Pool } from 'generic-pool'
-import { SqlJs } from 'sql.js/module'
+import { Database } from 'sql.js'
 import * as hooks from './hooks'
 import * as types from './types'
 
@@ -61,7 +61,7 @@ export class Trilogy {
    *
    * @internal
    */
-  pool?: Pool<SqlJs.Database>
+  pool?: Pool<Database>
 
   private _definitions: Map<string, Model<any>>
 
