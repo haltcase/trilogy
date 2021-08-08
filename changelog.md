@@ -1,3 +1,14 @@
+<a name="2.0.5"></a>
+## [`2.0.5`](https://github.com/citycide/trilogy/compare/v2.0.4...v2.0.5) (2021-08-08)
+
+
+###### BUG FIXES
+
+* ensure timestamps/schema options are handled properly ([#112](https://github.com/citycide/trilogy/issues/112)) ([a30b29c](https://github.com/citycide/trilogy/commit/a30b29c))
+
+
+---
+
 <a name="2.0.4"></a>
 ## [`2.0.4`](https://github.com/citycide/trilogy/compare/v2.0.3...v2.0.4) (2021-08-08)
 
