@@ -29,13 +29,17 @@ export function toKnexSchema <D extends types.ReturnDict> (
     for (const [name, descriptor] of Object.entries(model.schema)) {
       // these timestamp fields are handled as part of the model options
       // processing below, ignore them here so we don't duplicate the fields
-      if (options.timestamps && (name === 'created_at' || name === 'updated_at')) return
+      if (options.timestamps && (name === 'created_at' || name === 'updated_at')) {
+        continue
+      }
 
       // each column's value is either its type or a descriptor
       const type = getDataType(descriptor)
       const partial = table[toKnexMethod(type)](name)
 
-      if (isFunction(descriptor) || !isObject(descriptor)) return
+      if (isFunction(descriptor) || !isObject(descriptor)) {
+        continue
+      }
 
       const props = types.ColumnDescriptor.check(descriptor)
 
