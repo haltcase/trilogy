@@ -3,7 +3,7 @@ import { openSync, closeSync, mkdirSync } from "fs"
 
 import * as pool from "generic-pool"
 import knex from "knex"
-import { SqlJs } from "sql.js/module"
+import { Database } from "sql.js"
 import { } from "type-fest"
 
 import { Model } from "./model"
@@ -68,7 +68,7 @@ export class Trilogy {
    *
    * @internal
    */
-  pool?: pool.Pool<SqlJs.Database>
+  pool?: pool.Pool<Database>
 
   readonly #definitions = new Map<string, Model<any, any>>()
 
