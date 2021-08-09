@@ -261,9 +261,11 @@ type ResolveSchemaFromDefinitionImpl <ModelSchema extends SchemaFromDefinition> 
   ModelSchema[Key] extends Record<string, any>
     ? ColumnDescriptor<
         ModelSchema[Key]["type"],
-        unknown extends ModelSchema[Key]["_staticType"]
-          ? TryStatic<ModelSchema[Key]["type"]>
-          : ModelSchema[Key]["_staticType"]
+        IfUnknown<
+          ModelSchema[Key]["_staticType"],
+          TryStatic<ModelSchema[Key]["type"]>,
+          ModelSchema[Key]["_staticType"]
+        >
       >
     : ColumnDescriptor<RuntimeSchemaType<ModelSchema[Key]>, TryStatic<ModelSchema[Key]>>
 }
