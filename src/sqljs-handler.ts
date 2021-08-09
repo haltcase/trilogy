@@ -6,7 +6,7 @@ import * as pool from "generic-pool"
 import { Trilogy } from "."
 import { LooseObject } from "./types/utils"
 
-import { Database } from "sql.js"
+import type { Database } from "sql.js"
 
 export type SqlJsResponse = Array<{
   columns: string[]
