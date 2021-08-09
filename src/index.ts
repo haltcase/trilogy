@@ -173,7 +173,7 @@ export class Trilogy {
     ModelSchema extends Schema = SchemaFromShape<T>
   > (
     name: string,
-    schema: Const<ModelSchema>,
+    schema: ModelSchema,
     options: ModelOptions = {}
   ): Promise<Model<ModelSchema>> {
     return new Model<ModelSchema>(this, name, schema, options)

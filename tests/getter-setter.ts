@@ -12,11 +12,11 @@ test.before(async t => {
   t.context.people = await db.modelWithShape<Person>("people", {
     name: {
       type: ColumnType.String,
-      get: name => name.toUpperCase()
+      get: name => name?.toUpperCase() ?? ""
     },
     age: {
       type: ColumnType.Number,
-      set: age => age + 1
+      set: age => age ?? 0 + 1
     }
   })
 
