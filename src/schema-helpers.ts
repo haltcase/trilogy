@@ -15,7 +15,7 @@ import * as types from './types'
 
 const TimestampTriggerTemplate = `
 create trigger if not exists :name: after update on :modelName: begin
-  update :modelName: set :column: = \`current_timestamp\`
+  update :modelName: set :column: = current_timestamp
   where :key: = \`old\`.:key:;
 end
 `
