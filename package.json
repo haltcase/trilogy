@@ -43,28 +43,28 @@
     "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {
-    "generic-pool": "^3.7.1",
-    "knex": "^0.20.1",
-    "runtypes": "^4.0.0",
-    "tslib": "^1.10.0"
+    "generic-pool": "3.7.1",
+    "knex": "0.20.1",
+    "runtypes": "4.0.0",
+    "tslib": "1.10.0"
   },
   "devDependencies": {
-    "@citycide/changelog": "^1.1.0",
-    "@types/generic-pool": "^3.1.9",
-    "@types/node": "^8.10.49",
-    "@types/rimraf": "^2.0.3",
-    "@types/sql.js": "^1.4.2",
-    "@vuepress/plugin-back-to-top": "^1.2.0",
-    "ava": "^2.4.0",
-    "cpy-cli": "^2.0.0",
-    "rimraf": "^3.0.0",
-    "sql.js": "^1.5.0",
-    "sqlite3": "^5.0.2",
-    "ts-node": "^8.4.1",
-    "tslint": "^5.20.1",
-    "tslint-config-standard": "^9.0.0",
-    "typescript": "^3.7.2",
-    "vuepress": "^1.2.0"
+    "@citycide/changelog": "1.1.0",
+    "@types/generic-pool": "3.1.9",
+    "@types/node": "8.10.49",
+    "@types/rimraf": "2.0.3",
+    "@types/sql.js": "1.4.2",
+    "@vuepress/plugin-back-to-top": "1.2.0",
+    "ava": "2.4.0",
+    "cpy-cli": "2.0.0",
+    "rimraf": "3.0.0",
+    "sql.js": "1.5.0",
+    "sqlite3": "5.0.2",
+    "ts-node": "8.4.1",
+    "tslint": "5.20.1",
+    "tslint-config-standard": "9.0.0",
+    "typescript": "3.7.2",
+    "vuepress": "1.2.0"
   },
   "ava": {
     "compileEnhancements": false,
